@@ -172,6 +172,25 @@ export default function Settings() {
         </View>
         
         <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Troubleshooting</Text>
+          <TouchableOpacity
+            style={styles.settingCard}
+            onPress={() => router.push('/clear-cache')}
+          >
+            <View style={styles.settingLeft}>
+              <Ionicons name="trash" size={24} color="#FF9800" />
+              <View style={styles.settingInfo}>
+                <Text style={styles.settingLabel}>Clear Cache</Text>
+                <Text style={styles.settingSubtext}>
+                  Fix audio or content issues
+                </Text>
+              </View>
+            </View>
+            <Ionicons name="chevron-forward" size={24} color="#aaa" />
+          </TouchableOpacity>
+        </View>
+        
+        <View style={styles.section}>
           <Text style={styles.sectionTitle}>About</Text>
           <View style={styles.settingCard}>
             <View style={styles.settingLeft}>
