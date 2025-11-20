@@ -1,30 +1,17 @@
 #!/usr/bin/env python3
 """
-Castle Audio Tour Guide API Testing Suite
-Tests all backend endpoints for the audio tour guide application.
+Spiš Castle Audio Tour - Backend Audio Data Testing
+Focus: Audio data availability and validation for all tour stops
 """
 
 import requests
+import base64
 import json
 import sys
-import os
 from typing import Dict, List, Any
-import time
 
-# Get backend URL from frontend .env file
-def get_backend_url():
-    try:
-        with open('/app/frontend/.env', 'r') as f:
-            for line in f:
-                if line.startswith('EXPO_PUBLIC_BACKEND_URL='):
-                    base_url = line.split('=', 1)[1].strip()
-                    return f"{base_url}/api"
-        return "http://localhost:8001/api"  # fallback
-    except:
-        return "http://localhost:8001/api"  # fallback
-
-BASE_URL = get_backend_url()
-print(f"Testing backend at: {BASE_URL}")
+# Backend URL from environment - specifically for audio testing
+BACKEND_URL = "https://spis-explorer-1.preview.emergentagent.com/api"
 
 class APITester:
     def __init__(self):
