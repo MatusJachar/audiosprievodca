@@ -267,6 +267,33 @@ export default function Admin() {
           <Ionicons name="refresh" size={24} color="#fff" />
         </TouchableOpacity>
       </View>
+
+      {/* Background Image Section */}
+      <View style={styles.backgroundSection}>
+        <Text style={styles.sectionTitle}>Background Image</Text>
+        <TouchableOpacity
+          style={styles.backgroundButton}
+          onPress={pickBackgroundImage}
+          disabled={uploadingImage}
+        >
+          {backgroundImage ? (
+            <Image 
+              source={{ uri: `data:image/png;base64,${backgroundImage}` }} 
+              style={styles.backgroundPreview}
+            />
+          ) : (
+            <View style={styles.backgroundPlaceholder}>
+              <Ionicons name="image-outline" size={48} color="#666" />
+              <Text style={styles.placeholderText}>Upload Background</Text>
+            </View>
+          )}
+          {uploadingImage && (
+            <View style={styles.uploadingOverlay}>
+              <ActivityIndicator size="large" color="#FFD700" />
+            </View>
+          )}
+        </TouchableOpacity>
+      </View>
       
       <FlatList
         data={tourStops}
