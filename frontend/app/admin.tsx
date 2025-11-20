@@ -207,6 +207,7 @@ export default function Admin() {
 
   const renderStopItem = ({ item }: { item: any }) => {
     const audioCount = Object.keys(item.audio || {}).length;
+    const hasImage = !!item.image_base64;
     
     return (
       <View style={styles.stopCard}>
@@ -217,7 +218,7 @@ export default function Admin() {
           <View style={styles.stopInfo}>
             <Text style={styles.stopTitle}>{item.content.en.title}</Text>
             <Text style={styles.audioStatus}>
-              {audioCount}/8 audio files
+              {audioCount}/8 audio • {hasImage ? '✓ Image' : '⚠ No Image'}
             </Text>
           </View>
         </View>
@@ -232,12 +233,21 @@ export default function Admin() {
           </TouchableOpacity>
           
           <TouchableOpacity
+            style={[styles.actionButton, styles.imageButton]}
+            onPress={() => handleManageImages(item)}
+            disabled={uploadingImage}
+          >
+            <Ionicons name="image-outline" size={20} color="#fff" />
+            <Text style={styles.actionButtonText}>Image</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
             style={[styles.actionButton, styles.audioButton]}
             onPress={() => handleGenerateAllAudio(item.id)}
             disabled={generating}
           >
             <Ionicons name="volume-high" size={20} color="#fff" />
-            <Text style={styles.actionButtonText}>Generate Audio</Text>
+            <Text style={styles.actionButtonText}>Audio</Text>
           </TouchableOpacity>
         </View>
       </View>
