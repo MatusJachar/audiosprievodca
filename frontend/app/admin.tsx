@@ -374,6 +374,65 @@ export default function Admin() {
           </View>
         </View>
       </Modal>
+
+      {/* Image Upload Modal */}
+      <Modal
+        visible={imageModalVisible}
+        animationType="slide"
+        transparent={true}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                Manage Image - Stop {selectedStop?.stop_number}
+              </Text>
+              <TouchableOpacity onPress={() => setImageModalVisible(false)}>
+                <Ionicons name="close" size={28} color="#fff" />
+              </TouchableOpacity>
+            </View>
+            
+            <ScrollView style={styles.imageModalContent}>
+              <Text style={styles.sectionSubtitle}>{selectedStop?.content.en.title}</Text>
+              
+              {selectedStop?.image_base64 ? (
+                <View style={styles.imagePreviewContainer}>
+                  <Image 
+                    source={{ uri: `data:image/png;base64,${selectedStop.image_base64}` }} 
+                    style={styles.stopImagePreview}
+                    resizeMode="cover"
+                  />
+                  <Text style={styles.imageStatusText}>✓ Image uploaded</Text>
+                </View>
+              ) : (
+                <View style={styles.imagePreviewContainer}>
+                  <View style={styles.stopImagePlaceholder}>
+                    <Ionicons name="image-outline" size={64} color="#666" />
+                    <Text style={styles.placeholderText}>No image uploaded</Text>
+                  </View>
+                </View>
+              )}
+              
+              <TouchableOpacity
+                style={styles.uploadButton}
+                onPress={() => pickStopImage(selectedStop?.id)}
+                disabled={uploadingImage}
+              >
+                {uploadingImage ? (
+                  <ActivityIndicator size="small" color="#000" />
+                ) : (
+                  <>
+                    <Ionicons name="cloud-upload-outline" size={24} color="#000" />
+                    <Text style={styles.uploadButtonText}>
+                      {selectedStop?.image_base64 ? 'Replace Image' : 'Upload Image'}
+                    </Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
