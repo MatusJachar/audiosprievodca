@@ -18,6 +18,7 @@ export default function StopDetail() {
   const [playbackPosition, setPlaybackPosition] = useState(0);
   const [playbackDuration, setPlaybackDuration] = useState(0);
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
+  const [skipAmount, setSkipAmount] = useState(10000); // 10 seconds in milliseconds
 
   const stop = tourStops.find((s) => s.id === stopId);
   const content = stop?.content[selectedLanguage];
