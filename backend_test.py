@@ -11,7 +11,7 @@ import sys
 from typing import Dict, List, Any
 
 # Backend URL from environment - specifically for audio testing
-BACKEND_URL = "https://spis-explorer-1.preview.emergentagent.com/api"
+BACKEND_URL = "https://audio-castle-tour.preview.emergentagent.com/api"
 
 class AudioDataTester:
     def __init__(self):

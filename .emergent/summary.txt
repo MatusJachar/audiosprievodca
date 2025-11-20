@@ -1,0 +1,87 @@
+<analysis>
+The trajectory details the process of building a mobile audio tour guide app. The initial work involved scaffolding the Expo/FastAPI application and implementing core features. The main challenge began with an audio playback issue on mobile. After extensive debugging, the root cause was identified as a  in the browser/device storage, triggered by attempting to cache large base64-encoded audio files in Zustand's persisted store. The fix involved modifying the state management to fetch audio on-demand instead of caching it.
+
+Subsequently, the user requested the addition of German and Hungarian content. This process was iterative, involving the user providing text and custom audio files in multiple batches. A key pivot was the user's request to use higher-quality TTS voices, leading to a discussion about Minimax vs. OpenAI.
+
+A critical bug emerged where incorrect (English) text was displayed for other languages. This was due to a combination of missing translated text in the database and frontend caching issues. The AI addressed this by removing unsupported languages and then re-adding them with proper text content provided by the user. The last actions involved adding complete Slovak text and preparing to add complete Russian text, which was interrupted by the user's request for this summary. The user's primary language is English; the next agent must respond in English.
+</analysis>
+
+<product_requirements>
+The objective is to create a comprehensive, editable audio tour guide mobile app for Spiš Castle.
+
+**Core Features:**
+*   **Content:** 13 editable tour stops.
+*   **Multi-language Support:** The app must support English, Polish, German, Hungarian, Slovak, Russian, Spanish, and Chinese.
+*   **Hybrid Audio:** The system must support both AI-generated TTS audio and custom-uploaded MP3 files, with custom files overriding AI versions.
+*   **Image Support:** The app should display a main background image and a unique, editable image for each of the 13 tour stops.
+*   **Enhanced Descriptions:** Tour stop descriptions should be concise and highlight unique features.
+*   **Admin Panel:** A backend interface to edit all content (text, audio, images).
+
+**Implementation Status:**
+The core application is functional. A critical  bug, which prevented audio playback due to large files filling local storage, has been resolved by fetching audio on-demand. The app currently supports 5 languages with full text and audio: English, Polish, German, Hungarian, and Slovak. Russian text has been provided and is ready to be added to the database. The image upload and enhanced description features are pending.
+</product_requirements>
+
+<key_technical_concepts>
+- **Frameworks:** Expo (React Native) frontend, FastAPI (Python) backend.
+- **Database:** MongoDB.
+- **State Management:** Zustand for frontend state. A key change was made to its  middleware to prevent caching large audio files and resolve a .
+- **Audio Handling:**  for playback, base64 encoding for storage,  for server-side compression, and OpenAI TTS-1-HD for AI voice generation.
+- **Backend Scripting:** Python scripts are used heavily for batch data processing, including adding new languages and audio files.
+</key_technical_concepts>
+
+<code_architecture>
+The application uses a monolithic repository with a  and  directory. The backend is a FastAPI server providing a REST API, and the frontend is an Expo app using file-based routing with .
+
+**Directory Structure:**
+
+
+**Key Files & Recent Changes:**
+
+-   ****
+    -   **Importance:** Manages global tour data using Zustand.
+    -   **Changes:** This file was critically modified to fix a . The  middleware was configured to exclude the  from being saved to , preventing large base64 audio strings from crashing the app. Data is now fetched from the API on app load instead of being cached.
+
+-   ****
+    -   **Importance:** A script to populate the MongoDB database with the complete Slovak text for all 13 tour stops.
+    -   **Changes:** Created and executed successfully to add the user-provided Slovak text, fixing the bug where English text was displayed for the Slovak language.
+
+-   ****
+    -   **Importance:** A script to add the complete Russian text for all 13 tour stops to the database.
+    -   **Changes:** Created based on user-provided Russian text. It has **not yet been executed**. This is the next immediate task.
+
+-   ****
+    -   **Importance:** A script created to remove languages (Russian, Spanish, Chinese) from the database at the user's request to fix content errors quickly.
+    -   **Changes:** Created and run to clean up the database and focus on a smaller set of working languages, which was a critical step in resolving user frustration.
+
+-   ****
+    -   **Importance:** Script to generate TTS audio for all missing languages using the  library and OpenAI TTS-1-HD.
+    -   **Changes:** Created and run to generate high-quality storyteller voices for Slovak, Russian, Spanish, and Chinese, completing the audio portion for all 8 languages before some were removed.
+</code_architecture>
+
+<pending_tasks>
+- Upload a background image for the main page.
+- Implement functionality to upload and associate a unique photo with each of the 13 tour stops.
+- Implement the enhanced descriptions feature by shortening the English text to highlight key facts.
+- Add Spanish and Chinese languages back with proper translated text (currently blocked as the  does not support text translation).
+- The user will provide professional Slovak audio files to replace the current AI-generated ones.
+</pending_tasks>
+
+<current_work>
+The immediate focus has been on correcting a critical bug where English text was displayed for non-English languages and completing the content for all requested languages.
+
+The user was frustrated that after selecting a language like Polish or Slovak, the tour stop titles and descriptions remained in English. This was traced to missing text data in the database.
+
+In the most recent messages, the user provided the complete, professional Slovak text for all 13 tour stops. A script, , was created and successfully executed to update the database with this content.
+
+Immediately after, the user provided the complete Russian text for all 13 stops. A new script, , was created to process and add this Russian text to the database. The session was paused at the user's request for a summary just before this script could be executed. The backend and frontend services have been restarted, and the application is in a stable state with 5 fully-functional languages.
+</current_work>
+
+<optional_next_step>
+Run the script  to add the complete Russian text content to the database, as per the user's last provision of content.
+</optional_next_step>
+
+<direct_quotes>
+**User's last request:** summarise project as I would like to continue in new session with out losing progress
+
+**AI engineer's last action before summary:** Let me first add the Russian content to the database, then provide you with a complete project summary:
+</direct_quotes>
