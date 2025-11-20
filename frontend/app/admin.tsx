@@ -1,10 +1,12 @@
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Modal, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Modal, ScrollView, Alert, Image, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useTourStore } from '../store/tourStore';
 import { useLanguageStore, LANGUAGES } from '../store/languageStore';
 import { useState, useEffect } from 'react';
+import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
