@@ -278,6 +278,66 @@ async def generate_all_audio(stop_id: str):
         logger.error(f"Error generating all audio: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# Image Upload Endpoints
+@api_router.post("/images/background")
+async def upload_background_image(request: ImageUploadRequest):
+    """Upload background image for the main page"""
+    try:
+        # Get or create app settings
+        settings = await db.app_settings.find_one({"id": "app_settings"})
+        
+        if settings:
+            await db.app_settings.update_one(
+                {"id": "app_settings"},
+                {"$set": {
+                    "background_image_base64": request.image_base64,
+                    "updated_at": datetime.utcnow()
+                }}
+            )
+        else:
+            new_settings = AppSettings(background_image_base64=request.image_base64)
+            await db.app_settings.insert_one(new_settings.dict())
+        
+        return {"message": "Background image uploaded successfully"}
+    except Exception as e:
+        logger.error(f"Error uploading background image: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/images/background")
+async def get_background_image():
+    """Get background image"""
+    try:
+        settings = await db.app_settings.find_one({"id": "app_settings"})
+        if not settings or not settings.get("background_image_base64"):
+            return {"background_image_base64": None}
+        return {"background_image_base64": settings["background_image_base64"]}
+    except Exception as e:
+        logger.error(f"Error fetching background image: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/images/tour-stop/{stop_id}")
+async def upload_tour_stop_image(stop_id: str, request: ImageUploadRequest):
+    """Upload image for a specific tour stop"""
+    try:
+        stop = await db.tour_stops.find_one({"id": stop_id})
+        if not stop:
+            raise HTTPException(status_code=404, detail="Tour stop not found")
+        
+        await db.tour_stops.update_one(
+            {"id": stop_id},
+            {"$set": {
+                "image_base64": request.image_base64,
+                "updated_at": datetime.utcnow()
+            }}
+        )
+        
+        return {"message": "Tour stop image uploaded successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error uploading tour stop image: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 # User Progress
 @api_router.get("/progress/{user_id}", response_model=UserProgress)
 async def get_user_progress(user_id: str):
