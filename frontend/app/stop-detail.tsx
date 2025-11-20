@@ -217,28 +217,50 @@ export default function StopDetail() {
       
       {audioBase64 && (
         <View style={styles.audioPlayer}>
+          {/* Progress Bar */}
           <View style={styles.progressContainer}>
             <Text style={styles.timeText}>{formatTime(playbackPosition)}</Text>
-            <View style={styles.progressBar}>
-              <View
-                style={[
-                  styles.progressFill,
-                  { width: `${(playbackPosition / playbackDuration) * 100}%` },
-                ]}
-              />
-            </View>
+            <TouchableOpacity 
+              style={styles.progressBarWrapper} 
+              activeOpacity={0.8}
+              onPress={handleProgressBarPress}
+            >
+              <View style={styles.progressBar}>
+                <View
+                  style={[
+                    styles.progressFill,
+                    { width: `${(playbackPosition / playbackDuration) * 100}%` },
+                  ]}
+                />
+              </View>
+            </TouchableOpacity>
             <Text style={styles.timeText}>{formatTime(playbackDuration)}</Text>
           </View>
           
+          {/* Skip Amount Indicator */}
+          <View style={styles.skipIndicator}>
+            <Text style={styles.skipText}>Skip: {skipAmount / 1000}s</Text>
+          </View>
+          
+          {/* Main Controls */}
           <View style={styles.controls}>
+            {/* Speed Control */}
             <TouchableOpacity onPress={changeSpeed} style={styles.speedButton}>
               <Text style={styles.speedText}>{playbackSpeed}x</Text>
+              <Text style={styles.speedLabel}>Speed</Text>
             </TouchableOpacity>
             
-            <TouchableOpacity onPress={handleStop} style={styles.controlButton}>
-              <Ionicons name="stop" size={32} color="#fff" />
+            {/* Skip Backward */}
+            <TouchableOpacity 
+              onPress={skipBackward} 
+              style={styles.skipButton}
+              disabled={!sound || playbackPosition === 0}
+            >
+              <Ionicons name="play-back" size={28} color="#FFD700" />
+              <Text style={styles.skipButtonText}>-{skipAmount / 1000}s</Text>
             </TouchableOpacity>
             
+            {/* Play/Pause Button */}
             <TouchableOpacity
               onPress={handlePlayPause}
               style={styles.playButton}
@@ -255,12 +277,20 @@ export default function StopDetail() {
               )}
             </TouchableOpacity>
             
-            <TouchableOpacity style={styles.controlButton}>
-              <Ionicons name="volume-medium" size={32} color="#fff" />
+            {/* Skip Forward */}
+            <TouchableOpacity 
+              onPress={skipForward} 
+              style={styles.skipButton}
+              disabled={!sound || playbackPosition >= playbackDuration}
+            >
+              <Ionicons name="play-forward" size={28} color="#FFD700" />
+              <Text style={styles.skipButtonText}>+{skipAmount / 1000}s</Text>
             </TouchableOpacity>
             
-            <TouchableOpacity style={styles.speedButton}>
-              <Ionicons name="download-outline" size={24} color="#fff" />
+            {/* Stop Button */}
+            <TouchableOpacity onPress={handleStop} style={styles.stopButton}>
+              <Ionicons name="stop" size={24} color="#FF5252" />
+              <Text style={styles.stopLabel}>Stop</Text>
             </TouchableOpacity>
           </View>
         </View>
