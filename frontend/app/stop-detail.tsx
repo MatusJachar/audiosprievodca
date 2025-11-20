@@ -105,6 +105,52 @@ export default function StopDetail() {
     }
   };
 
+  const skipBackward = async () => {
+    if (sound) {
+      try {
+        const status = await sound.getStatusAsync();
+        if (status.isLoaded) {
+          const newPosition = Math.max(0, playbackPosition - skipAmount);
+          await sound.setPositionAsync(newPosition);
+          setPlaybackPosition(newPosition);
+        }
+      } catch (error) {
+        console.error('Error skipping backward:', error);
+      }
+    }
+  };
+
+  const skipForward = async () => {
+    if (sound) {
+      try {
+        const status = await sound.getStatusAsync();
+        if (status.isLoaded) {
+          const newPosition = Math.min(playbackDuration, playbackPosition + skipAmount);
+          await sound.setPositionAsync(newPosition);
+          setPlaybackPosition(newPosition);
+        }
+      } catch (error) {
+        console.error('Error skipping forward:', error);
+      }
+    }
+  };
+
+  const handleProgressBarPress = async (event: any) => {
+    if (sound && playbackDuration > 0) {
+      try {
+        const { locationX } = event.nativeEvent;
+        const progressBarWidth = event.nativeEvent.target.offsetWidth || 300;
+        const percentage = locationX / progressBarWidth;
+        const newPosition = percentage * playbackDuration;
+        
+        await sound.setPositionAsync(newPosition);
+        setPlaybackPosition(newPosition);
+      } catch (error) {
+        console.error('Error seeking:', error);
+      }
+    }
+  };
+
   const formatTime = (millis: number) => {
     const minutes = Math.floor(millis / 60000);
     const seconds = Math.floor((millis % 60000) / 1000);
