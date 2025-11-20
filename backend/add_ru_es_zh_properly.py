@@ -7,7 +7,8 @@ import asyncio
 import base64
 from pymongo import MongoClient
 from dotenv import load_dotenv
-from emergentintegrations.llm.openai import OpenAI, OpenAITextToSpeech
+from openai import OpenAI
+from emergentintegrations.llm.openai import OpenAITextToSpeech
 import subprocess
 
 load_dotenv()
