@@ -54,20 +54,36 @@ export const useTourStore = create<TourState>((set, get) => ({
   fetchTourStops: async () => {
     set({ loading: true, error: null });
     try {
+      console.log('[TourStore] Fetching tour stops from:', `${API_URL}/api/tour-stops`);
       const response = await fetch(`${API_URL}/api/tour-stops`);
       if (!response.ok) throw new Error('Failed to fetch tour stops');
       const data = await response.json();
+      
+      // Debug: Check audio data for first stop
+      if (data.length > 0) {
+        const firstStop = data[0];
+        console.log('[TourStore] First stop audio keys:', Object.keys(firstStop.audio || {}));
+        console.log('[TourStore] First stop has English audio:', !!firstStop.audio?.en);
+        console.log('[TourStore] English audio length:', firstStop.audio?.en?.length || 0);
+      }
+      
       set({ tourStops: data, loading: false });
       
       // Cache data locally
       await AsyncStorage.setItem('tourStops', JSON.stringify(data));
+      console.log('[TourStore] Tour stops cached successfully');
     } catch (error) {
-      console.error('Error fetching tour stops:', error);
+      console.error('[TourStore] Error fetching tour stops:', error);
       // Try to load from cache
       try {
         const cached = await AsyncStorage.getItem('tourStops');
         if (cached) {
-          set({ tourStops: JSON.parse(cached), loading: false });
+          console.log('[TourStore] Loading from cache');
+          const cachedData = JSON.parse(cached);
+          if (cachedData.length > 0) {
+            console.log('[TourStore] Cached first stop has English audio:', !!cachedData[0].audio?.en);
+          }
+          set({ tourStops: cachedData, loading: false });
         } else {
           set({ error: 'Failed to load tour data', loading: false });
         }
