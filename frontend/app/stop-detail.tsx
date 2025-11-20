@@ -25,6 +25,17 @@ export default function StopDetail() {
   const audioBase64 = stop?.audio[selectedLanguage];
   const isCompleted = userProgress?.completed_stops.includes(stopId as string) || false;
 
+  // Debug logging
+  useEffect(() => {
+    if (stop) {
+      console.log('[StopDetail] Stop ID:', stopId);
+      console.log('[StopDetail] Selected Language:', selectedLanguage);
+      console.log('[StopDetail] Available audio languages:', Object.keys(stop.audio || {}));
+      console.log('[StopDetail] Has audio for selected language:', !!audioBase64);
+      console.log('[StopDetail] Audio base64 length:', audioBase64?.length || 0);
+    }
+  }, [stop, selectedLanguage, audioBase64]);
+
   useEffect(() => {
     return () => {
       if (sound) {
