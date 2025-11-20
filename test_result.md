@@ -214,7 +214,17 @@ backend:
           comment: "✅ PASS: Tour data initialization working. 13 tour stops with multilingual content properly initialized in database."
 
 frontend:
-  # No frontend testing performed as per instructions
+  - task: "Audio playback investigation - verify data flow from backend to player"
+    implemented: true
+    working: "NA"
+    file: "frontend/app/stop-detail.tsx, frontend/store/tourStore.ts"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "User reported audio not playing on mobile despite backend returning data. Added debug logging to track data flow. Created cache clearing utility. Need to verify if issue is caching, data format, or expo-av loading."
 
 metadata:
   created_by: "testing_agent"
