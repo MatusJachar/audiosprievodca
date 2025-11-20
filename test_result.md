@@ -231,4 +231,4 @@ test_plan:
 
 agent_communication:
     - agent: "testing"
-      message: "Comprehensive backend API testing completed successfully. All 9 core endpoints tested and working correctly. TTS audio generation functional, database operations working, user progress tracking operational. Backend URL correctly configured at https://castle-voice-guide.preview.emergentagent.com/api. All tests passed with 100% success rate."
+      message: "Comprehensive backend API testing completed successfully. All 9 core endpoints tested and working correctly. TTS audio generation functional, database operations working, user progress tracking operational. Backend URL correctly configured at https://spis-explorer-1.preview.emergentagent.com/api. All tests passed with 100% success rate."
