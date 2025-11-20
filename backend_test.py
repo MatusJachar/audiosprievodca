@@ -13,337 +13,234 @@ from typing import Dict, List, Any
 # Backend URL from environment - specifically for audio testing
 BACKEND_URL = "https://spis-explorer-1.preview.emergentagent.com/api"
 
-class APITester:
+class AudioDataTester:
     def __init__(self):
-        self.base_url = BASE_URL
-        self.session = requests.Session()
-        self.test_results = []
-        self.tour_stops = []
-        self.test_stop_id = None
-        
-    def log_result(self, test_name: str, success: bool, details: str = "", response_data: Any = None):
-        """Log test result"""
-        result = {
-            "test": test_name,
-            "success": success,
-            "details": details,
-            "response_data": response_data
+        self.results = {
+            "total_stops": 0,
+            "stops_with_audio": 0,
+            "audio_validation": {},
+            "missing_audio": [],
+            "invalid_audio": [],
+            "detailed_results": []
         }
-        self.test_results.append(result)
-        status = "✅ PASS" if success else "❌ FAIL"
-        print(f"{status}: {test_name}")
-        if details:
-            print(f"   Details: {details}")
-        if not success and response_data:
-            print(f"   Response: {response_data}")
-        print()
-
-    def test_root_endpoint(self):
-        """Test the root API endpoint"""
+    
+    def validate_base64(self, data: str) -> bool:
+        """Validate if string is proper base64"""
         try:
-            response = self.session.get(f"{self.base_url}/")
-            if response.status_code == 200:
-                data = response.json()
-                if "message" in data:
-                    self.log_result("Root endpoint", True, f"Message: {data['message']}")
-                else:
-                    self.log_result("Root endpoint", False, "No message in response", data)
-            else:
-                self.log_result("Root endpoint", False, f"Status: {response.status_code}", response.text)
-        except Exception as e:
-            self.log_result("Root endpoint", False, f"Exception: {str(e)}")
-
-    def test_initialize_tour_data(self):
-        """Initialize tour data if needed"""
+            if not data:
+                return False
+            # Check if it's valid base64
+            base64.b64decode(data)
+            return True
+        except Exception:
+            return False
+    
+    def test_tour_stops_audio_data(self):
+        """Test all tour stops for audio data availability"""
+        print("🎵 Testing Tour Stops Audio Data Availability")
+        print("=" * 60)
+        
         try:
-            response = self.session.post(f"{self.base_url}/init-tour-data")
-            if response.status_code == 200:
-                data = response.json()
-                self.log_result("Initialize tour data", True, data.get("message", ""))
-            else:
-                self.log_result("Initialize tour data", False, f"Status: {response.status_code}", response.text)
-        except Exception as e:
-            self.log_result("Initialize tour data", False, f"Exception: {str(e)}")
-
-    def test_get_all_tour_stops(self):
-        """Test GET /api/tour-stops - Fetch all tour stops"""
-        try:
-            response = self.session.get(f"{self.base_url}/tour-stops")
-            if response.status_code == 200:
-                data = response.json()
-                self.tour_stops = data
-                
-                # Check if we have stops
-                if not data:
-                    self.log_result("Get all tour stops", False, "No tour stops returned")
-                    return
-                
-                # Verify structure
-                stop_count = len(data)
-                languages = ["sk", "en", "de", "pl", "ru", "es", "hu", "zh"]
-                
-                # Check first stop structure
-                first_stop = data[0]
-                required_fields = ["id", "stop_number", "content"]
-                missing_fields = [field for field in required_fields if field not in first_stop]
-                
-                if missing_fields:
-                    self.log_result("Get all tour stops", False, f"Missing fields: {missing_fields}")
-                    return
-                
-                # Check language content
-                content = first_stop.get("content", {})
-                available_languages = list(content.keys())
-                
-                # Check if stops are ordered by stop_number
-                stop_numbers = [stop.get("stop_number") for stop in data]
-                is_ordered = stop_numbers == sorted(stop_numbers)
-                
-                # Store first stop ID for later tests
-                if data:
-                    self.test_stop_id = data[0]["id"]
-                
-                details = f"Found {stop_count} stops, Languages: {available_languages}, Ordered: {is_ordered}"
-                self.log_result("Get all tour stops", True, details)
-                
-            else:
-                self.log_result("Get all tour stops", False, f"Status: {response.status_code}", response.text)
-        except Exception as e:
-            self.log_result("Get all tour stops", False, f"Exception: {str(e)}")
-
-    def test_get_specific_tour_stop(self):
-        """Test GET /api/tour-stops/{stop_id} - Fetch specific tour stop"""
-        if not self.test_stop_id:
-            self.log_result("Get specific tour stop", False, "No test stop ID available")
-            return
+            # Get all tour stops
+            response = requests.get(f"{BACKEND_URL}/tour-stops", timeout=30)
             
-        try:
-            response = self.session.get(f"{self.base_url}/tour-stops/{self.test_stop_id}")
-            if response.status_code == 200:
-                data = response.json()
-                
-                # Verify structure
-                required_fields = ["id", "stop_number", "content"]
-                missing_fields = [field for field in required_fields if field not in data]
-                
-                if missing_fields:
-                    self.log_result("Get specific tour stop", False, f"Missing fields: {missing_fields}")
-                    return
-                
-                # Check language content
-                content = data.get("content", {})
-                available_languages = list(content.keys())
-                
-                details = f"Stop ID: {data['id']}, Languages: {available_languages}"
-                self.log_result("Get specific tour stop", True, details)
-                
-            else:
-                self.log_result("Get specific tour stop", False, f"Status: {response.status_code}", response.text)
-        except Exception as e:
-            self.log_result("Get specific tour stop", False, f"Exception: {str(e)}")
-
-    def test_generate_audio(self):
-        """Test POST /api/audio/generate - Generate TTS audio"""
-        if not self.test_stop_id:
-            self.log_result("Generate audio", False, "No test stop ID available")
-            return
+            if response.status_code != 200:
+                print(f"❌ Failed to fetch tour stops: {response.status_code}")
+                return False
             
-        try:
-            payload = {
-                "stop_id": self.test_stop_id,
-                "language": "en"
+            stops = response.json()
+            self.results["total_stops"] = len(stops)
+            
+            print(f"📍 Found {len(stops)} tour stops")
+            print()
+            
+            # Test each stop for audio data
+            for stop in stops:
+                stop_result = self.test_single_stop_audio(stop)
+                self.results["detailed_results"].append(stop_result)
+                
+                if stop_result["has_audio"]:
+                    self.results["stops_with_audio"] += 1
+            
+            return True
+            
+        except requests.exceptions.RequestException as e:
+            print(f"❌ Network error: {e}")
+            return False
+        except Exception as e:
+            print(f"❌ Unexpected error: {e}")
+            return False
+    
+    def test_single_stop_audio(self, stop: Dict[str, Any]) -> Dict[str, Any]:
+        """Test audio data for a single tour stop"""
+        stop_id = stop.get("id", "unknown")
+        stop_number = stop.get("stop_number", "unknown")
+        
+        result = {
+            "stop_id": stop_id,
+            "stop_number": stop_number,
+            "has_audio": False,
+            "languages_tested": ["en", "pl"],
+            "audio_status": {},
+            "required_fields": {},
+            "issues": []
+        }
+        
+        print(f"🔍 Testing Stop {stop_number} (ID: {stop_id[:8]}...)")
+        
+        # Check required fields
+        required_fields = ["id", "stop_number", "content", "audio", "created_at", "updated_at"]
+        for field in required_fields:
+            result["required_fields"][field] = field in stop
+            if field not in stop:
+                result["issues"].append(f"Missing required field: {field}")
+        
+        # Check audio data for English and Polish
+        audio_data = stop.get("audio", {})
+        
+        for lang in ["en", "pl"]:
+            audio_base64 = audio_data.get(lang, "")
+            
+            status = {
+                "present": bool(audio_base64),
+                "length": len(audio_base64) if audio_base64 else 0,
+                "valid_base64": False,
+                "sufficient_length": False
             }
             
-            response = self.session.post(f"{self.base_url}/audio/generate", json=payload)
-            if response.status_code == 200:
-                data = response.json()
+            if audio_base64:
+                # Validate base64 format
+                status["valid_base64"] = self.validate_base64(audio_base64)
                 
-                # Check if audio_base64 is returned
-                if "audio_base64" in data:
-                    audio_length = len(data["audio_base64"])
-                    details = f"Audio generated, Base64 length: {audio_length}"
-                    self.log_result("Generate audio", True, details)
+                # Check if length is reasonable (>100k characters as requested)
+                status["sufficient_length"] = len(audio_base64) > 100000
+                
+                if status["valid_base64"] and status["sufficient_length"]:
+                    print(f"  ✅ {lang.upper()}: Valid audio ({len(audio_base64):,} chars)")
+                elif status["valid_base64"]:
+                    print(f"  ⚠️  {lang.upper()}: Valid format but short ({len(audio_base64):,} chars)")
+                    result["issues"].append(f"{lang} audio too short: {len(audio_base64)} chars")
                 else:
-                    self.log_result("Generate audio", False, "No audio_base64 in response", data)
-                    
-            elif response.status_code == 500:
-                # Audio generation might fail due to budget limits - this is expected
-                error_text = response.text
-                if "budget" in error_text.lower() or "quota" in error_text.lower() or "billing" in error_text.lower():
-                    self.log_result("Generate audio", True, "Audio generation failed due to budget limits (expected)")
-                else:
-                    self.log_result("Generate audio", False, f"Status: {response.status_code}", response.text)
+                    print(f"  ❌ {lang.upper()}: Invalid base64 format")
+                    result["issues"].append(f"{lang} audio invalid base64")
             else:
-                self.log_result("Generate audio", False, f"Status: {response.status_code}", response.text)
-        except Exception as e:
-            self.log_result("Generate audio", False, f"Exception: {str(e)}")
-
-    def test_update_tour_stop(self):
-        """Test PUT /api/tour-stops/{stop_id} - Update tour stop content"""
-        if not self.test_stop_id:
-            self.log_result("Update tour stop", False, "No test stop ID available")
-            return
+                print(f"  ❌ {lang.upper()}: No audio data")
+                result["issues"].append(f"Missing {lang} audio")
             
-        try:
-            # Update English content
-            payload = {
-                "content": {
-                    "en": {
-                        "title": "Updated Welcome Title",
-                        "description": "This is an updated description for testing purposes."
-                    }
-                }
-            }
-            
-            response = self.session.put(f"{self.base_url}/tour-stops/{self.test_stop_id}", json=payload)
-            if response.status_code == 200:
-                data = response.json()
-                
-                # Verify the update
-                if "content" in data and "en" in data["content"]:
-                    updated_title = data["content"]["en"]["title"]
-                    if "Updated Welcome Title" in updated_title:
-                        self.log_result("Update tour stop", True, f"Title updated to: {updated_title}")
-                    else:
-                        self.log_result("Update tour stop", False, f"Title not updated correctly: {updated_title}")
-                else:
-                    self.log_result("Update tour stop", False, "Updated content not found in response", data)
-                    
-            else:
-                self.log_result("Update tour stop", False, f"Status: {response.status_code}", response.text)
-        except Exception as e:
-            self.log_result("Update tour stop", False, f"Exception: {str(e)}")
-
-    def test_get_user_progress(self):
-        """Test GET /api/progress/default-user - Get user progress"""
-        try:
-            response = self.session.get(f"{self.base_url}/progress/default-user")
-            if response.status_code == 200:
-                data = response.json()
-                
-                # Verify structure
-                required_fields = ["user_id", "completed_stops"]
-                missing_fields = [field for field in required_fields if field not in data]
-                
-                if missing_fields:
-                    self.log_result("Get user progress", False, f"Missing fields: {missing_fields}")
-                    return
-                
-                completed_count = len(data.get("completed_stops", []))
-                details = f"User: {data['user_id']}, Completed stops: {completed_count}"
-                self.log_result("Get user progress", True, details)
-                
-            else:
-                self.log_result("Get user progress", False, f"Status: {response.status_code}", response.text)
-        except Exception as e:
-            self.log_result("Get user progress", False, f"Exception: {str(e)}")
-
-    def test_mark_stop_complete(self):
-        """Test POST /api/progress/default-user/complete/{stop_id} - Mark stop as complete"""
-        if not self.test_stop_id:
-            self.log_result("Mark stop complete", False, "No test stop ID available")
-            return
-            
-        try:
-            response = self.session.post(f"{self.base_url}/progress/default-user/complete/{self.test_stop_id}")
-            if response.status_code == 200:
-                data = response.json()
-                
-                # Verify the response
-                if "message" in data:
-                    # Check if stop is now in completed list
-                    progress_response = self.session.get(f"{self.base_url}/progress/default-user")
-                    if progress_response.status_code == 200:
-                        progress_data = progress_response.json()
-                        completed_stops = progress_data.get("completed_stops", [])
-                        
-                        if self.test_stop_id in completed_stops:
-                            self.log_result("Mark stop complete", True, f"Stop {self.test_stop_id} marked as complete")
-                        else:
-                            self.log_result("Mark stop complete", False, f"Stop not found in completed list: {completed_stops}")
-                    else:
-                        self.log_result("Mark stop complete", True, "Stop marked complete (couldn't verify)")
-                else:
-                    self.log_result("Mark stop complete", False, "No message in response", data)
-                    
-            else:
-                self.log_result("Mark stop complete", False, f"Status: {response.status_code}", response.text)
-        except Exception as e:
-            self.log_result("Mark stop complete", False, f"Exception: {str(e)}")
-
-    def test_reset_progress(self):
-        """Test POST /api/progress/default-user/reset - Reset progress"""
-        try:
-            response = self.session.post(f"{self.base_url}/progress/default-user/reset")
-            if response.status_code == 200:
-                data = response.json()
-                
-                # Verify the response
-                if "message" in data:
-                    # Check if progress is reset
-                    progress_response = self.session.get(f"{self.base_url}/progress/default-user")
-                    if progress_response.status_code == 200:
-                        progress_data = progress_response.json()
-                        completed_stops = progress_data.get("completed_stops", [])
-                        
-                        if len(completed_stops) == 0:
-                            self.log_result("Reset progress", True, "Progress reset successfully")
-                        else:
-                            self.log_result("Reset progress", False, f"Progress not reset, still has: {completed_stops}")
-                    else:
-                        self.log_result("Reset progress", True, "Progress reset (couldn't verify)")
-                else:
-                    self.log_result("Reset progress", False, "No message in response", data)
-                    
-            else:
-                self.log_result("Reset progress", False, f"Status: {response.status_code}", response.text)
-        except Exception as e:
-            self.log_result("Reset progress", False, f"Exception: {str(e)}")
-
-    def run_all_tests(self):
-        """Run all API tests"""
-        print("=" * 60)
-        print("CASTLE AUDIO TOUR GUIDE API TESTING")
-        print("=" * 60)
+            result["audio_status"][lang] = status
+        
+        # Determine if stop has valid audio
+        en_valid = (result["audio_status"]["en"]["valid_base64"] and 
+                   result["audio_status"]["en"]["sufficient_length"])
+        pl_valid = (result["audio_status"]["pl"]["valid_base64"] and 
+                   result["audio_status"]["pl"]["sufficient_length"])
+        
+        result["has_audio"] = en_valid and pl_valid
+        
+        if not result["has_audio"]:
+            self.results["missing_audio"].append({
+                "stop_number": stop_number,
+                "stop_id": stop_id,
+                "issues": result["issues"]
+            })
+        
         print()
+        return result
+    
+    def test_specific_stop_detail(self, stop_id: str):
+        """Test fetching specific stop to verify data consistency"""
+        print(f"🔍 Testing specific stop detail: {stop_id[:8]}...")
         
-        # Test sequence
-        self.test_root_endpoint()
-        self.test_initialize_tour_data()
-        self.test_get_all_tour_stops()
-        self.test_get_specific_tour_stop()
-        self.test_generate_audio()
-        self.test_update_tour_stop()
-        self.test_get_user_progress()
-        self.test_mark_stop_complete()
-        self.test_reset_progress()
-        
-        # Summary
+        try:
+            response = requests.get(f"{BACKEND_URL}/tour-stops/{stop_id}", timeout=30)
+            
+            if response.status_code == 200:
+                stop = response.json()
+                print(f"  ✅ Successfully fetched stop {stop.get('stop_number', 'unknown')}")
+                return stop
+            else:
+                print(f"  ❌ Failed to fetch stop: {response.status_code}")
+                return None
+                
+        except Exception as e:
+            print(f"  ❌ Error fetching stop: {e}")
+            return None
+    
+    def generate_summary_report(self):
+        """Generate comprehensive summary report"""
+        print("\n" + "=" * 60)
+        print("📊 AUDIO DATA VALIDATION SUMMARY")
         print("=" * 60)
-        print("TEST SUMMARY")
-        print("=" * 60)
         
-        passed = sum(1 for result in self.test_results if result["success"])
-        total = len(self.test_results)
+        print(f"Total tour stops found: {self.results['total_stops']}")
+        print(f"Stops with complete audio: {self.results['stops_with_audio']}")
+        print(f"Success rate: {(self.results['stops_with_audio']/self.results['total_stops']*100):.1f}%")
         
-        print(f"Total Tests: {total}")
-        print(f"Passed: {passed}")
-        print(f"Failed: {total - passed}")
-        print(f"Success Rate: {(passed/total)*100:.1f}%")
-        print()
+        if self.results["missing_audio"]:
+            print(f"\n❌ STOPS WITH AUDIO ISSUES ({len(self.results['missing_audio'])}):")
+            for issue in self.results["missing_audio"]:
+                print(f"  Stop {issue['stop_number']}: {', '.join(issue['issues'])}")
         
-        # Failed tests details
-        failed_tests = [result for result in self.test_results if not result["success"]]
-        if failed_tests:
-            print("FAILED TESTS:")
-            for test in failed_tests:
-                print(f"❌ {test['test']}: {test['details']}")
+        print(f"\n📈 DETAILED AUDIO STATISTICS:")
+        en_count = sum(1 for r in self.results["detailed_results"] 
+                      if r["audio_status"]["en"]["valid_base64"] and r["audio_status"]["en"]["sufficient_length"])
+        pl_count = sum(1 for r in self.results["detailed_results"] 
+                      if r["audio_status"]["pl"]["valid_base64"] and r["audio_status"]["pl"]["sufficient_length"])
+        
+        print(f"  English audio available: {en_count}/{self.results['total_stops']} stops")
+        print(f"  Polish audio available: {pl_count}/{self.results['total_stops']} stops")
+        
+        # Audio length statistics
+        en_lengths = [r["audio_status"]["en"]["length"] for r in self.results["detailed_results"] 
+                     if r["audio_status"]["en"]["present"]]
+        pl_lengths = [r["audio_status"]["pl"]["length"] for r in self.results["detailed_results"] 
+                     if r["audio_status"]["pl"]["present"]]
+        
+        if en_lengths:
+            print(f"  English audio avg length: {sum(en_lengths)//len(en_lengths):,} chars")
+        if pl_lengths:
+            print(f"  Polish audio avg length: {sum(pl_lengths)//len(pl_lengths):,} chars")
+        
+        return self.results["stops_with_audio"] == self.results["total_stops"]
+
+def main():
+    """Main testing function"""
+    print("🏰 Spiš Castle Audio Tour - Backend Audio Data Testing")
+    print(f"🌐 Backend URL: {BACKEND_URL}")
+    print("=" * 60)
+    
+    tester = AudioDataTester()
+    
+    # Test root endpoint first
+    try:
+        response = requests.get(f"{BACKEND_URL}/", timeout=10)
+        if response.status_code == 200:
+            print("✅ Backend API is accessible")
         else:
-            print("🎉 ALL TESTS PASSED!")
+            print(f"⚠️  Backend API returned: {response.status_code}")
+    except Exception as e:
+        print(f"❌ Cannot reach backend API: {e}")
+        return False
+    
+    print()
+    
+    # Main audio data testing
+    success = tester.test_tour_stops_audio_data()
+    
+    if success:
+        # Generate final report
+        all_audio_complete = tester.generate_summary_report()
         
-        return passed == total
+        if all_audio_complete:
+            print("\n🎉 ALL TESTS PASSED: All tour stops have complete audio data!")
+            return True
+        else:
+            print("\n⚠️  TESTS COMPLETED WITH ISSUES: Some stops missing audio data")
+            return False
+    else:
+        print("\n❌ TESTING FAILED: Could not complete audio data validation")
+        return False
 
 if __name__ == "__main__":
-    tester = APITester()
-    success = tester.run_all_tests()
+    success = main()
     sys.exit(0 if success else 1)
