@@ -77,6 +77,14 @@ class AudioUploadRequest(BaseModel):
     language: str
     audio_base64: str
 
+class ImageUploadRequest(BaseModel):
+    image_base64: str
+
+class AppSettings(BaseModel):
+    id: str = Field(default_factory=lambda: "app_settings")
+    background_image_base64: Optional[str] = None
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
 # Routes
 @api_router.get("/")
 async def root():
