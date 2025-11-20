@@ -121,6 +121,81 @@ export default function Admin() {
     }
   };
 
+  const pickBackgroundImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [16, 9],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0].uri) {
+      setUploadingImage(true);
+      try {
+        const base64 = await FileSystem.readAsStringAsync(result.assets[0].uri, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+
+        const response = await fetch(`${API_URL}/api/images/background`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image_base64: base64 }),
+        });
+
+        if (response.ok) {
+          Alert.alert('Success', 'Background image uploaded successfully!');
+          setBackgroundImage(base64);
+        } else {
+          Alert.alert('Error', 'Failed to upload background image');
+        }
+      } catch (error) {
+        Alert.alert('Error', 'Network error occurred');
+      } finally {
+        setUploadingImage(false);
+      }
+    }
+  };
+
+  const pickStopImage = async (stopId: string) => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0].uri) {
+      setUploadingImage(true);
+      try {
+        const base64 = await FileSystem.readAsStringAsync(result.assets[0].uri, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+
+        const response = await fetch(`${API_URL}/api/images/tour-stop/${stopId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image_base64: base64 }),
+        });
+
+        if (response.ok) {
+          Alert.alert('Success', 'Tour stop image uploaded successfully!');
+          fetchTourStops();
+        } else {
+          Alert.alert('Error', 'Failed to upload tour stop image');
+        }
+      } catch (error) {
+        Alert.alert('Error', 'Network error occurred');
+      } finally {
+        setUploadingImage(false);
+      }
+    }
+  };
+
+  const handleManageImages = (stop: any) => {
+    setSelectedStop(stop);
+    setImageModalVisible(true);
+  };
+
   const changeEditLanguage = (langCode: string) => {
     if (selectedStop) {
       const content = selectedStop.content[langCode];
