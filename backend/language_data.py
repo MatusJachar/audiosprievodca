@@ -119,7 +119,7 @@ HUNGARIAN_AUDIO_URLS = {
     5: "https://customer-assets.emergentagent.com/job_spis-explorer-1/artifacts/i068226s_5.Hungarian.mp3",
 }
 
-# German audio URLs (stops 1-8 provided by user)
+# German audio URLs (ALL 13 stops provided by user)
 GERMAN_AUDIO_URLS = {
     1: "https://customer-assets.emergentagent.com/job_spis-explorer-1/artifacts/urpva1w5_1.German.mp3",
     2: "https://customer-assets.emergentagent.com/job_spis-explorer-1/artifacts/1tjelzvc_2.German.mp3",
@@ -129,4 +129,9 @@ GERMAN_AUDIO_URLS = {
     6: "https://customer-assets.emergentagent.com/job_spis-explorer-1/artifacts/ogg8ju0i_6.German.mp3",
     7: "https://customer-assets.emergentagent.com/job_spis-explorer-1/artifacts/kcaq6715_7.German.mp3",
     8: "https://customer-assets.emergentagent.com/job_spis-explorer-1/artifacts/b9ijhqzt_8.German.mp3",
+    9: "https://customer-assets.emergentagent.com/job_spis-explorer-1/artifacts/y38lc6kz_9.German.mp3",
+    10: "https://customer-assets.emergentagent.com/job_spis-explorer-1/artifacts/m205qh4w_10.German.mp3",
+    11: "https://customer-assets.emergentagent.com/job_spis-explorer-1/artifacts/9vhant0u_11.German.mp3",
+    12: "https://customer-assets.emergentagent.com/job_spis-explorer-1/artifacts/j3brelh3_12.German.mp3",
+    13: "https://customer-assets.emergentagent.com/job_spis-explorer-1/artifacts/mkpvbmhx_13.German.mp3",
 }
