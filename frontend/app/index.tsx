@@ -9,7 +9,7 @@ export default function Index() {
       <StatusBar style="light" />
       
       <View style={styles.content}>
-        <Ionicons name="castle" size={80} color="#FFD700" />
+        <Ionicons name="business" size={80} color="#FFD700" />
         
         <Text style={styles.title}>Spiš Castle</Text>
         <Text style={styles.subtitle}>Audio Tour Guide</Text>
