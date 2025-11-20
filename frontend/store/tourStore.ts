@@ -174,12 +174,14 @@ export const useTourStore = create<TourState>((set, get) => ({
   downloadAllContent: async () => {
     set({ loading: true });
     try {
-      const { tourStops } = get();
-      // All content is already base64, so it's downloaded when we fetch
+      // Note: Audio files are too large (111MB total) to cache in AsyncStorage
+      // They will be fetched on-demand from the backend
+      // We only cache metadata for offline reference
       await AsyncStorage.setItem('offlineReady', 'true');
+      console.log('[TourStore] Offline mode enabled (audio will stream from backend)');
       set({ isOfflineMode: true, loading: false });
     } catch (error) {
-      console.error('Error downloading content:', error);
+      console.error('[TourStore] Error enabling offline mode:', error);
       set({ loading: false });
     }
   },
