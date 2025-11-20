@@ -69,27 +69,27 @@ export const useTourStore = create<TourState>((set, get) => ({
       
       set({ tourStops: data, loading: false });
       
-      // Cache data locally
-      await AsyncStorage.setItem('tourStops', JSON.stringify(data));
-      console.log('[TourStore] Tour stops cached successfully');
+      // Cache only metadata (without audio) to avoid quota issues
+      // Audio files are too large (111MB total) for localStorage
+      try {
+        const metadataOnly = data.map((stop: TourStop) => ({
+          id: stop.id,
+          stop_number: stop.stop_number,
+          content: stop.content,
+          image_base64: stop.image_base64,
+          created_at: stop.created_at,
+          updated_at: stop.updated_at,
+          // Don't cache audio - it's too large
+        }));
+        await AsyncStorage.setItem('tourStopsMetadata', JSON.stringify(metadataOnly));
+        console.log('[TourStore] Tour stops metadata cached (without audio)');
+      } catch (cacheError) {
+        console.warn('[TourStore] Could not cache metadata:', cacheError);
+        // Non-critical error, continue anyway
+      }
     } catch (error) {
       console.error('[TourStore] Error fetching tour stops:', error);
-      // Try to load from cache
-      try {
-        const cached = await AsyncStorage.getItem('tourStops');
-        if (cached) {
-          console.log('[TourStore] Loading from cache');
-          const cachedData = JSON.parse(cached);
-          if (cachedData.length > 0) {
-            console.log('[TourStore] Cached first stop has English audio:', !!cachedData[0].audio?.en);
-          }
-          set({ tourStops: cachedData, loading: false });
-        } else {
-          set({ error: 'Failed to load tour data', loading: false });
-        }
-      } catch (e) {
-        set({ error: 'Failed to load tour data', loading: false });
-      }
+      set({ error: 'Failed to load tour data. Please check your internet connection.', loading: false });
     }
   },
   
