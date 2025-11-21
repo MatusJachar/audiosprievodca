@@ -44,9 +44,11 @@ class TourStopContent(BaseModel):
 
 class TourStop(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    stop_number: int
+    stop_number: Optional[int] = None
+    stop_name: Optional[str] = None  # For special stops like "Legends"
     image_base64: Optional[str] = None
     content: Dict[str, TourStopContent]  # language code -> content
+    legends: Optional[List[Dict]] = None  # For Legends stop
     audio: Dict[str, str] = {}  # language code -> audio_base64
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
