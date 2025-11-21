@@ -54,9 +54,11 @@ class TourStop(BaseModel):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
 class TourStopCreate(BaseModel):
-    stop_number: int
+    stop_number: Optional[int] = None
+    stop_name: Optional[str] = None
     image_base64: Optional[str] = None
     content: Dict[str, TourStopContent]
+    legends: Optional[List[Dict]] = None
 
 class TourStopUpdate(BaseModel):
     stop_number: Optional[int] = None
