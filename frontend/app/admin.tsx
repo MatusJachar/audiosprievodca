@@ -158,15 +158,6 @@ export default function Admin() {
     setImageModalVisible(true);
   };
 
-  const changeEditLanguage = (langCode: string) => {
-    if (selectedStop) {
-      const content = selectedStop.content[langCode];
-      setEditingLanguage(langCode);
-      setEditTitle(content?.title || '');
-      setEditDescription(content?.description || '');
-    }
-  };
-
   const renderStopItem = ({ item }: { item: any }) => {
     const audioCount = Object.keys(item.audio || {}).length;
     const hasImage = !!item.image_base64;
