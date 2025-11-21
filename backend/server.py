@@ -96,10 +96,22 @@ async def root():
 
 @api_router.get("/tour-stops", response_model=List[TourStop])
 async def get_tour_stops():
-    """Get all tour stops"""
+    """Get all tour stops - numbered stops first (1-13), then Legends at the end"""
     try:
-        stops = await db.tour_stops.find().sort("stop_number", 1).to_list(100)
-        return [TourStop(**stop) for stop in stops]
+        # Get all stops
+        all_stops = await db.tour_stops.find().to_list(100)
+        
+        # Separate numbered stops and Legends stop
+        numbered_stops = [s for s in all_stops if s.get('stop_number') is not None]
+        legends_stop = [s for s in all_stops if s.get('stop_name') == 'Legends']
+        
+        # Sort numbered stops by stop_number
+        numbered_stops.sort(key=lambda x: x.get('stop_number', 999))
+        
+        # Combine: numbered stops first, then Legends at the end
+        sorted_stops = numbered_stops + legends_stop
+        
+        return [TourStop(**stop) for stop in sorted_stops]
     except Exception as e:
         logger.error(f"Error fetching tour stops: {e}")
         raise HTTPException(status_code=500, detail=str(e))
