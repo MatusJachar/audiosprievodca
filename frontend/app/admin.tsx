@@ -40,11 +40,7 @@ export default function Admin() {
   };
 
   const handleEditStop = (stop: any) => {
-    setSelectedStop(stop);
-    setEditingLanguage('en');
-    setEditTitle(stop.content.en.title);
-    setEditDescription(stop.content.en.description);
-    setEditModalVisible(true);
+    router.push({ pathname: '/edit-stop', params: { stopId: stop.id } });
   };
 
   const handleSaveEdit = async () => {
