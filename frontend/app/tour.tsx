@@ -30,7 +30,7 @@ export default function Tour() {
   const renderTourStop = ({ item }: { item: any }) => {
     const content = item.content[selectedLanguage];
     const completed = isStopCompleted(item.id);
-    const isLegendsStop = item.stop_number === 14;
+    const isLegendsStop = item.stop_name === 'Legends' || item.stop_number === null;
     const legendCount = item.legends?.length || 0;
 
     return (
@@ -42,7 +42,11 @@ export default function Tour() {
         })}
       >
         <View style={styles.stopNumber}>
-          <Text style={styles.stopNumberText}>{item.stop_number}</Text>
+          {isLegendsStop ? (
+            <Ionicons name="book" size={24} color="#FFD700" />
+          ) : (
+            <Text style={styles.stopNumberText}>{item.stop_number}</Text>
+          )}
         </View>
         
         <View style={styles.stopContent}>
