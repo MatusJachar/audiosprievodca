@@ -1,281 +1,461 @@
+diff --git a/frontend/app/admin.tsx b/frontend/app/admin.tsx
+index def3bc1..2c59125 100644
+--- a/frontend/app/admin.tsx
++++ b/frontend/app/admin.tsx
+@@ -1,9 +1,8 @@
+-import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Modal, ScrollView, Alert, Image, ActivityIndicator } from 'react-native';
++import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, ScrollView, Alert, Image, ActivityIndicator } from 'react-native';
+ import { router } from 'expo-router';
+ import { StatusBar } from 'expo-status-bar';
+ import { Ionicons } from '@expo/vector-icons';
+ import { useTourStore } from '../store/tourStore';
+-import { useLanguageStore, LANGUAGES } from '../store/languageStore';
+ import { useState, useEffect } from 'react';
+ import * as ImagePicker from 'expo-image-picker';
+ import * as FileSystem from 'expo-file-system';
+@@ -13,11 +12,7 @@ const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+ export default function Admin() {
+   const { tourStops, fetchTourStops } = useTourStore();
+   const [selectedStop, setSelectedStop] = useState<any>(null);
+-  const [editModalVisible, setEditModalVisible] = useState(false);
+   const [imageModalVisible, setImageModalVisible] = useState(false);
+-  const [editingLanguage, setEditingLanguage] = useState('en');
+-  const [editTitle, setEditTitle] = useState('');
+-  const [editDescription, setEditDescription] = useState('');
+   const [generating, setGenerating] = useState(false);
+   const [uploadingImage, setUploadingImage] = useState(false);
+   const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
+@@ -40,41 +35,7 @@ export default function Admin() {
+   };
+ 
+   const handleEditStop = (stop: any) => {
+-    setSelectedStop(stop);
+-    setEditingLanguage('en');
+-    setEditTitle(stop.content.en.title);
+-    setEditDescription(stop.content.en.description);
+-    setEditModalVisible(true);
+-  };
+-
+-  const handleSaveEdit = async () => {
+-    if (!selectedStop) return;
+-
+-    try {
+-      const updatedContent = {
+-        ...selectedStop.content,
+-        [editingLanguage]: {
+-          title: editTitle,
+-          description: editDescription,
+-        },
+-      };
+-
+-      const response = await fetch(`${API_URL}/api/tour-stops/${selectedStop.id}`, {
+-        method: 'PUT',
+-        headers: { 'Content-Type': 'application/json' },
+-        body: JSON.stringify({ content: updatedContent }),
+-      });
+-
+-      if (response.ok) {
+-        Alert.alert('Success', 'Tour stop updated successfully!');
+-        setEditModalVisible(false);
+-        fetchTourStops();
+-      } else {
+-        Alert.alert('Error', 'Failed to update tour stop');
+-      }
+-    } catch (error) {
+-      Alert.alert('Error', 'Network error occurred');
+-    }
++    router.push({ pathname: '/edit-stop', params: { stopId: stop.id } });
+   };
+ 
+   const handleGenerateAudio = async (stopId: string, language: string) => {
+@@ -196,15 +157,6 @@ export default function Admin() {
+     setImageModalVisible(true);
+   };
+ 
+-  const changeEditLanguage = (langCode: string) => {
+-    if (selectedStop) {
+-      const content = selectedStop.content[langCode];
+-      setEditingLanguage(langCode);
+-      setEditTitle(content?.title || '');
+-      setEditDescription(content?.description || '');
+-    }
+-  };
+-
+   const renderStopItem = ({ item }: { item: any }) => {
+     const audioCount = Object.keys(item.audio || {}).length;
+     const hasImage = !!item.image_base64;
+@@ -229,7 +181,7 @@ export default function Admin() {
+             onPress={() => handleEditStop(item)}
+           >
+             <Ionicons name="create-outline" size={20} color="#fff" />
+-            <Text style={styles.actionButtonText}>Edit</Text>
++            <Text style={styles.actionButtonText}>Edit Text</Text>
+           </TouchableOpacity>
+           
+           <TouchableOpacity
+@@ -302,79 +254,6 @@ export default function Admin() {
+         contentContainerStyle={styles.listContent}
+       />
+       
+-      {/* Edit Modal */}
+-      <Modal
+-        visible={editModalVisible}
+-        animationType="slide"
+-        transparent={true}
+-      >
+-        <View style={styles.modalContainer}>
+-          <View style={styles.modalContent}>
+-            <View style={styles.modalHeader}>
+-              <Text style={styles.modalTitle}>
+-                Edit Stop {selectedStop?.stop_number}
+-              </Text>
+-              <TouchableOpacity onPress={() => setEditModalVisible(false)}>
+-                <Ionicons name="close" size={28} color="#fff" />
+-              </TouchableOpacity>
+-            </View>
+-            
+-            {/* Language Selector */}
+-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.languageTabs}>
+-              {LANGUAGES.map((lang) => (
+-                <TouchableOpacity
+-                  key={lang.code}
+-                  style={[
+-                    styles.languageTab,
+-                    editingLanguage === lang.code && styles.languageTabActive,
+-                  ]}
+-                  onPress={() => changeEditLanguage(lang.code)}
+-                >
+-                  <Text style={styles.languageTabText}>{lang.flag}</Text>
+-                  <Text style={[
+-                    styles.languageTabLabel,
+-                    editingLanguage === lang.code && styles.languageTabLabelActive,
+-                  ]}>
+-                    {lang.code.toUpperCase()}
+-                  </Text>
+-                </TouchableOpacity>
+-              ))}
+-            </ScrollView>
+-            
+-            <ScrollView style={styles.formContent}>
+-              <Text style={styles.label}>Title</Text>
+-              <TextInput
+-                style={styles.input}
+-                value={editTitle}
+-                onChangeText={setEditTitle}
+-                placeholder="Enter title"
+-                placeholderTextColor="#666"
+-              />
+-              
+-              <Text style={styles.label}>Description</Text>
+-              <TextInput
+-                style={[styles.input, styles.textArea]}
+-                value={editDescription}
+-                onChangeText={setEditDescription}
+-                placeholder="Enter description"
+-                placeholderTextColor="#666"
+-                multiline
+-                numberOfLines={10}
+-                textAlignVertical="top"
+-              />
+-              
+-              <TouchableOpacity
+-                style={styles.saveButton}
+-                onPress={handleSaveEdit}
+-              >
+-                <Ionicons name="checkmark" size={20} color="#000" />
+-                <Text style={styles.saveButtonText}>Save Changes</Text>
+-              </TouchableOpacity>
+-            </ScrollView>
+-          </View>
+-        </View>
+-      </Modal>
+-
+       {/* Image Upload Modal */}
+       <Modal
+         visible={imageModalVisible}
 diff --git a/model.patch b/model.patch
-index 03b4a71..e69de29 100644
+index da7ea65..cc463be 100644
 --- a/model.patch
 +++ b/model.patch
-@@ -1,276 +0,0 @@
--diff --git a/backend/server.py b/backend/server.py
--index e8bf838..1d6cc6a 100644
----- a/backend/server.py
--+++ b/backend/server.py
--@@ -44,17 +44,21 @@ class TourStopContent(BaseModel):
-- 
-- class TourStop(BaseModel):
--     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
---    stop_number: int
--+    stop_number: Optional[int] = None
--+    stop_name: Optional[str] = None  # For special stops like "Legends"
--     image_base64: Optional[str] = None
--     content: Dict[str, TourStopContent]  # language code -> content
--+    legends: Optional[List[Dict]] = None  # For Legends stop
--     audio: Dict[str, str] = {}  # language code -> audio_base64
--     created_at: datetime = Field(default_factory=datetime.utcnow)
--     updated_at: datetime = Field(default_factory=datetime.utcnow)
-- 
-- class TourStopCreate(BaseModel):
---    stop_number: int
--+    stop_number: Optional[int] = None
--+    stop_name: Optional[str] = None
--     image_base64: Optional[str] = None
--     content: Dict[str, TourStopContent]
--+    legends: Optional[List[Dict]] = None
-- 
-- class TourStopUpdate(BaseModel):
--     stop_number: Optional[int] = None
+@@ -1,281 +0,0 @@
 -diff --git a/model.patch b/model.patch
--index c9a9fb4..e69de29 100644
+-index 03b4a71..e69de29 100644
 ---- a/model.patch
 -+++ b/model.patch
--@@ -1,208 +0,0 @@
+-@@ -1,276 +0,0 @@
+--diff --git a/backend/server.py b/backend/server.py
+--index e8bf838..1d6cc6a 100644
+----- a/backend/server.py
+--+++ b/backend/server.py
+--@@ -44,17 +44,21 @@ class TourStopContent(BaseModel):
+-- 
+-- class TourStop(BaseModel):
+--     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+---    stop_number: int
+--+    stop_number: Optional[int] = None
+--+    stop_name: Optional[str] = None  # For special stops like "Legends"
+--     image_base64: Optional[str] = None
+--     content: Dict[str, TourStopContent]  # language code -> content
+--+    legends: Optional[List[Dict]] = None  # For Legends stop
+--     audio: Dict[str, str] = {}  # language code -> audio_base64
+--     created_at: datetime = Field(default_factory=datetime.utcnow)
+--     updated_at: datetime = Field(default_factory=datetime.utcnow)
+-- 
+-- class TourStopCreate(BaseModel):
+---    stop_number: int
+--+    stop_number: Optional[int] = None
+--+    stop_name: Optional[str] = None
+--     image_base64: Optional[str] = None
+--     content: Dict[str, TourStopContent]
+--+    legends: Optional[List[Dict]] = None
+-- 
+-- class TourStopUpdate(BaseModel):
+--     stop_number: Optional[int] = None
 --diff --git a/model.patch b/model.patch
---index 0a4aa3a..e69de29 100644
+--index c9a9fb4..e69de29 100644
 ----- a/model.patch
 --+++ b/model.patch
---@@ -1,189 +0,0 @@
+--@@ -1,208 +0,0 @@
 ---diff --git a/model.patch b/model.patch
----index ff4a736..e69de29 100644
+---index 0a4aa3a..e69de29 100644
 ------ a/model.patch
 ---+++ b/model.patch
----@@ -1,184 +0,0 @@
+---@@ -1,189 +0,0 @@
 ----diff --git a/model.patch b/model.patch
-----index 6a43fea..e69de29 100644
+----index ff4a736..e69de29 100644
 ------- a/model.patch
 ----+++ b/model.patch
-----@@ -1,36 +0,0 @@
------diff --git a/frontend/app/settings.tsx b/frontend/app/settings.tsx
------index 1f1f112..1181a51 100644
--------- a/frontend/app/settings.tsx
------+++ b/frontend/app/settings.tsx
------@@ -152,11 +152,30 @@ export default function Settings() {
------           </TouchableOpacity>
------         </View>
------         
------+        <View style={styles.section}>
------+          <Text style={styles.sectionTitle}>Admin</Text>
------+          <TouchableOpacity
------+            style={styles.settingCard}
------+            onPress={() => router.push('/admin')}
------+          >
------+            <View style={styles.settingLeft}>
------+              <Ionicons name="shield-checkmark" size={24} color="#FF5252" />
------+              <View style={styles.settingInfo}>
------+                <Text style={styles.settingLabel}>Admin Panel</Text>
------+                <Text style={styles.settingSubtext}>
------+                  Edit tour stops and generate audio
------+                </Text>
------+              </View>
------+            </View>
------+            <Ionicons name="chevron-forward" size={24} color="#aaa" />
------+          </TouchableOpacity>
------+        </View>
------+        
------         <View style={styles.section}>
------           <Text style={styles.sectionTitle}>About</Text>
------           <View style={styles.settingCard}>
------             <View style={styles.settingLeft}>
-------              <Ionicons name="castle" size={24} color="#FFD700" />
------+              <Ionicons name="business" size={24} color="#FFD700" />
------               <View style={styles.settingInfo}>
------                 <Text style={styles.settingLabel}>Spiš Castle Audio Tour</Text>
------                 <Text style={styles.settingSubtext}>Version 1.0.0</Text>
-----diff --git a/test_result.md b/test_result.md
-----index 187cba4..d49f7bf 100644
-------- a/test_result.md
-----+++ b/test_result.md
-----@@ -100,4 +100,135 @@
----- 
----- #====================================================================================================
----- # Testing Data - Main Agent and testing sub agent both should log testing data below this section
------#====================================================================================================
-----\ No newline at end of file
-----+#====================================================================================================
-----+
-----+user_problem_statement: "Castle Audio Tour Guide API Testing - Test all backend functionality including tour stops, audio generation, and user progress tracking"
-----+
-----+backend:
-----+  - task: "GET /api/tour-stops - Fetch all tour stops"
-----+    implemented: true
-----+    working: true
-----+    file: "backend/server.py"
-----+    stuck_count: 0
-----+    priority: "high"
-----+    needs_retesting: false
-----+    status_history:
-----+        - working: true
-----+          agent: "testing"
-----+          comment: "✅ PASS: Successfully fetched all 13 tour stops with content in all 8 languages (sk, en, de, pl, ru, es, hu, zh). Stops are properly ordered by stop_number (1-13). All required fields present."
-----+
-----+  - task: "GET /api/tour-stops/{stop_id} - Fetch specific tour stop"
-----+    implemented: true
-----+    working: true
-----+    file: "backend/server.py"
-----+    stuck_count: 0
-----+    priority: "high"
-----+    needs_retesting: false
-----+    status_history:
-----+        - working: true
-----+          agent: "testing"
-----+          comment: "✅ PASS: Successfully fetched specific tour stop by ID. Content structure verified with all 8 languages available. All required fields present."
-----+
-----+  - task: "POST /api/audio/generate - Generate TTS audio"
-----+    implemented: true
-----+    working: true
-----+    file: "backend/server.py"
-----+    stuck_count: 0
-----+    priority: "high"
-----+    needs_retesting: false
-----+    status_history:
-----+        - working: true
-----+          agent: "testing"
-----+          comment: "✅ PASS: Successfully generated TTS audio for English language. Returned base64 encoded audio (341120 characters). OpenAI TTS integration working correctly."
-----+
-----+  - task: "PUT /api/tour-stops/{stop_id} - Update tour stop content"
-----+    implemented: true
-----+    working: true
-----+    file: "backend/server.py"
-----+    stuck_count: 0
-----+    priority: "high"
-----+    needs_retesting: false
-----+    status_history:
-----+        - working: true
-----+          agent: "testing"
-----+          comment: "✅ PASS: Successfully updated tour stop content. English title and description updated correctly. Changes persist in database."
-----+
-----+  - task: "GET /api/progress/default-user - Get user progress"
-----+    implemented: true
-----+    working: true
-----+    file: "backend/server.py"
-----+    stuck_count: 0
-----+    priority: "high"
-----+    needs_retesting: false
-----+    status_history:
-----+        - working: true
-----+          agent: "testing"
-----+          comment: "✅ PASS: Successfully retrieved user progress. Progress tracking structure correct with user_id and completed_stops array."
-----+
-----+  - task: "POST /api/progress/default-user/complete/{stop_id} - Mark stop complete"
-----+    implemented: true
-----+    working: true
-----+    file: "backend/server.py"
-----+    stuck_count: 0
-----+    priority: "high"
-----+    needs_retesting: false
-----+    status_history:
-----+        - working: true
-----+          agent: "testing"
-----+          comment: "✅ PASS: Successfully marked tour stop as complete. Stop ID correctly added to completed_stops array. Progress persistence verified."
-----+
-----+  - task: "POST /api/progress/default-user/reset - Reset progress"
-----+    implemented: true
-----+    working: true
-----+    file: "backend/server.py"
-----+    stuck_count: 0
-----+    priority: "high"
-----+    needs_retesting: false
-----+    status_history:
-----+        - working: true
-----+          agent: "testing"
-----+          comment: "✅ PASS: Successfully reset user progress. completed_stops array cleared. Reset functionality working correctly."
-----+
-----+  - task: "Root API endpoint - GET /api/"
-----+    implemented: true
-----+    working: true
-----+    file: "backend/server.py"
-----+    stuck_count: 0
-----+    priority: "medium"
-----+    needs_retesting: false
-----+    status_history:
-----+        - working: true
-----+          agent: "testing"
-----+          comment: "✅ PASS: Root API endpoint responding correctly with welcome message."
-----+
-----+  - task: "Tour data initialization - POST /api/init-tour-data"
-----+    implemented: true
-----+    working: true
-----+    file: "backend/server.py"
-----+    stuck_count: 0
-----+    priority: "medium"
-----+    needs_retesting: false
-----+    status_history:
-----+        - working: true
-----+          agent: "testing"
-----+          comment: "✅ PASS: Tour data initialization working. 13 tour stops with multilingual content properly initialized in database."
-----+
-----+frontend:
-----+  # No frontend testing performed as per instructions
-----+
-----+metadata:
-----+  created_by: "testing_agent"
-----+  version: "1.0"
-----+  test_sequence: 1
-----+  run_ui: false
-----+
-----+test_plan:
-----+  current_focus:
-----+    - "All backend API endpoints tested and verified"
-----+  stuck_tasks: []
-----+  test_all: true
-----+  test_priority: "high_first"
-----+
-----+agent_communication:
-----+    - agent: "testing"
-----+      message: "Comprehensive backend API testing completed successfully. All 9 core endpoints tested and working correctly. TTS audio generation functional, database operations working, user progress tracking operational. Backend URL correctly configured at https://castle-legends-1.preview.emergentagent.com/api. All tests passed with 100% success rate."
-----\ No newline at end of file
+----@@ -1,184 +0,0 @@
+-----diff --git a/model.patch b/model.patch
+-----index 6a43fea..e69de29 100644
+-------- a/model.patch
+-----+++ b/model.patch
+-----@@ -1,36 +0,0 @@
+------diff --git a/frontend/app/settings.tsx b/frontend/app/settings.tsx
+------index 1f1f112..1181a51 100644
+--------- a/frontend/app/settings.tsx
+------+++ b/frontend/app/settings.tsx
+------@@ -152,11 +152,30 @@ export default function Settings() {
+------           </TouchableOpacity>
+------         </View>
+------         
+------+        <View style={styles.section}>
+------+          <Text style={styles.sectionTitle}>Admin</Text>
+------+          <TouchableOpacity
+------+            style={styles.settingCard}
+------+            onPress={() => router.push('/admin')}
+------+          >
+------+            <View style={styles.settingLeft}>
+------+              <Ionicons name="shield-checkmark" size={24} color="#FF5252" />
+------+              <View style={styles.settingInfo}>
+------+                <Text style={styles.settingLabel}>Admin Panel</Text>
+------+                <Text style={styles.settingSubtext}>
+------+                  Edit tour stops and generate audio
+------+                </Text>
+------+              </View>
+------+            </View>
+------+            <Ionicons name="chevron-forward" size={24} color="#aaa" />
+------+          </TouchableOpacity>
+------+        </View>
+------+        
+------         <View style={styles.section}>
+------           <Text style={styles.sectionTitle}>About</Text>
+------           <View style={styles.settingCard}>
+------             <View style={styles.settingLeft}>
+-------              <Ionicons name="castle" size={24} color="#FFD700" />
+------+              <Ionicons name="business" size={24} color="#FFD700" />
+------               <View style={styles.settingInfo}>
+------                 <Text style={styles.settingLabel}>Spiš Castle Audio Tour</Text>
+------                 <Text style={styles.settingSubtext}>Version 1.0.0</Text>
+-----diff --git a/test_result.md b/test_result.md
+-----index 187cba4..d49f7bf 100644
+-------- a/test_result.md
+-----+++ b/test_result.md
+-----@@ -100,4 +100,135 @@
+----- 
+----- #====================================================================================================
+----- # Testing Data - Main Agent and testing sub agent both should log testing data below this section
+------#====================================================================================================
+-----\ No newline at end of file
+-----+#====================================================================================================
+-----+
+-----+user_problem_statement: "Castle Audio Tour Guide API Testing - Test all backend functionality including tour stops, audio generation, and user progress tracking"
+-----+
+-----+backend:
+-----+  - task: "GET /api/tour-stops - Fetch all tour stops"
+-----+    implemented: true
+-----+    working: true
+-----+    file: "backend/server.py"
+-----+    stuck_count: 0
+-----+    priority: "high"
+-----+    needs_retesting: false
+-----+    status_history:
+-----+        - working: true
+-----+          agent: "testing"
+-----+          comment: "✅ PASS: Successfully fetched all 13 tour stops with content in all 8 languages (sk, en, de, pl, ru, es, hu, zh). Stops are properly ordered by stop_number (1-13). All required fields present."
+-----+
+-----+  - task: "GET /api/tour-stops/{stop_id} - Fetch specific tour stop"
+-----+    implemented: true
+-----+    working: true
+-----+    file: "backend/server.py"
+-----+    stuck_count: 0
+-----+    priority: "high"
+-----+    needs_retesting: false
+-----+    status_history:
+-----+        - working: true
+-----+          agent: "testing"
+-----+          comment: "✅ PASS: Successfully fetched specific tour stop by ID. Content structure verified with all 8 languages available. All required fields present."
+-----+
+-----+  - task: "POST /api/audio/generate - Generate TTS audio"
+-----+    implemented: true
+-----+    working: true
+-----+    file: "backend/server.py"
+-----+    stuck_count: 0
+-----+    priority: "high"
+-----+    needs_retesting: false
+-----+    status_history:
+-----+        - working: true
+-----+          agent: "testing"
+-----+          comment: "✅ PASS: Successfully generated TTS audio for English language. Returned base64 encoded audio (341120 characters). OpenAI TTS integration working correctly."
+-----+
+-----+  - task: "PUT /api/tour-stops/{stop_id} - Update tour stop content"
+-----+    implemented: true
+-----+    working: true
+-----+    file: "backend/server.py"
+-----+    stuck_count: 0
+-----+    priority: "high"
+-----+    needs_retesting: false
+-----+    status_history:
+-----+        - working: true
+-----+          agent: "testing"
+-----+          comment: "✅ PASS: Successfully updated tour stop content. English title and description updated correctly. Changes persist in database."
+-----+
+-----+  - task: "GET /api/progress/default-user - Get user progress"
+-----+    implemented: true
+-----+    working: true
+-----+    file: "backend/server.py"
+-----+    stuck_count: 0
+-----+    priority: "high"
+-----+    needs_retesting: false
+-----+    status_history:
+-----+        - working: true
+-----+          agent: "testing"
+-----+          comment: "✅ PASS: Successfully retrieved user progress. Progress tracking structure correct with user_id and completed_stops array."
+-----+
+-----+  - task: "POST /api/progress/default-user/complete/{stop_id} - Mark stop complete"
+-----+    implemented: true
+-----+    working: true
+-----+    file: "backend/server.py"
+-----+    stuck_count: 0
+-----+    priority: "high"
+-----+    needs_retesting: false
+-----+    status_history:
+-----+        - working: true
+-----+          agent: "testing"
+-----+          comment: "✅ PASS: Successfully marked tour stop as complete. Stop ID correctly added to completed_stops array. Progress persistence verified."
+-----+
+-----+  - task: "POST /api/progress/default-user/reset - Reset progress"
+-----+    implemented: true
+-----+    working: true
+-----+    file: "backend/server.py"
+-----+    stuck_count: 0
+-----+    priority: "high"
+-----+    needs_retesting: false
+-----+    status_history:
+-----+        - working: true
+-----+          agent: "testing"
+-----+          comment: "✅ PASS: Successfully reset user progress. completed_stops array cleared. Reset functionality working correctly."
+-----+
+-----+  - task: "Root API endpoint - GET /api/"
+-----+    implemented: true
+-----+    working: true
+-----+    file: "backend/server.py"
+-----+    stuck_count: 0
+-----+    priority: "medium"
+-----+    needs_retesting: false
+-----+    status_history:
+-----+        - working: true
+-----+          agent: "testing"
+-----+          comment: "✅ PASS: Root API endpoint responding correctly with welcome message."
+-----+
+-----+  - task: "Tour data initialization - POST /api/init-tour-data"
+-----+    implemented: true
+-----+    working: true
+-----+    file: "backend/server.py"
+-----+    stuck_count: 0
+-----+    priority: "medium"
+-----+    needs_retesting: false
+-----+    status_history:
+-----+        - working: true
+-----+          agent: "testing"
+-----+          comment: "✅ PASS: Tour data initialization working. 13 tour stops with multilingual content properly initialized in database."
+-----+
+-----+frontend:
+-----+  # No frontend testing performed as per instructions
+-----+
+-----+metadata:
+-----+  created_by: "testing_agent"
+-----+  version: "1.0"
+-----+  test_sequence: 1
+-----+  run_ui: false
+-----+
+-----+test_plan:
+-----+  current_focus:
+-----+    - "All backend API endpoints tested and verified"
+-----+  stuck_tasks: []
+-----+  test_all: true
+-----+  test_priority: "high_first"
+-----+
+-----+agent_communication:
+-----+    - agent: "testing"
+-----+      message: "Comprehensive backend API testing completed successfully. All 9 core endpoints tested and working correctly. TTS audio generation functional, database operations working, user progress tracking operational. Backend URL correctly configured at https://castle-legends-1.preview.emergentagent.com/api. All tests passed with 100% success rate."
+-----\ No newline at end of file
+---diff --git a/test_result.md b/test_result.md
+---index 5d63878..2e0bbdd 100644
+------ a/test_result.md
+---+++ b/test_result.md
+---@@ -243,4 +243,6 @@ agent_communication:
+---     - agent: "testing"
+---       message: "Comprehensive backend API testing completed successfully. All 9 core endpoints tested and working correctly. TTS audio generation functional, database operations working, user progress tracking operational. Backend URL correctly configured at https://castle-legends-1.preview.emergentagent.com/api. All tests passed with 100% success rate."
+---     - agent: "main"
+----      message: "Investigating audio playback issue reported by user on mobile. Backend verified to be returning audio data correctly (1.16MB base64 for stop 1). Added debug logging to tourStore.ts and stop-detail.tsx to trace data flow. Created clear-cache.tsx utility page to help users resolve caching issues. Added troubleshooting section in settings. Restarted Expo service. Ready for backend testing."
+---\ No newline at end of file
+---+      message: "Investigating audio playback issue reported by user on mobile. Backend verified to be returning audio data correctly (1.16MB base64 for stop 1). Added debug logging to tourStore.ts and stop-detail.tsx to trace data flow. Created clear-cache.tsx utility page to help users resolve caching issues. Added troubleshooting section in settings. Restarted Expo service. Ready for backend testing."
+---+    - agent: "testing"
+---+      message: "AUDIO DATA VALIDATION COMPLETE: Comprehensive testing of all 13 tour stops confirms complete audio data availability. All stops have valid base64 audio for both English and Polish languages. Audio sizes range from 932KB to 10.2MB per language. Total audio data: 59MB English + 52MB Polish. All required fields present. Backend is delivering complete, valid audio data - mobile playback issue is NOT due to missing/invalid backend data. Issue likely in frontend audio player or mobile-specific handling."
+---\ No newline at end of file
 --diff --git a/test_result.md b/test_result.md
---index 5d63878..2e0bbdd 100644
+--index cf8b290..14bfca2 100644
 ----- a/test_result.md
 --+++ b/test_result.md
---@@ -243,4 +243,6 @@ agent_communication:
+--@@ -215,15 +215,18 @@ backend:
+-- 
+--   - task: "Legends tour stop - GET /api/tour-stops (includes unnumbered Legends stop)"
+--     implemented: true
+---    working: "NA"
+--+    working: true
+--     file: "backend/server.py, backend/create_legends_and_fix_russian.py"
+--     stuck_count: 0
+--     priority: "high"
+---    needs_retesting: true
+--+    needs_retesting: false
+--     status_history:
+--         - working: "NA"
+--           agent: "main"
+--           comment: "Created unnumbered 'Legends' tour stop with 4 legends in 6 languages. Each legend has nested content structure with title and description. Stop has stop_name='Legends' and stop_number=null. Contains legends for: Tatar Princess Šad, Knight Šaršek, Beautiful Hedwig, and White Lady. Need to verify endpoint returns this data correctly and frontend can access it."
+--+        - working: true
+--+          agent: "testing"
+--+          comment: "✅ PASS: Comprehensive testing completed successfully. GET /api/tour-stops returns exactly 14 stops (13 numbered + 1 Legends). Legends stop verified with stop_name='Legends', stop_number=null, and 4 legends array. All 4 legends have complete content in 6 languages (en, de, pl, hu, sk, ru) with proper title and description fields. Legend titles verified: 'Legend of the Tatar Princess Šad', 'Legend of Knight Šaršek', 'Legend of Beautiful Hedwig', 'Legend of the White Lady'. Russian content updates confirmed for stops 1-2 with exact character counts (756 and 2507 chars). GET /api/tour-stops/{legends_id} successfully retrieves Legends stop by ID. Fixed TourStop model to support optional stop_number and stop_name fields for special stops. All requirements from review request fully satisfied."
+-- 
+-- frontend:
+--   - task: "Audio playback investigation - verify data flow from backend to player"
+--@@ -259,4 +262,6 @@ agent_communication:
 --     - agent: "testing"
---       message: "Comprehensive backend API testing completed successfully. All 9 core endpoints tested and working correctly. TTS audio generation functional, database operations working, user progress tracking operational. Backend URL correctly configured at https://castle-legends-1.preview.emergentagent.com/api. All tests passed with 100% success rate."
+--       message: "AUDIO DATA VALIDATION COMPLETE: Comprehensive testing of all 13 tour stops confirms complete audio data availability. All stops have valid base64 audio for both English and Polish languages. Audio sizes range from 932KB to 10.2MB per language. Total audio data: 59MB English + 52MB Polish. All required fields present. Backend is delivering complete, valid audio data - mobile playback issue is NOT due to missing/invalid backend data. Issue likely in frontend audio player or mobile-specific handling."
 --     - agent: "main"
----      message: "Investigating audio playback issue reported by user on mobile. Backend verified to be returning audio data correctly (1.16MB base64 for stop 1). Added debug logging to tourStore.ts and stop-detail.tsx to trace data flow. Created clear-cache.tsx utility page to help users resolve caching issues. Added troubleshooting section in settings. Restarted Expo service. Ready for backend testing."
+---      message: "TASK 1 & 2 COMPLETED: Created unnumbered 'Legends' tour stop with 4 legends in 6 languages (en, de, pl, hu, sk, ru). Updated Russian content for stops 1-2 with complete enhanced text. Updated frontend tour.tsx to recognize Legends stop by stop_name field. Updated legends-detail.tsx to display legends correctly with new data structure. Total structure now: 13 numbered stops + 1 Legends stop. Ready for backend testing to verify new Legends stop endpoint and data integrity."
 --\ No newline at end of file
---+      message: "Investigating audio playback issue reported by user on mobile. Backend verified to be returning audio data correctly (1.16MB base64 for stop 1). Added debug logging to tourStore.ts and stop-detail.tsx to trace data flow. Created clear-cache.tsx utility page to help users resolve caching issues. Added troubleshooting section in settings. Restarted Expo service. Ready for backend testing."
+--+      message: "TASK 1 & 2 COMPLETED: Created unnumbered 'Legends' tour stop with 4 legends in 6 languages (en, de, pl, hu, sk, ru). Updated Russian content for stops 1-2 with complete enhanced text. Updated frontend tour.tsx to recognize Legends stop by stop_name field. Updated legends-detail.tsx to display legends correctly with new data structure. Total structure now: 13 numbered stops + 1 Legends stop. Ready for backend testing to verify new Legends stop endpoint and data integrity."
 --+    - agent: "testing"
---+      message: "AUDIO DATA VALIDATION COMPLETE: Comprehensive testing of all 13 tour stops confirms complete audio data availability. All stops have valid base64 audio for both English and Polish languages. Audio sizes range from 932KB to 10.2MB per language. Total audio data: 59MB English + 52MB Polish. All required fields present. Backend is delivering complete, valid audio data - mobile playback issue is NOT due to missing/invalid backend data. Issue likely in frontend audio player or mobile-specific handling."
+--+      message: "LEGENDS TOUR STOP TESTING COMPLETE: ✅ All tests PASSED! Backend successfully returns 14 total stops (13 numbered + 1 Legends). Legends stop verified with correct structure: stop_name='Legends', stop_number=null, 4 legends array with complete content in 6 languages each. All 4 legend titles confirmed: Tatar Princess Šad, Knight Šaršek, Beautiful Hedwig, White Lady. Russian content updates verified for stops 1-2 (756 and 2507 characters). GET /api/tour-stops/{legends_id} endpoint working correctly. Fixed TourStop model to support optional stop_number/stop_name fields. Implementation fully meets all requirements from review request."
 --\ No newline at end of file
--diff --git a/test_result.md b/test_result.md
--index cf8b290..14bfca2 100644
----- a/test_result.md
--+++ b/test_result.md
--@@ -215,15 +215,18 @@ backend:
-- 
--   - task: "Legends tour stop - GET /api/tour-stops (includes unnumbered Legends stop)"
--     implemented: true
---    working: "NA"
--+    working: true
--     file: "backend/server.py, backend/create_legends_and_fix_russian.py"
--     stuck_count: 0
--     priority: "high"
---    needs_retesting: true
--+    needs_retesting: false
--     status_history:
--         - working: "NA"
--           agent: "main"
--           comment: "Created unnumbered 'Legends' tour stop with 4 legends in 6 languages. Each legend has nested content structure with title and description. Stop has stop_name='Legends' and stop_number=null. Contains legends for: Tatar Princess Šad, Knight Šaršek, Beautiful Hedwig, and White Lady. Need to verify endpoint returns this data correctly and frontend can access it."
--+        - working: true
--+          agent: "testing"
--+          comment: "✅ PASS: Comprehensive testing completed successfully. GET /api/tour-stops returns exactly 14 stops (13 numbered + 1 Legends). Legends stop verified with stop_name='Legends', stop_number=null, and 4 legends array. All 4 legends have complete content in 6 languages (en, de, pl, hu, sk, ru) with proper title and description fields. Legend titles verified: 'Legend of the Tatar Princess Šad', 'Legend of Knight Šaršek', 'Legend of Beautiful Hedwig', 'Legend of the White Lady'. Russian content updates confirmed for stops 1-2 with exact character counts (756 and 2507 chars). GET /api/tour-stops/{legends_id} successfully retrieves Legends stop by ID. Fixed TourStop model to support optional stop_number and stop_name fields for special stops. All requirements from review request fully satisfied."
-- 
-- frontend:
--   - task: "Audio playback investigation - verify data flow from backend to player"
--@@ -259,4 +262,6 @@ agent_communication:
--     - agent: "testing"
--       message: "AUDIO DATA VALIDATION COMPLETE: Comprehensive testing of all 13 tour stops confirms complete audio data availability. All stops have valid base64 audio for both English and Polish languages. Audio sizes range from 932KB to 10.2MB per language. Total audio data: 59MB English + 52MB Polish. All required fields present. Backend is delivering complete, valid audio data - mobile playback issue is NOT due to missing/invalid backend data. Issue likely in frontend audio player or mobile-specific handling."
--     - agent: "main"
---      message: "TASK 1 & 2 COMPLETED: Created unnumbered 'Legends' tour stop with 4 legends in 6 languages (en, de, pl, hu, sk, ru). Updated Russian content for stops 1-2 with complete enhanced text. Updated frontend tour.tsx to recognize Legends stop by stop_name field. Updated legends-detail.tsx to display legends correctly with new data structure. Total structure now: 13 numbered stops + 1 Legends stop. Ready for backend testing to verify new Legends stop endpoint and data integrity."
--\ No newline at end of file
--+      message: "TASK 1 & 2 COMPLETED: Created unnumbered 'Legends' tour stop with 4 legends in 6 languages (en, de, pl, hu, sk, ru). Updated Russian content for stops 1-2 with complete enhanced text. Updated frontend tour.tsx to recognize Legends stop by stop_name field. Updated legends-detail.tsx to display legends correctly with new data structure. Total structure now: 13 numbered stops + 1 Legends stop. Ready for backend testing to verify new Legends stop endpoint and data integrity."
--+    - agent: "testing"
--+      message: "LEGENDS TOUR STOP TESTING COMPLETE: ✅ All tests PASSED! Backend successfully returns 14 total stops (13 numbered + 1 Legends). Legends stop verified with correct structure: stop_name='Legends', stop_number=null, 4 legends array with complete content in 6 languages each. All 4 legend titles confirmed: Tatar Princess Šad, Knight Šaršek, Beautiful Hedwig, White Lady. Russian content updates verified for stops 1-2 (756 and 2507 characters). GET /api/tour-stops/{legends_id} endpoint working correctly. Fixed TourStop model to support optional stop_number/stop_name fields. Implementation fully meets all requirements from review request."
--\ No newline at end of file
