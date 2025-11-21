@@ -1,12 +1,34 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ImageBackground } from 'react-native';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
+import { useState, useEffect } from 'react';
+
+const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 export default function Index() {
-  return (
+  const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchBackgroundImage();
+  }, []);
+
+  const fetchBackgroundImage = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/images/background`);
+      const data = await response.json();
+      if (data.background_image_base64) {
+        setBackgroundImage(`data:image/jpeg;base64,${data.background_image_base64}`);
+      }
+    } catch (error) {
+      console.error('Error fetching background:', error);
+    }
+  };
+
+  const content = (
     <View style={styles.container}>
       <StatusBar style="light" />
+      <View style={styles.overlay} />
       
       <View style={styles.content}>
         <Ionicons name="business" size={80} color="#FFD700" />
