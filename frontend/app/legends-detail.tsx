@@ -96,14 +96,17 @@ export default function LegendsDetail() {
   };
 
   const renderLegendCard = (legend: any, index: number) => {
-    const legendContent = legend.content[selectedLanguage];
+    const legendContent = legend.content?.[selectedLanguage];
+    if (!legendContent) return null;
+    
     const hasAudio = !!legend.audio?.[selectedLanguage];
+    const legendKey = `legend-${index}`;
     
     return (
       <TouchableOpacity
-        key={legend.id}
+        key={legendKey}
         style={styles.legendCard}
-        onPress={() => setSelectedLegend(selectedLegend?.id === legend.id ? null : legend)}
+        onPress={() => setSelectedLegend(selectedLegend === legendKey ? null : legendKey)}
       >
         <View style={styles.legendHeader}>
           <View style={styles.legendNumber}>
@@ -118,13 +121,13 @@ export default function LegendsDetail() {
             </View>
           </View>
           <Ionicons 
-            name={selectedLegend?.id === legend.id ? "chevron-up" : "chevron-down"} 
+            name={selectedLegend === legendKey ? "chevron-up" : "chevron-down"} 
             size={24} 
             color="#FFD700" 
           />
         </View>
 
-        {selectedLegend?.id === legend.id && (
+        {selectedLegend === legendKey && (
           <View style={styles.legendContent}>
             <Text style={styles.legendDescription}>{legendContent.description}</Text>
             
