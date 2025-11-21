@@ -215,15 +215,18 @@ backend:
 
   - task: "Legends tour stop - GET /api/tour-stops (includes unnumbered Legends stop)"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/server.py, backend/create_legends_and_fix_russian.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Created unnumbered 'Legends' tour stop with 4 legends in 6 languages. Each legend has nested content structure with title and description. Stop has stop_name='Legends' and stop_number=null. Contains legends for: Tatar Princess Šad, Knight Šaršek, Beautiful Hedwig, and White Lady. Need to verify endpoint returns this data correctly and frontend can access it."
+        - working: true
+          agent: "testing"
+          comment: "✅ PASS: Comprehensive testing completed successfully. GET /api/tour-stops returns exactly 14 stops (13 numbered + 1 Legends). Legends stop verified with stop_name='Legends', stop_number=null, and 4 legends array. All 4 legends have complete content in 6 languages (en, de, pl, hu, sk, ru) with proper title and description fields. Legend titles verified: 'Legend of the Tatar Princess Šad', 'Legend of Knight Šaršek', 'Legend of Beautiful Hedwig', 'Legend of the White Lady'. Russian content updates confirmed for stops 1-2 with exact character counts (756 and 2507 chars). GET /api/tour-stops/{legends_id} successfully retrieves Legends stop by ID. Fixed TourStop model to support optional stop_number and stop_name fields for special stops. All requirements from review request fully satisfied."
 
 frontend:
   - task: "Audio playback investigation - verify data flow from backend to player"
