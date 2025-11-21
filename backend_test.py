@@ -14,232 +14,225 @@ BACKEND_URL = "https://castle-legends-1.preview.emergentagent.com/api"
 
 class BackendTester:
     def __init__(self):
-        self.results = {
-            "total_stops": 0,
-            "stops_with_audio": 0,
-            "audio_validation": {},
-            "missing_audio": [],
-            "invalid_audio": [],
-            "detailed_results": []
-        }
-    
-    def validate_base64(self, data: str) -> bool:
-        """Validate if string is proper base64"""
-        try:
-            if not data:
-                return False
-            # Check if it's valid base64
-            base64.b64decode(data)
-            return True
-        except Exception:
-            return False
-    
-    def test_tour_stops_audio_data(self):
-        """Test all tour stops for audio data availability"""
-        print("🎵 Testing Tour Stops Audio Data Availability")
-        print("=" * 60)
+        self.backend_url = BACKEND_URL
+        self.test_results = []
+        self.legends_stop_id = None
+        
+    def log_test(self, test_name: str, passed: bool, details: str = ""):
+        """Log test result"""
+        status = "✅ PASS" if passed else "❌ FAIL"
+        result = f"{status}: {test_name}"
+        if details:
+            result += f" - {details}"
+        self.test_results.append(result)
+        print(result)
+        
+    def test_get_all_tour_stops(self):
+        """Test GET /api/tour-stops - Should return 14 stops (13 numbered + 1 Legends)"""
+        print("\n=== Testing GET /api/tour-stops ===")
         
         try:
-            # Get all tour stops
-            response = requests.get(f"{BACKEND_URL}/tour-stops", timeout=30)
+            response = requests.get(f"{self.backend_url}/tour-stops", timeout=30)
             
             if response.status_code != 200:
-                print(f"❌ Failed to fetch tour stops: {response.status_code}")
+                self.log_test("GET /api/tour-stops status", False, f"Status: {response.status_code}")
                 return False
-            
-            stops = response.json()
-            self.results["total_stops"] = len(stops)
-            
-            print(f"📍 Found {len(stops)} tour stops")
-            print()
-            
-            # Test each stop for audio data
-            for stop in stops:
-                stop_result = self.test_single_stop_audio(stop)
-                self.results["detailed_results"].append(stop_result)
                 
-                if stop_result["has_audio"]:
-                    self.results["stops_with_audio"] += 1
+            stops = response.json()
+            
+            # Test 1: Total count should be 14
+            total_count = len(stops)
+            self.log_test("Total stop count", total_count == 14, f"Expected: 14, Got: {total_count}")
+            
+            # Test 2: Find numbered stops (1-13) and Legends stop
+            numbered_stops = [s for s in stops if s.get('stop_number') is not None]
+            legends_stops = [s for s in stops if s.get('stop_name') == 'Legends']
+            
+            self.log_test("Numbered stops count", len(numbered_stops) == 13, f"Expected: 13, Got: {len(numbered_stops)}")
+            self.log_test("Legends stops count", len(legends_stops) == 1, f"Expected: 1, Got: {len(legends_stops)}")
+            
+            # Test 3: Verify Legends stop structure
+            if legends_stops:
+                legends_stop = legends_stops[0]
+                self.legends_stop_id = legends_stop.get('id')
+                
+                # Check stop_name
+                self.log_test("Legends stop_name", legends_stop.get('stop_name') == 'Legends', 
+                            f"Expected: 'Legends', Got: {legends_stop.get('stop_name')}")
+                
+                # Check stop_number is null
+                self.log_test("Legends stop_number is null", legends_stop.get('stop_number') is None,
+                            f"Expected: null, Got: {legends_stop.get('stop_number')}")
+                
+                # Check legends array exists and has 4 items
+                legends_array = legends_stop.get('legends', [])
+                self.log_test("Legends array count", len(legends_array) == 4, 
+                            f"Expected: 4, Got: {len(legends_array)}")
+                
+                # Test each legend has content in 6 languages
+                expected_languages = ['en', 'de', 'pl', 'hu', 'sk', 'ru']
+                for i, legend in enumerate(legends_array):
+                    legend_content = legend.get('content', {})
+                    available_languages = list(legend_content.keys())
+                    
+                    self.log_test(f"Legend {i+1} language count", len(available_languages) == 6,
+                                f"Expected: 6 languages, Got: {len(available_languages)}")
+                    
+                    # Check each language has title and description
+                    for lang in expected_languages:
+                        if lang in legend_content:
+                            content = legend_content[lang]
+                            has_title = 'title' in content and content['title']
+                            has_description = 'description' in content and content['description']
+                            self.log_test(f"Legend {i+1} {lang} content", has_title and has_description,
+                                        f"Title: {has_title}, Description: {has_description}")
+                
+                # Verify legend names
+                expected_legend_titles = [
+                    "Legend of the Tatar Princess Šad",
+                    "Legend of Knight Šaršek", 
+                    "Legend of Beautiful Hedwig",
+                    "Legend of the White Lady"
+                ]
+                
+                for i, legend in enumerate(legends_array):
+                    if i < len(expected_legend_titles):
+                        en_title = legend.get('content', {}).get('en', {}).get('title', '')
+                        expected_title = expected_legend_titles[i]
+                        self.log_test(f"Legend {i+1} English title", expected_title in en_title,
+                                    f"Expected: '{expected_title}', Got: '{en_title}'")
+            
+            # Test 4: Verify Russian content for stops 1-2
+            stop_1 = next((s for s in stops if s.get('stop_number') == 1), None)
+            stop_2 = next((s for s in stops if s.get('stop_number') == 2), None)
+            
+            if stop_1:
+                ru_content_1 = stop_1.get('content', {}).get('ru', {})
+                ru_desc_1 = ru_content_1.get('description', '')
+                self.log_test("Stop 1 Russian content length", len(ru_desc_1) >= 700,
+                            f"Expected: ~756 chars, Got: {len(ru_desc_1)} chars")
+                
+            if stop_2:
+                ru_content_2 = stop_2.get('content', {}).get('ru', {})
+                ru_desc_2 = ru_content_2.get('description', '')
+                self.log_test("Stop 2 Russian content length", len(ru_desc_2) >= 2400,
+                            f"Expected: ~2507 chars, Got: {len(ru_desc_2)} chars")
             
             return True
             
         except requests.exceptions.RequestException as e:
-            print(f"❌ Network error: {e}")
+            self.log_test("GET /api/tour-stops request", False, f"Request error: {str(e)}")
             return False
         except Exception as e:
-            print(f"❌ Unexpected error: {e}")
+            self.log_test("GET /api/tour-stops processing", False, f"Processing error: {str(e)}")
             return False
     
-    def test_single_stop_audio(self, stop: Dict[str, Any]) -> Dict[str, Any]:
-        """Test audio data for a single tour stop"""
-        stop_id = stop.get("id", "unknown")
-        stop_number = stop.get("stop_number", "unknown")
+    def test_get_legends_stop_by_id(self):
+        """Test GET /api/tour-stops/{legends_id} - Fetch Legends stop by ID"""
+        print("\n=== Testing GET /api/tour-stops/{legends_id} ===")
         
-        result = {
-            "stop_id": stop_id,
-            "stop_number": stop_number,
-            "has_audio": False,
-            "languages_tested": ["en", "pl"],
-            "audio_status": {},
-            "required_fields": {},
-            "issues": []
-        }
-        
-        print(f"🔍 Testing Stop {stop_number} (ID: {stop_id[:8]}...)")
-        
-        # Check required fields
-        required_fields = ["id", "stop_number", "content", "audio", "created_at", "updated_at"]
-        for field in required_fields:
-            result["required_fields"][field] = field in stop
-            if field not in stop:
-                result["issues"].append(f"Missing required field: {field}")
-        
-        # Check audio data for English and Polish
-        audio_data = stop.get("audio", {})
-        
-        for lang in ["en", "pl"]:
-            audio_base64 = audio_data.get(lang, "")
+        if not self.legends_stop_id:
+            self.log_test("Legends stop ID available", False, "No Legends stop ID found from previous test")
+            return False
             
-            status = {
-                "present": bool(audio_base64),
-                "length": len(audio_base64) if audio_base64 else 0,
-                "valid_base64": False,
-                "sufficient_length": False
-            }
+        try:
+            response = requests.get(f"{self.backend_url}/tour-stops/{self.legends_stop_id}", timeout=30)
             
-            if audio_base64:
-                # Validate base64 format
-                status["valid_base64"] = self.validate_base64(audio_base64)
+            if response.status_code != 200:
+                self.log_test("GET Legends stop by ID status", False, f"Status: {response.status_code}")
+                return False
                 
-                # Check if length is reasonable (>100k characters as requested)
-                status["sufficient_length"] = len(audio_base64) > 100000
-                
-                if status["valid_base64"] and status["sufficient_length"]:
-                    print(f"  ✅ {lang.upper()}: Valid audio ({len(audio_base64):,} chars)")
-                elif status["valid_base64"]:
-                    print(f"  ⚠️  {lang.upper()}: Valid format but short ({len(audio_base64):,} chars)")
-                    result["issues"].append(f"{lang} audio too short: {len(audio_base64)} chars")
-                else:
-                    print(f"  ❌ {lang.upper()}: Invalid base64 format")
-                    result["issues"].append(f"{lang} audio invalid base64")
-            else:
-                print(f"  ❌ {lang.upper()}: No audio data")
-                result["issues"].append(f"Missing {lang} audio")
+            legends_stop = response.json()
             
-            result["audio_status"][lang] = status
-        
-        # Determine if stop has valid audio
-        en_valid = (result["audio_status"]["en"]["valid_base64"] and 
-                   result["audio_status"]["en"]["sufficient_length"])
-        pl_valid = (result["audio_status"]["pl"]["valid_base64"] and 
-                   result["audio_status"]["pl"]["sufficient_length"])
-        
-        result["has_audio"] = en_valid and pl_valid
-        
-        if not result["has_audio"]:
-            self.results["missing_audio"].append({
-                "stop_number": stop_number,
-                "stop_id": stop_id,
-                "issues": result["issues"]
-            })
-        
-        print()
-        return result
+            # Verify it's the Legends stop
+            self.log_test("Retrieved stop is Legends", legends_stop.get('stop_name') == 'Legends',
+                        f"Expected: 'Legends', Got: {legends_stop.get('stop_name')}")
+            
+            # Verify structure
+            self.log_test("Legends stop has ID", 'id' in legends_stop and legends_stop['id'],
+                        f"ID present: {'id' in legends_stop}")
+            
+            legends_array = legends_stop.get('legends', [])
+            self.log_test("Legends array accessible by ID", len(legends_array) == 4,
+                        f"Expected: 4 legends, Got: {len(legends_array)}")
+            
+            return True
+            
+        except requests.exceptions.RequestException as e:
+            self.log_test("GET Legends stop by ID request", False, f"Request error: {str(e)}")
+            return False
+        except Exception as e:
+            self.log_test("GET Legends stop by ID processing", False, f"Processing error: {str(e)}")
+            return False
     
-    def test_specific_stop_detail(self, stop_id: str):
-        """Test fetching specific stop to verify data consistency"""
-        print(f"🔍 Testing specific stop detail: {stop_id[:8]}...")
+    def test_backend_health(self):
+        """Test basic backend connectivity"""
+        print("\n=== Testing Backend Health ===")
         
         try:
-            response = requests.get(f"{BACKEND_URL}/tour-stops/{stop_id}", timeout=30)
+            response = requests.get(f"{self.backend_url}/", timeout=10)
             
             if response.status_code == 200:
-                stop = response.json()
-                print(f"  ✅ Successfully fetched stop {stop.get('stop_number', 'unknown')}")
-                return stop
+                data = response.json()
+                self.log_test("Backend health check", True, f"Message: {data.get('message', 'No message')}")
+                return True
             else:
-                print(f"  ❌ Failed to fetch stop: {response.status_code}")
-                return None
+                self.log_test("Backend health check", False, f"Status: {response.status_code}")
+                return False
                 
-        except Exception as e:
-            print(f"  ❌ Error fetching stop: {e}")
-            return None
+        except requests.exceptions.RequestException as e:
+            self.log_test("Backend connectivity", False, f"Connection error: {str(e)}")
+            return False
     
-    def generate_summary_report(self):
-        """Generate comprehensive summary report"""
-        print("\n" + "=" * 60)
-        print("📊 AUDIO DATA VALIDATION SUMMARY")
-        print("=" * 60)
+    def run_all_tests(self):
+        """Run all backend tests for Legends implementation"""
+        print(f"🧪 Starting Backend Tests for Legends Tour Stop Implementation")
+        print(f"Backend URL: {self.backend_url}")
+        print("=" * 80)
         
-        print(f"Total tour stops found: {self.results['total_stops']}")
-        print(f"Stops with complete audio: {self.results['stops_with_audio']}")
-        print(f"Success rate: {(self.results['stops_with_audio']/self.results['total_stops']*100):.1f}%")
+        # Test backend health first
+        if not self.test_backend_health():
+            print("\n❌ Backend is not accessible. Stopping tests.")
+            return False
         
-        if self.results["missing_audio"]:
-            print(f"\n❌ STOPS WITH AUDIO ISSUES ({len(self.results['missing_audio'])}):")
-            for issue in self.results["missing_audio"]:
-                print(f"  Stop {issue['stop_number']}: {', '.join(issue['issues'])}")
+        # Run main tests
+        success_count = 0
+        total_tests = 2
         
-        print(f"\n📈 DETAILED AUDIO STATISTICS:")
-        en_count = sum(1 for r in self.results["detailed_results"] 
-                      if r["audio_status"]["en"]["valid_base64"] and r["audio_status"]["en"]["sufficient_length"])
-        pl_count = sum(1 for r in self.results["detailed_results"] 
-                      if r["audio_status"]["pl"]["valid_base64"] and r["audio_status"]["pl"]["sufficient_length"])
+        if self.test_get_all_tour_stops():
+            success_count += 1
+            
+        if self.test_get_legends_stop_by_id():
+            success_count += 1
         
-        print(f"  English audio available: {en_count}/{self.results['total_stops']} stops")
-        print(f"  Polish audio available: {pl_count}/{self.results['total_stops']} stops")
+        # Summary
+        print("\n" + "=" * 80)
+        print("🏁 TEST SUMMARY")
+        print("=" * 80)
         
-        # Audio length statistics
-        en_lengths = [r["audio_status"]["en"]["length"] for r in self.results["detailed_results"] 
-                     if r["audio_status"]["en"]["present"]]
-        pl_lengths = [r["audio_status"]["pl"]["length"] for r in self.results["detailed_results"] 
-                     if r["audio_status"]["pl"]["present"]]
+        for result in self.test_results:
+            print(result)
         
-        if en_lengths:
-            print(f"  English audio avg length: {sum(en_lengths)//len(en_lengths):,} chars")
-        if pl_lengths:
-            print(f"  Polish audio avg length: {sum(pl_lengths)//len(pl_lengths):,} chars")
+        print(f"\nOverall: {success_count}/{total_tests} major test categories passed")
         
-        return self.results["stops_with_audio"] == self.results["total_stops"]
-
-def main():
-    """Main testing function"""
-    print("🏰 Spiš Castle Audio Tour - Backend Audio Data Testing")
-    print(f"🌐 Backend URL: {BACKEND_URL}")
-    print("=" * 60)
-    
-    tester = AudioDataTester()
-    
-    # Test root endpoint first
-    try:
-        response = requests.get(f"{BACKEND_URL}/", timeout=10)
-        if response.status_code == 200:
-            print("✅ Backend API is accessible")
-        else:
-            print(f"⚠️  Backend API returned: {response.status_code}")
-    except Exception as e:
-        print(f"❌ Cannot reach backend API: {e}")
-        return False
-    
-    print()
-    
-    # Main audio data testing
-    success = tester.test_tour_stops_audio_data()
-    
-    if success:
-        # Generate final report
-        all_audio_complete = tester.generate_summary_report()
-        
-        if all_audio_complete:
-            print("\n🎉 ALL TESTS PASSED: All tour stops have complete audio data!")
+        if success_count == total_tests:
+            print("🎉 All Legends tour stop tests PASSED!")
             return True
         else:
-            print("\n⚠️  TESTS COMPLETED WITH ISSUES: Some stops missing audio data")
+            print("⚠️  Some tests FAILED - see details above")
             return False
+
+def main():
+    """Main test execution"""
+    tester = BackendTester()
+    success = tester.run_all_tests()
+    
+    if success:
+        print("\n✅ Backend testing completed successfully")
+        sys.exit(0)
     else:
-        print("\n❌ TESTING FAILED: Could not complete audio data validation")
-        return False
+        print("\n❌ Backend testing completed with failures")
+        sys.exit(1)
 
 if __name__ == "__main__":
-    success = main()
-    sys.exit(0 if success else 1)
+    main()
