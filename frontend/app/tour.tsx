@@ -30,11 +30,16 @@ export default function Tour() {
   const renderTourStop = ({ item }: { item: any }) => {
     const content = item.content[selectedLanguage];
     const completed = isStopCompleted(item.id);
+    const isLegendsStop = item.stop_number === 14;
+    const legendCount = item.legends?.length || 0;
 
     return (
       <TouchableOpacity
         style={styles.stopCard}
-        onPress={() => router.push({ pathname: '/stop-detail', params: { stopId: item.id } })}
+        onPress={() => router.push({ 
+          pathname: isLegendsStop ? '/legends-detail' : '/stop-detail', 
+          params: { stopId: item.id } 
+        })}
       >
         <View style={styles.stopNumber}>
           <Text style={styles.stopNumberText}>{item.stop_number}</Text>
@@ -45,13 +50,16 @@ export default function Tour() {
           <Text style={styles.stopDescription} numberOfLines={2}>
             {content?.description || ''}
           </Text>
+          {isLegendsStop && legendCount > 0 && (
+            <Text style={styles.legendsBadge}>📖 {legendCount} Legends</Text>
+          )}
         </View>
         
         <View style={styles.stopActions}>
           {completed && (
             <Ionicons name="checkmark-circle" size={24} color="#4CAF50" />
           )}
-          <Ionicons name="play-circle" size={32} color="#FFD700" />
+          <Ionicons name={isLegendsStop ? "book" : "play-circle"} size={32} color="#FFD700" />
         </View>
       </TouchableOpacity>
     );
