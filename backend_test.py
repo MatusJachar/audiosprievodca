@@ -1,19 +1,18 @@
 #!/usr/bin/env python3
 """
-Spiš Castle Audio Tour - Backend Audio Data Testing
-Focus: Audio data availability and validation for all tour stops
+Backend API Testing for Castle Audio Tour Guide
+Testing the new Legends tour stop implementation and Russian content updates
 """
 
 import requests
-import base64
 import json
 import sys
 from typing import Dict, List, Any
 
-# Backend URL from environment - specifically for audio testing
+# Backend URL from frontend .env
 BACKEND_URL = "https://castle-legends-1.preview.emergentagent.com/api"
 
-class AudioDataTester:
+class BackendTester:
     def __init__(self):
         self.results = {
             "total_stops": 0,
