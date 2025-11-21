@@ -213,6 +213,18 @@ backend:
           agent: "testing"
           comment: "✅ PASS: Tour data initialization working. 13 tour stops with multilingual content properly initialized in database."
 
+  - task: "Legends tour stop - GET /api/tour-stops (includes unnumbered Legends stop)"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py, backend/create_legends_and_fix_russian.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Created unnumbered 'Legends' tour stop with 4 legends in 6 languages. Each legend has nested content structure with title and description. Stop has stop_name='Legends' and stop_number=null. Contains legends for: Tatar Princess Šad, Knight Šaršek, Beautiful Hedwig, and White Lady. Need to verify endpoint returns this data correctly and frontend can access it."
+
 frontend:
   - task: "Audio playback investigation - verify data flow from backend to player"
     implemented: true
