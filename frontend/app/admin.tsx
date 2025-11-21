@@ -13,11 +13,7 @@ const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 export default function Admin() {
   const { tourStops, fetchTourStops } = useTourStore();
   const [selectedStop, setSelectedStop] = useState<any>(null);
-  const [editModalVisible, setEditModalVisible] = useState(false);
   const [imageModalVisible, setImageModalVisible] = useState(false);
-  const [editingLanguage, setEditingLanguage] = useState('en');
-  const [editTitle, setEditTitle] = useState('');
-  const [editDescription, setEditDescription] = useState('');
   const [generating, setGenerating] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
