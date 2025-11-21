@@ -55,15 +55,27 @@ export default function EditStop() {
   };
 
   const saveChanges = async () => {
+    if (!title.trim()) {
+      Alert.alert('Error', 'Title cannot be empty');
+      return;
+    }
+    if (!description.trim()) {
+      Alert.alert('Error', 'Description cannot be empty');
+      return;
+    }
+
     setSaving(true);
     try {
       const updatedContent = {
         ...stop.content,
         [selectedLang]: {
-          title,
-          description
+          title: title.trim(),
+          description: description.trim()
         }
       };
+
+      console.log('Saving to:', `${API_URL}/api/tour-stops/${stopId}`);
+      console.log('Content length:', description.trim().length);
 
       const response = await fetch(`${API_URL}/api/tour-stops/${stopId}`, {
         method: 'PUT',
@@ -72,13 +84,16 @@ export default function EditStop() {
       });
 
       if (response.ok) {
-        Alert.alert('Success', 'Changes saved successfully');
-        loadStop();
+        Alert.alert('Success', `Changes saved successfully!\n\n${selectedLang.toUpperCase()}: ${description.trim().length} characters`);
+        await loadStop();
       } else {
-        Alert.alert('Error', 'Failed to save changes');
+        const errorText = await response.text();
+        console.error('Save failed:', errorText);
+        Alert.alert('Error', `Failed to save: ${response.status}`);
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to save changes');
+      console.error('Save error:', error);
+      Alert.alert('Error', `Network error: ${error.message}`);
     } finally {
       setSaving(false);
     }
