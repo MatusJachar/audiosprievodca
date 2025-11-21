@@ -225,7 +225,7 @@ export default function Admin() {
             onPress={() => handleEditStop(item)}
           >
             <Ionicons name="create-outline" size={20} color="#fff" />
-            <Text style={styles.actionButtonText}>Edit</Text>
+            <Text style={styles.actionButtonText}>Edit Text</Text>
           </TouchableOpacity>
           
           <TouchableOpacity
