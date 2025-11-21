@@ -65,6 +65,16 @@ export default function Index() {
       </View>
     </View>
   );
+
+  if (backgroundImage) {
+    return (
+      <ImageBackground source={{ uri: backgroundImage }} style={styles.backgroundImage} blurRadius={2}>
+        {content}
+      </ImageBackground>
+    );
+  }
+
+  return content;
 }
 
 const styles = StyleSheet.create({
