@@ -172,7 +172,9 @@ export default function LegendsDetail() {
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Stop {stop.stop_number}</Text>
+        <Text style={styles.headerTitle}>
+          {stop.stop_name === 'Legends' ? 'Legends' : `Stop ${stop.stop_number}`}
+        </Text>
         <View style={{ width: 24 }} />
       </View>
 
