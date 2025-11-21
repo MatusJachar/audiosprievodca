@@ -39,36 +39,6 @@ export default function Admin() {
     router.push({ pathname: '/edit-stop', params: { stopId: stop.id } });
   };
 
-  const handleSaveEdit = async () => {
-    if (!selectedStop) return;
-
-    try {
-      const updatedContent = {
-        ...selectedStop.content,
-        [editingLanguage]: {
-          title: editTitle,
-          description: editDescription,
-        },
-      };
-
-      const response = await fetch(`${API_URL}/api/tour-stops/${selectedStop.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: updatedContent }),
-      });
-
-      if (response.ok) {
-        Alert.alert('Success', 'Tour stop updated successfully!');
-        setEditModalVisible(false);
-        fetchTourStops();
-      } else {
-        Alert.alert('Error', 'Failed to update tour stop');
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Network error occurred');
-    }
-  };
-
   const handleGenerateAudio = async (stopId: string, language: string) => {
     setGenerating(true);
     try {
