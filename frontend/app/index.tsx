@@ -15,10 +15,14 @@ export default function Index() {
 
   const fetchBackgroundImage = async () => {
     try {
+      console.log('Fetching background from:', `${API_URL}/api/images/background`);
       const response = await fetch(`${API_URL}/api/images/background`);
       const data = await response.json();
+      console.log('Background response:', { hasImage: !!data.background_image_base64, length: data.background_image_base64?.length });
       if (data.background_image_base64) {
-        setBackgroundImage(`data:image/jpeg;base64,${data.background_image_base64}`);
+        const imageUri = `data:image/png;base64,${data.background_image_base64}`;
+        console.log('Setting background image, length:', imageUri.length);
+        setBackgroundImage(imageUri);
       }
     } catch (error) {
       console.error('Error fetching background:', error);
