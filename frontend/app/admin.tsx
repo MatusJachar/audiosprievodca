@@ -157,15 +157,42 @@ export default function Admin() {
     setImageModalVisible(true);
   };
 
+  const renderLegendItem = (legend: any, index: number, stopId: string) => {
+    const legendNames = [
+      'Tatar Princess Šad',
+      'Knight Šaršek',
+      'Beautiful Hedwig',
+      'White Lady'
+    ];
+    
+    return (
+      <View key={index} style={styles.legendItem}>
+        <Text style={styles.legendTitle}>Legend {index + 1}: {legendNames[index]}</Text>
+        <TouchableOpacity
+          style={[styles.button, styles.buttonEdit]}
+          onPress={() => router.push({ pathname: '/edit-legend', params: { stopId, legendIndex: index } })}
+        >
+          <Ionicons name="create" size={18} color="#fff" />
+          <Text style={styles.buttonText}>Edit Legend</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
   const renderStopItem = ({ item }: { item: any }) => {
     const audioCount = Object.keys(item.audio || {}).length;
     const hasImage = !!item.image_base64;
+    const isLegendsStop = item.stop_name === 'Legends';
     
     return (
       <View style={styles.stopCard}>
         <View style={styles.stopHeader}>
           <View style={styles.stopNumber}>
-            <Text style={styles.stopNumberText}>{item.stop_number}</Text>
+            {isLegendsStop ? (
+              <Ionicons name="book" size={20} color="#FFD700" />
+            ) : (
+              <Text style={styles.stopNumberText}>{item.stop_number}</Text>
+            )}
           </View>
           <View style={styles.stopInfo}>
             <Text style={styles.stopTitle}>{item.content.en.title}</Text>
