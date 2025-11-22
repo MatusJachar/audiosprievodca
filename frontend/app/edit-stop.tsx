@@ -34,8 +34,12 @@ export default function EditStop() {
   useEffect(() => {
     if (stop) {
       const content = stop.content[selectedLang] || { title: '', description: '' };
-      setTitle(content.title);
-      setDescription(content.description);
+      console.log(`Loading ${selectedLang}:`, {
+        title: content.title,
+        descLength: content.description?.length || 0
+      });
+      setTitle(content.title || '');
+      setDescription(content.description || '');
     }
   }, [selectedLang, stop]);
 
