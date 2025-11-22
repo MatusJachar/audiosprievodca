@@ -398,4 +398,8 @@ const styles = StyleSheet.create({
   imageStatusText: { fontSize: 14, color: '#4CAF50', marginTop: 8, textAlign: 'center' },
   uploadButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFD700', padding: 16, borderRadius: 12, gap: 8 },
   uploadButtonText: { fontSize: 16, fontWeight: 'bold', color: '#000' },
+  legendsSection: { marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: '#333' },
+  legendsSectionTitle: { fontSize: 14, fontWeight: 'bold', color: '#FFD700', marginBottom: 12 },
+  legendItem: { backgroundColor: '#2a2a2a', padding: 12, borderRadius: 8, marginBottom: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  legendTitle: { fontSize: 14, color: '#fff', flex: 1 },
 });
