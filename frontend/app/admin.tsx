@@ -6,6 +6,7 @@ import { useTourStore } from '../store/tourStore';
 import { useState, useEffect } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
@@ -16,11 +17,29 @@ export default function Admin() {
   const [generating, setGenerating] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    fetchTourStops();
-    fetchBackgroundImage();
+    checkAuth();
   }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchTourStops();
+      fetchBackgroundImage();
+    }
+  }, [isAuthenticated]);
+
+  const checkAuth = async () => {
+    const auth = await AsyncStorage.getItem('admin_authenticated');
+    if (auth === 'true') {
+      setIsAuthenticated(true);
+    } else {
+      router.replace('/admin-login');
+    }
+    setChecking(false);
+  };
 
   const fetchBackgroundImage = async () => {
     try {
