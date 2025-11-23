@@ -30,19 +30,18 @@ export default function Tour() {
   const renderTourStop = ({ item }: { item: any }) => {
     const content = item.content[selectedLanguage];
     const completed = isStopCompleted(item.id);
-    const isLegendsStop = item.stop_name === 'Legends' || item.stop_number === null;
-    const legendCount = item.legends?.length || 0;
-
+    const isLegendStop = item.stop_name && item.stop_name.startsWith('Legend ');
+    
     return (
       <TouchableOpacity
         style={styles.stopCard}
         onPress={() => router.push({ 
-          pathname: isLegendsStop ? '/legends-detail' : '/stop-detail', 
+          pathname: '/stop-detail', 
           params: { stopId: item.id } 
         })}
       >
         <View style={styles.stopNumber}>
-          {isLegendsStop ? (
+          {isLegendStop ? (
             <Ionicons name="book" size={24} color="#FFD700" />
           ) : (
             <Text style={styles.stopNumberText}>{item.stop_number}</Text>
