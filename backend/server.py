@@ -96,20 +96,23 @@ async def root():
 
 @api_router.get("/tour-stops", response_model=List[TourStop])
 async def get_tour_stops():
-    """Get all tour stops - numbered stops first (1-13), then Legends at the end"""
+    """Get all tour stops - numbered stops first (1-13), then Legend 1-4 at the end"""
     try:
         # Get all stops
         all_stops = await db.tour_stops.find().to_list(100)
         
-        # Separate numbered stops and Legends stop
+        # Separate numbered stops and Legend stops
         numbered_stops = [s for s in all_stops if s.get('stop_number') is not None]
-        legends_stop = [s for s in all_stops if s.get('stop_name') == 'Legends']
+        legend_stops = [s for s in all_stops if s.get('stop_name', '').startswith('Legend ')]
         
         # Sort numbered stops by stop_number
         numbered_stops.sort(key=lambda x: x.get('stop_number', 999))
         
-        # Combine: numbered stops first, then Legends at the end
-        sorted_stops = numbered_stops + legends_stop
+        # Sort legend stops by name (Legend 1, Legend 2, Legend 3, Legend 4)
+        legend_stops.sort(key=lambda x: x.get('stop_name', ''))
+        
+        # Combine: numbered stops first, then Legend stops at the end
+        sorted_stops = numbered_stops + legend_stops
         
         return [TourStop(**stop) for stop in sorted_stops]
     except Exception as e:
