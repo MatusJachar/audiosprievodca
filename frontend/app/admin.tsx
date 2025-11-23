@@ -264,8 +264,11 @@ export default function Admin() {
       <StatusBar style="light" />
       
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
+        <TouchableOpacity onPress={async () => {
+          await AsyncStorage.removeItem('admin_authenticated');
+          router.replace('/settings');
+        }}>
+          <Ionicons name="log-out" size={24} color="#ff4444" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Admin Panel</Text>
         <TouchableOpacity onPress={() => fetchTourStops()}>
