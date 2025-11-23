@@ -195,6 +195,14 @@ export default function StopDetail() {
       </View>
       
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {stop.image_base64 && (
+          <Image 
+            source={{ uri: `data:image/jpeg;base64,${stop.image_base64}` }}
+            style={styles.stopImage}
+            resizeMode="cover"
+          />
+        )}
+        
         <Text style={styles.title}>{content?.title}</Text>
         
         {isCompleted && (
