@@ -248,13 +248,6 @@ export default function Admin() {
             <Text style={styles.actionButtonText}>Audio</Text>
           </TouchableOpacity>
         </View>
-        
-        {isLegendsStop && item.legends && item.legends.length > 0 && (
-          <View style={styles.legendsSection}>
-            <Text style={styles.legendsSectionTitle}>4 Individual Legends:</Text>
-            {item.legends.map((legend: any, index: number) => renderLegendItem(legend, index, item.id))}
-          </View>
-        )}
       </View>
     );
   };
