@@ -294,6 +294,57 @@ async def generate_all_audio(stop_id: str):
         logger.error(f"Error generating all audio: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.post("/audio/generate-legend")
+async def generate_legend_audio(stop_id: str, legend_index: int, language: str):
+    """Generate audio for a specific legend"""
+    try:
+        stop = await db.tour_stops.find_one({"id": stop_id})
+        if not stop:
+            raise HTTPException(status_code=404, detail="Tour stop not found")
+        
+        legends = stop.get("legends", [])
+        if legend_index >= len(legends):
+            raise HTTPException(status_code=404, detail="Legend not found")
+        
+        legend = legends[legend_index]
+        content = legend.get("content", {}).get(language)
+        
+        if not content:
+            raise HTTPException(status_code=404, detail=f"Content not found for language: {language}")
+        
+        text = f"{content['title']}. {content['description']}"
+        
+        logger.info(f"Generating audio for legend {legend_index} in {language}")
+        audio_bytes = await tts.generate_speech(
+            text=text,
+            model="tts-1",
+            voice="alloy",
+            speed=1.0
+        )
+        
+        audio_base64 = base64.b64encode(audio_bytes).decode('utf-8')
+        
+        # Update legend audio
+        if "audio" not in legend:
+            legend["audio"] = {}
+        legend["audio"][language] = audio_base64
+        
+        # Update in database
+        await db.tour_stops.update_one(
+            {"id": stop_id},
+            {"$set": {"legends": legends}}
+        )
+        
+        return {
+            "message": "Legend audio generated successfully",
+            "audio_base64": audio_base64
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating legend audio: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Image Upload Endpoints
 @api_router.post("/images/background")
 async def upload_background_image(request: ImageUploadRequest):
