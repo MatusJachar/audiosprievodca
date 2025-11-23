@@ -112,7 +112,7 @@ export default function EditLegend() {
 
   const legendNumber = Number(legendIndex) + 1;
   const legendNames = [
-    'Tatar Princess Šad',
+    'Brave Monk and the Girl',
     'Knight Šaršek',
     'Beautiful Hedwig',
     'White Lady'
