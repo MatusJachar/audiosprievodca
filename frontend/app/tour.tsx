@@ -53,9 +53,6 @@ export default function Tour() {
           <Text style={styles.stopDescription} numberOfLines={2}>
             {content?.description || ''}
           </Text>
-          {isLegendsStop && legendCount > 0 && (
-            <Text style={styles.legendsBadge}>📖 {legendCount} Legends</Text>
-          )}
         </View>
         
         <View style={styles.stopActions}>
