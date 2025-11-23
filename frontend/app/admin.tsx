@@ -178,7 +178,7 @@ export default function Admin() {
 
   const renderLegendItem = (legend: any, index: number, stopId: string) => {
     const legendNames = [
-      'Tatar Princess Šad',
+      'Brave Monk and the Girl',
       'Knight Šaršek',
       'Beautiful Hedwig',
       'White Lady'
