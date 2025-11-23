@@ -46,7 +46,8 @@ export default function LegendsDetail() {
       if (!audioBase64) {
         // Generate audio if not available
         setLoadingAudio(true);
-        const response = await fetch(`${API_URL}/api/audio/generate-legend`, {
+        const legendIndex = legends.findIndex((l: any) => l.order === legend.order);
+        const response = await fetch(`${API_URL}/api/audio/generate-legend?stop_id=${stopId}&legend_index=${legendIndex}&language=${selectedLanguage}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
