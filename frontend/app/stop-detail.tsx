@@ -330,6 +330,12 @@ const styles = StyleSheet.create({
   title: { fontSize: 28, fontWeight: 'bold', color: '#fff', marginBottom: 16 },
   completedBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1a3d1a', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, alignSelf: 'flex-start', marginBottom: 16, gap: 6 },
   completedText: { color: '#4CAF50', fontSize: 14, fontWeight: '600' },
+  stopImage: {
+    width: '100%',
+    height: 250,
+    borderRadius: 12,
+    marginBottom: 20,
+  },
   description: { fontSize: 16, color: '#ccc', lineHeight: 24, marginBottom: 24 },
   noAudioCard: { backgroundColor: '#2a2a1a', padding: 20, borderRadius: 12, alignItems: 'center', gap: 12, marginBottom: 16 },
   noAudioText: { color: '#FFD700', textAlign: 'center', fontSize: 14, lineHeight: 20 },
