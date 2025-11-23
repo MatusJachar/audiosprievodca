@@ -59,7 +59,7 @@ export default function Tour() {
           {completed && (
             <Ionicons name="checkmark-circle" size={24} color="#4CAF50" />
           )}
-          <Ionicons name={isLegendsStop ? "book" : "play-circle"} size={32} color="#FFD700" />
+          <Ionicons name={isLegendStop ? "book" : "play-circle"} size={32} color="#FFD700" />
         </View>
       </TouchableOpacity>
     );
