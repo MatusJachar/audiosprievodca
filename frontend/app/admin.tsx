@@ -327,8 +327,8 @@ export default function Admin() {
           
           <TouchableOpacity
             style={[styles.actionButton, styles.audioButton]}
-            onPress={() => handleGenerateAllAudio(item.id)}
-            disabled={generating}
+            onPress={() => handleManageAudio(item)}
+            disabled={uploadingAudio}
           >
             <Ionicons name="volume-high" size={20} color="#fff" />
             <Text style={styles.actionButtonText}>Audio</Text>
