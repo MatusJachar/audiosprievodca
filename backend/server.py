@@ -95,27 +95,16 @@ async def root():
     return {"message": "Castle Audio Tour Guide API"}
 
 @api_router.get("/tour-stops", response_model=List[TourStop])
-async def get_tour_stops(include_audio: bool = False):
-    """Get all tour stops - numbered stops first (1-13), then Legend 1-4 at the end
-    By default, audio is NOT included to reduce response size (326MB -> 1MB)
-    Set include_audio=true to get audio data
-    """
+async def get_tour_stops():
+    """Get all tour stops - numbered stops first (1-13), then Legend 1-4 at the end"""
     try:
         # Get all stops
         all_stops = await db.tour_stops.find().to_list(100)
         
-        # Only fetch audio if explicitly requested
-        if include_audio:
-            for stop in all_stops:
-                audio_files = await db.tour_audio.find({'stop_id': stop['id']}).to_list(None)
-                stop['audio'] = {af['language']: af['audio_base64'] for af in audio_files}
-        else:
-            # Just return which languages have audio available (metadata only)
-            for stop in all_stops:
-                audio_files = await db.tour_audio.find({'stop_id': stop['id']}).to_list(None)
-                # Return empty dict for audio, but client can check available languages
-                stop['audio'] = {}
-                stop['available_audio_languages'] = [af['language'] for af in audio_files]
+        # Fetch audio for all stops from tour_audio collection
+        for stop in all_stops:
+            audio_files = await db.tour_audio.find({'stop_id': stop['id']}).to_list(None)
+            stop['audio'] = {af['language']: af['audio_base64'] for af in audio_files}
         
         # Separate numbered stops and Legend stops
         numbered_stops = [s for s in all_stops if s.get('stop_number') is not None]
