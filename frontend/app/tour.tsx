@@ -190,17 +190,20 @@ const styles = StyleSheet.create({
   },
   stopContent: {
     flex: 1,
+    paddingRight: 8,
   },
   stopTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#fff',
-    marginBottom: 4,
+    marginBottom: 6,
+    flexWrap: 'wrap',
   },
   stopDescription: {
     fontSize: 14,
     color: '#aaa',
     lineHeight: 20,
+    flexWrap: 'wrap',
   },
   stopActions: {
     flexDirection: 'row',
