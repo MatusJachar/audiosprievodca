@@ -262,6 +262,20 @@ export default function Admin() {
     return languages[code] || code;
   };
 
+  const getLanguageFlag = (code: string): string => {
+    const flags: { [key: string]: string } = {
+      'sk': '🇸🇰',
+      'en': '🇬🇧',
+      'de': '🇩🇪',
+      'pl': '🇵🇱',
+      'ru': '🇷🇺',
+      'es': '🇪🇸',
+      'hu': '🇭🇺',
+      'zh': '🇨🇳',
+    };
+    return flags[code] || '🌐';
+  };
+
   const renderLegendItem = (legend: any, index: number, stopId: string) => {
     const legendNames = [
       'Brave Monk and the Girl',
