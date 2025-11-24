@@ -32,15 +32,6 @@ export default function Tour() {
     const completed = isStopCompleted(item.id);
     const isLegendStop = item.stop_name && item.stop_name.startsWith('Legend ');
     
-    // Truncate description to max 120 characters for preview
-    const truncateText = (text: string, maxLength: number = 120) => {
-      if (!text) return '';
-      if (text.length <= maxLength) return text;
-      return text.substring(0, maxLength).trim() + '...';
-    };
-    
-    const previewDescription = truncateText(content?.description || '');
-    
     return (
       <TouchableOpacity
         style={styles.stopCard}
