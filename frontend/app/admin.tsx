@@ -179,6 +179,89 @@ export default function Admin() {
     setImageModalVisible(true);
   };
 
+  const handleManageAudio = (stop: any) => {
+    setSelectedStop(stop);
+    setAudioModalVisible(true);
+  };
+
+  const pickAudioFile = async (language: string) => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: 'audio/*',
+        copyToCacheDirectory: true,
+      });
+
+      if (result.canceled || !result.assets || result.assets.length === 0) {
+        return;
+      }
+
+      const file = result.assets[0];
+      
+      // Check file size (limit to 50MB)
+      if (file.size && file.size > 50 * 1024 * 1024) {
+        Alert.alert('Error', 'File size must be less than 50MB');
+        return;
+      }
+
+      setUploadingAudio(true);
+
+      try {
+        // Read the audio file as base64
+        const base64 = await FileSystem.readAsStringAsync(file.uri, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+
+        // Upload to backend
+        const response = await fetch(`${API_URL}/api/audio/upload`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            stop_id: selectedStop.id,
+            language: language,
+            audio_base64: base64,
+          }),
+        });
+
+        if (response.ok) {
+          Alert.alert('Success', `Audio uploaded for ${getLanguageName(language)}!`);
+          fetchTourStops();
+          // Update the selected stop's audio in state
+          if (selectedStop) {
+            setSelectedStop({
+              ...selectedStop,
+              audio: { ...selectedStop.audio, [language]: base64 }
+            });
+          }
+        } else {
+          const error = await response.json();
+          Alert.alert('Error', error.detail || 'Failed to upload audio');
+        }
+      } catch (error) {
+        console.error('Upload error:', error);
+        Alert.alert('Error', 'Network error occurred while uploading');
+      } finally {
+        setUploadingAudio(false);
+      }
+    } catch (error) {
+      console.error('Document picker error:', error);
+      Alert.alert('Error', 'Failed to pick audio file');
+    }
+  };
+
+  const getLanguageName = (code: string): string => {
+    const languages: { [key: string]: string } = {
+      'sk': 'Slovak',
+      'en': 'English',
+      'de': 'German',
+      'pl': 'Polish',
+      'ru': 'Russian',
+      'es': 'Spanish',
+      'hu': 'Hungarian',
+      'zh': 'Chinese',
+    };
+    return languages[code] || code;
+  };
+
   const renderLegendItem = (legend: any, index: number, stopId: string) => {
     const legendNames = [
       'Brave Monk and the Girl',
