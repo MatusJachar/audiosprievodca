@@ -221,11 +221,30 @@ async def generate_audio(request: AudioGenerateRequest):
         # Convert to base64
         audio_base64 = base64.b64encode(audio_bytes).decode('utf-8')
         
-        # Update database
-        await db.tour_stops.update_one(
-            {"id": request.stop_id},
-            {"$set": {f"audio.{request.language}": audio_base64}}
-        )
+        # Store in tour_audio collection
+        existing_audio = await db.tour_audio.find_one({
+            "stop_id": request.stop_id,
+            "language": request.language
+        })
+        
+        if existing_audio:
+            await db.tour_audio.update_one(
+                {"stop_id": request.stop_id, "language": request.language},
+                {"$set": {
+                    "audio_base64": audio_base64,
+                    "updated_at": datetime.utcnow()
+                }}
+            )
+        else:
+            audio_doc = {
+                "id": str(uuid.uuid4()),
+                "stop_id": request.stop_id,
+                "language": request.language,
+                "audio_base64": audio_base64,
+                "created_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow()
+            }
+            await db.tour_audio.insert_one(audio_doc)
         
         return {
             "message": "Audio generated successfully",
