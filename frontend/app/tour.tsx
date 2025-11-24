@@ -49,8 +49,10 @@ export default function Tour() {
         </View>
         
         <View style={styles.stopContent}>
-          <Text style={styles.stopTitle}>{content?.title || 'Loading...'}</Text>
-          <Text style={styles.stopDescription} numberOfLines={2}>
+          <Text style={styles.stopTitle} numberOfLines={1} ellipsizeMode="tail">
+            {content?.title || 'Loading...'}
+          </Text>
+          <Text style={styles.stopDescription} numberOfLines={2} ellipsizeMode="tail">
             {content?.description || ''}
           </Text>
         </View>
