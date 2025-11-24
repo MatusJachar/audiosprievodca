@@ -52,7 +52,7 @@ export default function Tour() {
           <Text style={styles.stopTitle} numberOfLines={1} ellipsizeMode="tail">
             {content?.title || 'Loading...'}
           </Text>
-          <Text style={styles.stopDescription} numberOfLines={3} ellipsizeMode="tail">
+          <Text style={styles.stopDescription}>
             {content?.description || ''}
           </Text>
         </View>
