@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTourStore } from '../store/tourStore';
 import { useState, useEffect } from 'react';
 import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -14,8 +15,10 @@ export default function Admin() {
   const { tourStops, fetchTourStops } = useTourStore();
   const [selectedStop, setSelectedStop] = useState<any>(null);
   const [imageModalVisible, setImageModalVisible] = useState(false);
+  const [audioModalVisible, setAudioModalVisible] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadingAudio, setUploadingAudio] = useState(false);
   const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [checking, setChecking] = useState(true);
