@@ -205,7 +205,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#aaa',
     lineHeight: 20,
-    flexWrap: 'wrap',
+    maxHeight: 40,
+    overflow: 'hidden',
   },
   stopActions: {
     flexDirection: 'row',
