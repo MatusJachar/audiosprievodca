@@ -399,7 +399,7 @@ export default function Admin() {
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>
-                Manage Image - Stop {selectedStop?.stop_number}
+                Manage Image - Stop {selectedStop?.stop_number || selectedStop?.stop_name}
               </Text>
               <TouchableOpacity onPress={() => setImageModalVisible(false)}>
                 <Ionicons name="close" size={28} color="#fff" />
@@ -443,6 +443,72 @@ export default function Admin() {
                   </>
                 )}
               </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Audio Management Modal */}
+      <Modal
+        visible={audioModalVisible}
+        animationType="slide"
+        transparent={true}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                Manage Audio - {selectedStop?.stop_name || `Stop ${selectedStop?.stop_number}`}
+              </Text>
+              <TouchableOpacity onPress={() => setAudioModalVisible(false)}>
+                <Ionicons name="close" size={28} color="#fff" />
+              </TouchableOpacity>
+            </View>
+            
+            <ScrollView style={styles.audioModalContent}>
+              <Text style={styles.sectionSubtitle}>{selectedStop?.content.en.title}</Text>
+              
+              <View style={styles.audioLanguagesContainer}>
+                {['sk', 'en', 'de', 'pl', 'ru', 'es', 'hu', 'zh'].map((lang) => {
+                  const hasAudio = selectedStop?.audio?.[lang];
+                  return (
+                    <View key={lang} style={styles.audioLanguageItem}>
+                      <View style={styles.audioLanguageInfo}>
+                        <Text style={styles.languageFlag}>{getLanguageFlag(lang)}</Text>
+                        <View style={styles.languageDetails}>
+                          <Text style={styles.languageName}>{getLanguageName(lang)}</Text>
+                          <Text style={[styles.audioStatus2, hasAudio ? styles.audioStatusGreen : styles.audioStatusRed]}>
+                            {hasAudio ? '✓ Audio available' : '⚠ No audio'}
+                          </Text>
+                        </View>
+                      </View>
+                      <TouchableOpacity
+                        style={[styles.audioUploadButton, hasAudio && styles.audioReplaceButton]}
+                        onPress={() => pickAudioFile(lang)}
+                        disabled={uploadingAudio}
+                      >
+                        {uploadingAudio ? (
+                          <ActivityIndicator size="small" color="#fff" />
+                        ) : (
+                          <>
+                            <Ionicons name={hasAudio ? "refresh" : "cloud-upload"} size={18} color="#fff" />
+                            <Text style={styles.audioUploadButtonText}>
+                              {hasAudio ? 'Replace' : 'Upload'}
+                            </Text>
+                          </>
+                        )}
+                      </TouchableOpacity>
+                    </View>
+                  );
+                })}
+              </View>
+
+              <View style={styles.audioHintContainer}>
+                <Ionicons name="information-circle" size={20} color="#FFD700" />
+                <Text style={styles.audioHintText}>
+                  Upload MP3 audio files (max 50MB per file)
+                </Text>
+              </View>
             </ScrollView>
           </View>
         </View>
