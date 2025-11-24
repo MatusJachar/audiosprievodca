@@ -131,6 +131,11 @@ async def get_tour_stop(stop_id: str):
         stop = await db.tour_stops.find_one({"id": stop_id})
         if not stop:
             raise HTTPException(status_code=404, detail="Tour stop not found")
+        
+        # Fetch audio from tour_audio collection
+        audio_files = await db.tour_audio.find({'stop_id': stop_id}).to_list(None)
+        stop['audio'] = {af['language']: af['audio_base64'] for af in audio_files}
+        
         return TourStop(**stop)
     except HTTPException:
         raise
