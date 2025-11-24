@@ -246,11 +246,34 @@ async def upload_audio(request: AudioUploadRequest):
         if not stop:
             raise HTTPException(status_code=404, detail="Tour stop not found")
         
-        # Update database with uploaded audio
-        await db.tour_stops.update_one(
-            {"id": request.stop_id},
-            {"$set": {f"audio.{request.language}": request.audio_base64}}
-        )
+        # Check if audio already exists for this stop + language
+        existing_audio = await db.tour_audio.find_one({
+            "stop_id": request.stop_id,
+            "language": request.language
+        })
+        
+        if existing_audio:
+            # Update existing audio
+            await db.tour_audio.update_one(
+                {"stop_id": request.stop_id, "language": request.language},
+                {"$set": {
+                    "audio_base64": request.audio_base64,
+                    "updated_at": datetime.utcnow()
+                }}
+            )
+            logger.info(f"Updated audio for stop {request.stop_id} language {request.language}")
+        else:
+            # Insert new audio document
+            audio_doc = {
+                "id": str(uuid.uuid4()),
+                "stop_id": request.stop_id,
+                "language": request.language,
+                "audio_base64": request.audio_base64,
+                "created_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow()
+            }
+            await db.tour_audio.insert_one(audio_doc)
+            logger.info(f"Inserted new audio for stop {request.stop_id} language {request.language}")
         
         return {"message": "Audio uploaded successfully"}
     except HTTPException:
