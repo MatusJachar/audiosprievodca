@@ -101,6 +101,11 @@ async def get_tour_stops():
         # Get all stops
         all_stops = await db.tour_stops.find().to_list(100)
         
+        # Fetch audio for all stops from tour_audio collection
+        for stop in all_stops:
+            audio_files = await db.tour_audio.find({'stop_id': stop['id']}).to_list(None)
+            stop['audio'] = {af['language']: af['audio_base64'] for af in audio_files}
+        
         # Separate numbered stops and Legend stops
         numbered_stops = [s for s in all_stops if s.get('stop_number') is not None]
         legend_stops = [s for s in all_stops if s.get('stop_name', '').startswith('Legend ')]
