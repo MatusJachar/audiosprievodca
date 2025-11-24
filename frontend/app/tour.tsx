@@ -170,8 +170,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#1a1a1a',
     borderRadius: 12,
     padding: 16,
-    marginBottom: 12,
-    alignItems: 'center',
+    marginBottom: 16,
+    alignItems: 'flex-start',
+    minHeight: 80,
   },
   stopNumber: {
     width: 48,
