@@ -117,12 +117,23 @@ const styles = StyleSheet.create({
     marginTop: 8,
     textAlign: 'center',
   },
-  description: {
-    fontSize: 20,
-    color: '#aaa',
+  descriptionContainer: {
     marginTop: 24,
+    paddingHorizontal: 16,
+  },
+  descriptionBold: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#fff',
     textAlign: 'center',
     lineHeight: 28,
+    marginBottom: 12,
+  },
+  description: {
+    fontSize: 18,
+    color: '#FFD700',
+    textAlign: 'center',
+    lineHeight: 26,
   },
   startButton: {
     flexDirection: 'row',
