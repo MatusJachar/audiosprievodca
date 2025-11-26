@@ -42,7 +42,7 @@ export default function Tour() {
       >
         <View style={styles.stopNumber}>
           {isLegendStop ? (
-            <Ionicons name="book" size={24} color="#FFD700" />
+            <Ionicons name="book" size={28} color="#000" />
           ) : (
             <Text style={styles.stopNumberText}>{item.stop_number}</Text>
           )}
