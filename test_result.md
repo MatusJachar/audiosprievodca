@@ -240,6 +240,18 @@ frontend:
         - working: "NA"
           agent: "main"
           comment: "User reported audio not playing on mobile despite backend returning data. Added debug logging to track data flow. Created cache clearing utility. Need to verify if issue is caching, data format, or expo-av loading."
+  
+  - task: "Stop completion tracking - mark complete only after audio finishes"
+    implemented: true
+    working: "NA"
+    file: "frontend/app/stop-detail.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "User reported stops being permanently marked as completed incorrectly. Fixed by removing manual 'Mark as Complete' button. Now stops are only marked complete automatically when audio playback finishes (status.didJustFinish). The onPlaybackStatusUpdate callback at line 118-128 handles automatic completion tracking. This ensures visitors must actually listen to the audio to mark a stop complete."
 
 metadata:
   created_by: "testing_agent"
