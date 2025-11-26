@@ -256,7 +256,7 @@ test_plan:
 
 agent_communication:
     - agent: "testing"
-      message: "Comprehensive backend API testing completed successfully. All 9 core endpoints tested and working correctly. TTS audio generation functional, database operations working, user progress tracking operational. Backend URL correctly configured at https://audio-castle-1.preview.emergentagent.com/api. All tests passed with 100% success rate."
+      message: "Comprehensive backend API testing completed successfully. All 9 core endpoints tested and working correctly. TTS audio generation functional, database operations working, user progress tracking operational. Backend URL correctly configured at https://spistour.preview.emergentagent.com/api. All tests passed with 100% success rate."
     - agent: "main"
       message: "Investigating audio playback issue reported by user on mobile. Backend verified to be returning audio data correctly (1.16MB base64 for stop 1). Added debug logging to tourStore.ts and stop-detail.tsx to trace data flow. Created clear-cache.tsx utility page to help users resolve caching issues. Added troubleshooting section in settings. Restarted Expo service. Ready for backend testing."
     - agent: "testing"

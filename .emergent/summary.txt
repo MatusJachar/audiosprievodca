@@ -1,37 +1,34 @@
 <analysis>
-The trajectory documents an iterative and often contentious development process for a multi-language mobile audio tour app. The project began with foundational work, including creating the Expo/FastAPI stack and fixing an initial caching error. A significant portion of the work involved rectifying data integrity issues and misunderstandings with the user.
+The trajectory chronicles the development of a multi-language mobile audio tour app, marked by significant technical challenges and user-driven iterations. The initial work involved setting up the Expo/FastAPI stack and uploading user-provided audio files. A critical architectural flaw was discovered: embedding large base64 audio files directly into MongoDB documents exceeded the 16MB size limit. This necessitated a major refactor, migrating all audio data to a separate  collection and updating the backend API to handle this new structure.
 
-A major point of friction was the implementation of a Legends section. The AI engineer first misinterpreted this as a single stop, then as nested items, before finally, after multiple user complaints, restructuring it into four separate, numbered tour stops as requested. Another recurring problem was incomplete tour stop descriptions. The AI engineer struggled with this, first using abbreviated text, then incorrectly copying Spanish content into Slovak fields, leading to significant user frustration. The user ultimately updated the English descriptions manually via the newly-built admin panel.
+A major point of user friction occurred when the engineer implemented UI text truncation in the tour list to fix a layout bug. The user, having just spent hours manually updating 104 descriptions, perceived this as data loss, leading to angry feedback. The issue was purely a display bug, and the data was safe, but it highlighted a communication gap. The truncation was removed.
 
-Key technical challenges included a backend-crashing dependency conflict ( vs. ) and several UI/UX bugs, such as text overflow and a non-appearing background image, which were fixed iteratively. The final phase involved building a comprehensive, password-protected admin panel allowing for editable text and images for all tour stops, including the new Legend stops. The user's primary language is English; the next agent must respond in English.
+Further challenges included failed attempts to auto-generate audio via TTS APIs (both OpenAI and Google TTS failed due to API key limitations and rate-limiting). The project then pivoted to the user providing all audio files manually. This influx of data (over 500MB) caused severe performance timeouts. The engineer resolved this by implementing a lazy-loading mechanism: the main API endpoint now sends only metadata, and the frontend fetches audio for each stop on demand. The final interactions involved minor UI fixes (flags, welcome text, icons) and the user reporting a new bug with the stop completed feature, which is the current task.
+
+The user's primary language is English. The next agent must respond in English.
 </analysis>
 
 <product_requirements>
-The objective is to build and maintain a multi-language audio tour guide mobile app for Spiš Castle.
+The goal is to build a multi-language mobile audio tour app for Spiš Castle.
 
 **Core Features:**
-*   **Content Structure:** The app must feature 13 standard, numbered tour stops, followed by 4 separate, individually numbered stops for Legend 1, Legend 2, Legend 3, and Legend 4.
-*   **Multi-language Support:** The app supports 8 languages: English, Slovak, German, Polish, Russian, Spanish, Hungarian, and Chinese. All content must be translatable.
-*   **Visuals:**
-    *   A main background image must be displayed on the welcome/home screen.
-    *   Each of the 17 tour stops (13 main + 4 legends) must have a dedicated space for an image, which can be uploaded via the admin panel.
-*   **Admin Panel:** A comprehensive, password-protected admin panel accessible from a mobile device is required for all content management. It must allow authorized users to:
-    *   Edit the title and full description text for every stop in all supported languages.
-    *   Upload/manage a unique image for each of the 17 stops.
-    *   Upload/manage the main background image.
-    *   Manage or generate audio files for each stop.
+*   **Content:** 13 numbered tour stops plus 4 individually numbered Legend stops.
+*   **Languages:** Support for 8 languages: English, Slovak, German, Polish, Russian, Spanish, Hungarian, and Chinese.
+*   **Admin Panel:** A password-protected mobile admin panel () to edit all text content and upload images/audio for each stop and language.
+*   **Performance:** The app must load quickly and handle a large number of audio files without timeouts. Audio should be loaded on-demand (lazy-loading).
+*   **Offline Functionality:** The app should have a functional offline mode.
+*   **UI/UX:** A clean user interface with clear indicators for tour progress, language selection, and stop identification (e.g., icons for legends).
 
 **Implementation Status:**
-The application is largely functional. It now has 17 distinct tour stops (13 main + 4 legends). A password-protected () admin panel has been implemented, allowing for text and image editing. The background image is now correctly displayed. However, content integrity remains a concern; while the user manually updated the English text, other languages may still have incomplete or incorrect descriptions.
+The application is largely functional with 7 of 8 languages fully complete. The architecture has been refactored to support large audio files by storing them in a separate collection and implementing lazy-loading to solve performance issues. The admin panel supports text, image, and audio management. The UI has been refined based on user feedback. The primary pending work is completing the Slovak language tour and fixing bugs related to offline mode and tour progress tracking.
 </product_requirements>
 
 <key_technical_concepts>
 - **Frameworks**: Expo (React Native) frontend, FastAPI (Python) backend.
-- **Database**: MongoDB for storing tour data, including text, images (base64), and audio file references.
-- **State Management**: Zustand for frontend state.
-- **Image/Audio Handling**:  on the frontend. Assets are converted to base64 and sent to FastAPI endpoints for storage in MongoDB.
-- **Backend Scripting**: Extensive use of Python scripts for database migrations, content updates, and data correction (e.g., , ).
-- **Authentication**: Simple client-side password protection for the admin panel using Zustand persistence.
+- **Database**: MongoDB.
+- **Architecture**: A critical architectural change was made to move audio from embedded base64 strings within tour stop documents to a separate  collection to bypass MongoDB's 16MB document size limit.
+- **Performance**: Implemented lazy-loading for audio. The main  API endpoint no longer returns audio data, reducing initial load from ~500MB to ~0.6MB. The frontend () now fetches audio for a single stop on demand.
+- **Audio Processing**: Used  and  to compress large user-provided audio files on the fly to prevent upload errors.
 </key_technical_concepts>
 
 <code_architecture>
@@ -40,52 +37,51 @@ The application uses a monorepo structure with a  Expo app and a  FastAPI server
 
 
 -   ****
-    -   **Importance:** Defines all API endpoints for fetching tour data, managing content (CRUD operations on stops), generating audio, and handling image uploads.
-    -   **Changes:** Heavily modified to support the evolving data structure. Key changes include adding sorting logic to place Legend stops after stop 13, creating a new endpoint () for legend audio, and making model fields optional to accommodate different stop types.
+    -   **Importance:** The heart of the backend, defining all API endpoints for the app.
+    -   **Summary of Changes:** This file has undergone multiple major revisions.
+        1.  It was refactored to handle a separate  collection, changing how audio data is retrieved and associated with tour stops.
+        2.  The  endpoint was modified to implement lazy-loading. It no longer includes the base64 audio data in the main list response to solve a critical performance bottleneck, instead only returning metadata. An endpoint to fetch a single stop's full data (including audio) is used by the detail screen.
 
 -   ****
-    -   **Importance:** The main admin dashboard, providing an interface to manage all tour stops.
-    -   **Changes:** Reworked significantly to implement password protection, add Edit Text buttons linking to , and display image upload options for each of the 17 stops. The nested legend editing UI was removed. A logout button was also added.
-
--   ** and **
-    -   **Importance:** These new files create the UI for editing the text content (title and description) for each tour stop and legend in a tabbed view for all 8 languages.
-    -   **Changes:** Created from scratch to provide a dedicated, mobile-friendly text editing interface. They fetch the stop's current content and send  requests to the  endpoint to save changes.
+    -   **Importance:** The screen where users view a stop's details and play audio.
+    -   **Summary of Changes:** This file was modified to support the lazy-loading architecture. It now contains logic to fetch the full audio data for the specific stop when the component mounts, rather than relying on pre-loaded data from the global store. It was also updated to show a Loading audio... indicator instead of a premature error alert.
 
 -   ****
-    -   **Importance:** Displays the main list of all 17 tour stops.
-    -   **Changes:** Underwent multiple fixes to resolve a critical text overflow issue. The final fix involves manually truncating the description string in the code () because the  prop was not behaving as expected, especially with very long legend descriptions.
+    -   **Importance:** Displays the main list of all tour stops.
+    -   **Summary of Changes:** The file was edited to fix a user-reported UI issue. A controversial text truncation function was added and then completely removed. Finally, it was modified to display a book icon (📖) for Legend stops to differentiate them from numbered stops.
 
 -   ****
-    -   **Importance:** The initial welcome screen of the app.
-    -   **Changes:** Modified to correctly display the background image fetched from the database. A bug where a solid black container background was obscuring the image was fixed by changing the style to .
+    -   **Importance:** A Zustand store that manages the global state for tour stops, loading status, and language selection.
+    -   **Summary of Changes:** The  action was updated to work with the lazy-loading API, fetching the list of stops without audio data. It is the primary file to investigate for the stop completion logic bug.
 
 -   ****
-    -   **Importance:** The screen that shows the details for a single tour stop.
-    -   **Changes:** Updated to include an  component at the top to display the stop-specific image if it exists in the database.
+    -   **Importance:** Manages the state for language selection.
+    -   **Summary of Changes:** A minor but important UI fix was made here to change the incorrect Slovak flag emoji from 🇫🇰 to the correct 🇸🇰.
 
 -   ****
-    -   **Importance:** A critical migration script that reflects the final user requirement for the Legends section.
-    -   **Changes:** This script deleted the old single Legends stop and created four new, separate tour stops named Legend 1 through Legend 4, each with the standard stop structure.
+    -   **Importance:** The welcome/home screen of the app.
+    -   **Summary of Changes:** The descriptive text was updated per the user's request, and styling was applied to make it larger, split it into two lines, and add emphasis with bold and color.
 </code_architecture>
 
 <pending_tasks>
-- Compile and prepare the application for deployment on the iOS App Store and Google Play Store. This involves setting up Expo EAS, and generating necessary certificates and builds.
-- Enhance the text descriptions for the original 13 tour stops in all languages other than English and Spanish to be more detailed and complete.
-- Implement functionality to use any remaining user-provided professional Slovak audio files.
+- Upload the 4 remaining Slovak audio files for the Legend stops (user task).
+- Investigate and ensure the offline mode is working correctly.
+- Fix the logic for marking stops as completed. The user wants a stop to be marked as complete only after the audio has been listened to.
+- Compile and prepare the application for deployment on the iOS App Store and Google Play Store.
 </pending_tasks>
 
 <current_work>
-The most recent and final set of user-driven tasks involved a complete rework of the app's structure and functionality to address persistent user complaints.
+The last task initiated was a direct response to two user requests:
+1.  **Fixing Stop Completion Logic:** The user reported that some stops are permanently marked green as completed incorrectly. They want the logic fixed so a stop is only marked as complete after the user listens to the audio.
+2.  **Verifying Offline Mode:** The user asked to ensure the offline mode is working correctly.
 
-1.  **Legends Rework:** The single, nested Legends stop was deleted and replaced with four separate, individual tour stops (Legend 1, Legend 2, Legend 3, Legend 4). This required creating a backend script (), updating the backend sorting logic in , and modifying the frontend  to display them as regular stops.
-
-2.  **UI Overlap Fix:** A critical UI bug where long legend descriptions overflowed in the main tour list was fixed. After multiple failed attempts using styling props (), the issue was resolved by manually truncating the description text to 120 characters within the  component before rendering.
-
-3.  **Admin Panel Finalization:** A comprehensive, password-protected admin panel was implemented, allowing for mobile-friendly editing of text for all 17 stops across all 8 languages, as well as image and background management.
-
-4.  **Audio Upload Preparation:** The immediate task before this summary request was to handle a user upload of four MP3 audio files. The user explicitly requested these files be associated with the four new English-language legend stops. The previous AI engineer had located the uploaded artifacts and was preparing to process and link them to the corresponding database entries.
+Before this summary was requested, the AI engineer had just started investigating these issues. The first step was to examine the relevant code to understand the current implementation. The AI engineer identified  as the likely location for both the completion logic ( state) and the offline data handling ( function, which includes  logic). The work was paused immediately after identifying the files to inspect, before any code was read or modified. The core problem is to understand how the  array in the  is being populated and persisted, and to modify it so it's only updated upon successful audio playback completion.
 </current_work>
 
 <optional_next_step>
-Download the four provided MP3 audio files and upload them as base64 audio to the English language content for the four new Legend stops in the database.
+Analyze  and  to fix the stop completion logic. The goal is to ensure a stop is marked as complete only when its audio playback finishes.
 </optional_next_step>
+<direct_quotes>
+User: some stop are permanently marked green as completed. Make tour stop as completed if visitor listen audio. basically ensure right operation of that feature
+User: make sure that off-line mode is working.
+</direct_quotes>
