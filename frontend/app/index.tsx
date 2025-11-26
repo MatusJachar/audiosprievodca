@@ -113,11 +113,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   description: {
-    fontSize: 16,
+    fontSize: 20,
     color: '#aaa',
     marginTop: 24,
     textAlign: 'center',
-    lineHeight: 24,
+    lineHeight: 28,
   },
   startButton: {
     flexDirection: 'row',
