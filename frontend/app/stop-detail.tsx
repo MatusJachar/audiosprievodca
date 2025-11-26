@@ -19,11 +19,36 @@ export default function StopDetail() {
   const [playbackDuration, setPlaybackDuration] = useState(0);
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
   const [skipAmount, setSkipAmount] = useState(10000); // 10 seconds in milliseconds
+  const [stopWithAudio, setStopWithAudio] = useState<any>(null);
+  const [loadingAudio, setLoadingAudio] = useState(false);
 
   const stop = tourStops.find((s) => s.id === stopId);
   const content = stop?.content[selectedLanguage];
-  const audioBase64 = stop?.audio[selectedLanguage];
+  const audioBase64 = stopWithAudio?.audio?.[selectedLanguage] || stop?.audio?.[selectedLanguage];
   const isCompleted = userProgress?.completed_stops.includes(stopId as string) || false;
+
+  // Fetch audio separately when stop detail opens
+  useEffect(() => {
+    const fetchStopWithAudio = async () => {
+      if (!stopId || stopWithAudio) return;
+      
+      setLoadingAudio(true);
+      try {
+        const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+        const response = await fetch(`${API_URL}/api/tour-stops/${stopId}`);
+        if (response.ok) {
+          const stopData = await response.json();
+          setStopWithAudio(stopData);
+        }
+      } catch (error) {
+        console.error('[StopDetail] Error fetching audio:', error);
+      } finally {
+        setLoadingAudio(false);
+      }
+    };
+
+    fetchStopWithAudio();
+  }, [stopId]);
 
   // Debug logging
   useEffect(() => {
