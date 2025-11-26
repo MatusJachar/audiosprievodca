@@ -247,7 +247,16 @@ export default function StopDetail() {
         
         <Text style={styles.description}>{content?.description}</Text>
         
-        {!audioBase64 && (
+        {loadingAudio && (
+          <View style={styles.noAudioCard}>
+            <ActivityIndicator size="small" color="#FFD700" />
+            <Text style={styles.noAudioText}>
+              Loading audio...
+            </Text>
+          </View>
+        )}
+        
+        {!audioBase64 && !loadingAudio && (
           <View style={styles.noAudioCard}>
             <Ionicons name="information-circle" size={32} color="#FFD700" />
             <Text style={styles.noAudioText}>
