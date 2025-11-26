@@ -10,7 +10,7 @@ interface LanguageState {
 }
 
 export const LANGUAGES = [
-  { code: 'sk', name: 'Slovenčina', flag: '🇫🇰' },
+  { code: 'sk', name: 'Slovenčina', flag: '🇸🇰' },
   { code: 'en', name: 'English', flag: '🇬🇧' },
   { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
   { code: 'pl', name: 'Polski', flag: '🇵🇱' },
