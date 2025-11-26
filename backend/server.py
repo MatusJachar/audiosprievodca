@@ -96,15 +96,18 @@ async def root():
 
 @api_router.get("/tour-stops", response_model=List[TourStop])
 async def get_tour_stops():
-    """Get all tour stops - numbered stops first (1-13), then Legend 1-4 at the end"""
+    """Get all tour stops - numbered stops first (1-13), then Legend 1-4 at the end
+    NOTE: Audio is NOT included by default to prevent 500MB+ responses
+    Audio is fetched per-stop when viewing stop details
+    """
     try:
         # Get all stops
         all_stops = await db.tour_stops.find().to_list(100)
         
-        # Fetch audio for all stops from tour_audio collection
+        # DO NOT fetch audio here - it makes response 500MB+
+        # Audio is fetched per-stop in get_tour_stop() endpoint
         for stop in all_stops:
-            audio_files = await db.tour_audio.find({'stop_id': stop['id']}).to_list(None)
-            stop['audio'] = {af['language']: af['audio_base64'] for af in audio_files}
+            stop['audio'] = {}  # Empty audio field for list view
         
         # Separate numbered stops and Legend stops
         numbered_stops = [s for s in all_stops if s.get('stop_number') is not None]
