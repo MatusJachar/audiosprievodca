@@ -41,7 +41,7 @@ export default function Index() {
         <Text style={styles.subtitle}>Audio Tour Guide</Text>
         
         <Text style={styles.description}>
-          Explore one of the largest castle complexes in Europe with our interactive audio guide in 8 languages.
+          Explore, Discover and Immerse yourself in the largest U.N.E.S.C.O castle complexes in Europe. Our audio guide will take you through centuries of history, architecture and legends.
         </Text>
         
         <TouchableOpacity
