@@ -179,6 +179,9 @@ backend:
         - working: true
           agent: "testing"
           comment: "✅ PASS: Successfully marked tour stop as complete. Stop ID correctly added to completed_stops array. Progress persistence verified."
+        - working: true
+          agent: "testing"
+          comment: "✅ COMPREHENSIVE RE-TEST PASSED: After frontend fix, verified POST /api/progress/default-user/complete/{stop_id} correctly adds stop IDs to completed_stops array. Tested single completion, multiple completions, and duplicate completion handling (no duplicates created). All scenarios persist correctly in database."
 
   - task: "POST /api/progress/default-user/reset - Reset progress"
     implemented: true
