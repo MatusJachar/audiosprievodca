@@ -194,6 +194,9 @@ backend:
         - working: true
           agent: "testing"
           comment: "✅ PASS: Successfully reset user progress. completed_stops array cleared. Reset functionality working correctly."
+        - working: true
+          agent: "testing"
+          comment: "✅ COMPREHENSIVE RE-TEST PASSED: After frontend fix, verified POST /api/progress/default-user/reset correctly clears completed_stops array and resets progress to clean state. Tested reset from both empty state and populated state (with multiple completed stops). All scenarios working correctly."
 
   - task: "Root API endpoint - GET /api/"
     implemented: true
