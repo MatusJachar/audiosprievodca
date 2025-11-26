@@ -40,9 +40,14 @@ export default function Index() {
         <Text style={styles.title}>Spiš Castle</Text>
         <Text style={styles.subtitle}>Audio Tour Guide</Text>
         
-        <Text style={styles.description}>
-          Explore, Discover and Immerse yourself in the largest U.N.E.S.C.O castle complexes in Europe. Our audio guide will take you through centuries of history, architecture and legends.
-        </Text>
+        <View style={styles.descriptionContainer}>
+          <Text style={styles.descriptionBold}>
+            Explore, Discover and Immerse yourself in the largest U.N.E.S.C.O castle complexes in Europe.
+          </Text>
+          <Text style={styles.description}>
+            Our audio guide will take you through centuries of history, architecture and legends.
+          </Text>
+        </View>
         
         <TouchableOpacity
           style={styles.startButton}
