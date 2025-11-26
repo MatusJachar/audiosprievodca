@@ -264,16 +264,6 @@ export default function StopDetail() {
             </Text>
           </View>
         )}
-        
-        {!isCompleted && audioBase64 && (
-          <TouchableOpacity
-            style={styles.completeButton}
-            onPress={handleMarkComplete}
-          >
-            <Ionicons name="checkmark" size={20} color="#fff" />
-            <Text style={styles.completeButtonText}>Mark as Complete</Text>
-          </TouchableOpacity>
-        )}
       </ScrollView>
       
       {audioBase64 && (
