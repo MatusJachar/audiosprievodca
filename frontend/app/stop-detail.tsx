@@ -367,8 +367,6 @@ const styles = StyleSheet.create({
   description: { fontSize: 16, color: '#ccc', lineHeight: 24, marginBottom: 24 },
   noAudioCard: { backgroundColor: '#2a2a1a', padding: 20, borderRadius: 12, alignItems: 'center', gap: 12, marginBottom: 16 },
   noAudioText: { color: '#FFD700', textAlign: 'center', fontSize: 14, lineHeight: 20 },
-  completeButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#4CAF50', padding: 16, borderRadius: 12, gap: 8 },
-  completeButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
   audioPlayer: { backgroundColor: '#1a1a1a', padding: 24, paddingBottom: 40 },
   progressContainer: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
   progressBarWrapper: { flex: 1 },
