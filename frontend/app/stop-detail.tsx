@@ -71,8 +71,16 @@ export default function StopDetail() {
 
   const handlePlayPause = async () => {
     try {
+      // If audio is still loading, wait
+      if (loadingAudio) {
+        return; // Silently return while loading
+      }
+      
       if (!audioBase64) {
-        alert('Audio not available for this language. Please contact admin.');
+        // Only show error after audio fetch has completed
+        if (!loadingAudio) {
+          alert('Audio not available for this language. Please contact admin.');
+        }
         return;
       }
 
