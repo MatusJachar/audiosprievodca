@@ -201,10 +201,6 @@ export default function StopDetail() {
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
   };
 
-  const handleMarkComplete = () => {
-    markStopComplete('default-user', stopId as string);
-  };
-
   if (!stop) {
     return (
       <View style={[styles.container, styles.centered]}>
