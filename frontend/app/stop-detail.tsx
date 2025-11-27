@@ -355,7 +355,7 @@ export default function StopDetail() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0c0c0c' },
+  container: { flex: 1, backgroundColor: 'transparent' },
   centered: { justifyContent: 'center', alignItems: 'center' },
   loadingText: { color: '#aaa', marginTop: 16, fontSize: 16 },
   header: { flexDirection: 'row', alignItems: 'center', padding: 24, paddingTop: 60, gap: 16 },
