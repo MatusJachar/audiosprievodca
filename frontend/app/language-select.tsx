@@ -60,6 +60,7 @@ export default function LanguageSelect() {
         </TouchableOpacity>
       </View>
     </View>
+    </BackgroundWrapper>
   );
 }
 
