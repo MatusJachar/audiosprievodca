@@ -127,7 +127,10 @@ export default function Tour() {
           </TouchableOpacity>
         </View>
         
-        <Text style={styles.headerTitle}>Tour Stops</Text>
+        <View style={styles.headerTitleContainer}>
+          <Text style={styles.headerTitle}>{getTourRoute().name}</Text>
+          <Text style={styles.headerSubtitle}>{getTourRoute().duration}</Text>
+        </View>
         
         {/* Progress Bar */}
         <View style={styles.progressContainer}>
@@ -135,14 +138,14 @@ export default function Tour() {
             <View style={[styles.progressFill, { width: `${progressPercentage}%` }]} />
           </View>
           <Text style={styles.progressText}>
-            {completedCount} / {totalCount} completed
+            {completedInTour} / {totalCount} completed
           </Text>
         </View>
       </View>
       
       {/* Tour Stops List */}
       <FlatList
-        data={tourStops}
+        data={filteredTourStops}
         renderItem={renderTourStop}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
