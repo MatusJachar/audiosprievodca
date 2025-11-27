@@ -358,7 +358,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: 'transparent' },
   centered: { justifyContent: 'center', alignItems: 'center' },
   loadingText: { color: '#aaa', marginTop: 16, fontSize: 16 },
-  header: { flexDirection: 'row', alignItems: 'center', padding: 24, paddingTop: 60, gap: 16 },
+  header: { flexDirection: 'row', alignItems: 'center', padding: 16, paddingTop: 50, gap: 12, backgroundColor: 'transparent' },
   backButton: { padding: 8 },
   stopNumberBadge: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#FFD700', justifyContent: 'center', alignItems: 'center' },
   stopNumberBadgeText: { fontSize: 20, fontWeight: 'bold', color: '#000' },
