@@ -67,7 +67,7 @@ export default function LanguageSelect() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0c0c0c',
+    backgroundColor: 'transparent',
   },
   header: {
     alignItems: 'center',
