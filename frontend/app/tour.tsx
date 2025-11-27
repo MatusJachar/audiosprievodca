@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
   },
   stopCard: {
     flexDirection: 'row',
-    backgroundColor: '#1a1a1a',
+    backgroundColor: 'rgba(26, 26, 26, 0.9)',
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
