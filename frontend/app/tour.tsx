@@ -180,11 +180,19 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 16,
   },
+  headerTitleContainer: {
+    marginBottom: 16,
+  },
   headerTitle: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#fff',
-    marginBottom: 16,
+    marginBottom: 4,
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: '#FFD700',
+    fontWeight: '600',
   },
   progressContainer: {
     gap: 8,
