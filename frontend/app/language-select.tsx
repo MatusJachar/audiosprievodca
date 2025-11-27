@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useLanguageStore, LANGUAGES } from '../store/languageStore';
+import BackgroundWrapper from '../components/BackgroundWrapper';
 
 export default function LanguageSelect() {
   const { selectedLanguage, setLanguage } = useLanguageStore();
@@ -13,8 +14,9 @@ export default function LanguageSelect() {
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="light" />
+    <BackgroundWrapper>
+      <View style={styles.container}>
+        <StatusBar style="light" />
       
       <View style={styles.header}>
         <Ionicons name="language" size={48} color="#FFD700" />
