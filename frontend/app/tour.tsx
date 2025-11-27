@@ -70,16 +70,19 @@ export default function Tour() {
 
   if (loading && tourStops.length === 0) {
     return (
-      <View style={[styles.container, styles.centered]}>
-        <ActivityIndicator size="large" color="#FFD700" />
-        <Text style={styles.loadingText}>Loading tour...</Text>
-      </View>
+      <BackgroundWrapper>
+        <View style={[styles.container, styles.centered]}>
+          <ActivityIndicator size="large" color="#FFD700" />
+          <Text style={styles.loadingText}>Loading tour...</Text>
+        </View>
+      </BackgroundWrapper>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="light" />
+    <BackgroundWrapper>
+      <View style={styles.container}>
+        <StatusBar style="light" />
       
       {/* Header */}
       <View style={styles.header}>
