@@ -117,6 +117,7 @@ export default function Tour() {
         showsVerticalScrollIndicator={false}
       />
     </View>
+    </BackgroundWrapper>
   );
 }
 
