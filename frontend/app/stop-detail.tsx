@@ -244,10 +244,13 @@ export default function StopDetail() {
         <Text style={styles.description}>{content?.description}</Text>
         
         {loadingAudio && (
-          <View style={styles.noAudioCard}>
-            <ActivityIndicator size="small" color="#FFD700" />
-            <Text style={styles.noAudioText}>
-              Loading audio...
+          <View style={styles.loadingAudioCard}>
+            <ActivityIndicator size="large" color="#FFD700" />
+            <Text style={styles.loadingAudioTitle}>
+              Preparing Audio...
+            </Text>
+            <Text style={styles.loadingAudioSubtitle}>
+              This may take a few moments
             </Text>
           </View>
         )}
