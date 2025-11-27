@@ -10,7 +10,7 @@ export default function LanguageSelect() {
 
   const handleLanguageSelect = async (langCode: string) => {
     await setLanguage(langCode as any);
-    router.push('/tour');
+    router.push('/tour-select');
   };
 
   return (
