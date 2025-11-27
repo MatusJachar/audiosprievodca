@@ -6,6 +6,7 @@ import { useTourStore } from '../store/tourStore';
 import { useLanguageStore } from '../store/languageStore';
 import { useEffect, useState } from 'react';
 import { Audio } from 'expo-av';
+import BackgroundWrapper from '../components/BackgroundWrapper';
 
 export default function StopDetail() {
   const { stopId } = useLocalSearchParams();
