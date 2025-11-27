@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTourStore } from '../store/tourStore';
 import { useLanguageStore } from '../store/languageStore';
 import { useEffect } from 'react';
+import BackgroundWrapper from '../components/BackgroundWrapper';
 
 export default function Tour() {
   const { tourStops, userProgress, loading, fetchTourStops, fetchUserProgress } = useTourStore();
