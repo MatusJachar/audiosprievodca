@@ -204,16 +204,19 @@ export default function StopDetail() {
 
   if (!stop) {
     return (
-      <View style={[styles.container, styles.centered]}>
-        <ActivityIndicator size="large" color="#FFD700" />
-        <Text style={styles.loadingText}>Loading...</Text>
-      </View>
+      <BackgroundWrapper>
+        <View style={[styles.container, styles.centered]}>
+          <ActivityIndicator size="large" color="#FFD700" />
+          <Text style={styles.loadingText}>Loading...</Text>
+        </View>
+      </BackgroundWrapper>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="light" />
+    <BackgroundWrapper>
+      <View style={styles.container}>
+        <StatusBar style="light" />
       
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
