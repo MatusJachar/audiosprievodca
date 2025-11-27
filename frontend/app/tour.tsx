@@ -124,7 +124,7 @@ export default function Tour() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0c0c0c',
+    backgroundColor: 'transparent',
   },
   centered: {
     justifyContent: 'center',
