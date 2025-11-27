@@ -350,6 +350,7 @@ export default function StopDetail() {
         </View>
       )}
     </View>
+    </BackgroundWrapper>
   );
 }
 
