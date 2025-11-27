@@ -4,12 +4,14 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useTourStore } from '../store/tourStore';
 import { useLanguageStore } from '../store/languageStore';
-import { useEffect } from 'react';
+import { useTourTypeStore } from '../store/tourTypeStore';
+import { useEffect, useMemo } from 'react';
 import BackgroundWrapper from '../components/BackgroundWrapper';
 
 export default function Tour() {
   const { tourStops, userProgress, loading, fetchTourStops, fetchUserProgress } = useTourStore();
   const selectedLanguage = useLanguageStore((state) => state.selectedLanguage);
+  const { getTourRoute } = useTourTypeStore();
 
   useEffect(() => {
     if (tourStops.length === 0) {
@@ -20,13 +22,43 @@ export default function Tour() {
     }
   }, []);
 
+  // Filter tour stops based on selected tour type
+  const filteredTourStops = useMemo(() => {
+    const tourRoute = getTourRoute();
+    
+    return tourStops.filter(stop => {
+      // Check if it's a legend stop
+      const isLegendStop = stop.stop_name && stop.stop_name.startsWith('Legend ');
+      
+      if (isLegendStop) {
+        // For legend stops, check if the index is in legendIndexes
+        // Legend stops have stop_name like "Legend 1", "Legend 2", etc.
+        const legendMatch = stop.stop_name?.match(/Legend (\d+)/);
+        if (legendMatch) {
+          const legendNumber = parseInt(legendMatch[1]);
+          const legendIndex = legendNumber - 1; // Convert to 0-based index
+          return tourRoute.legendIndexes.includes(legendIndex);
+        }
+        return false;
+      } else {
+        // For regular stops, check if stop_number is in stopNumbers
+        return tourRoute.stopNumbers.includes(stop.stop_number);
+      }
+    });
+  }, [tourStops, getTourRoute]);
+
   const isStopCompleted = (stopId: string) => {
     return userProgress?.completed_stops.includes(stopId) || false;
   };
 
-  const completedCount = userProgress?.completed_stops.length || 0;
-  const totalCount = tourStops.length;
-  const progressPercentage = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
+  // Calculate progress based on filtered stops
+  const completedInTour = useMemo(() => {
+    const filteredIds = filteredTourStops.map(stop => stop.id);
+    return userProgress?.completed_stops.filter(id => filteredIds.includes(id)).length || 0;
+  }, [filteredTourStops, userProgress]);
+
+  const totalCount = filteredTourStops.length;
+  const progressPercentage = totalCount > 0 ? (completedInTour / totalCount) * 100 : 0;
 
   const renderTourStop = ({ item }: { item: any }) => {
     const content = item.content[selectedLanguage];
