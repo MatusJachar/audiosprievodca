@@ -25,13 +25,16 @@ export default function TourSelect() {
 
   const handleContinue = async () => {
     // Check if already cached
-    const isCached = await OfflineCacheManager.isTourCached(selectedLanguage);
+    // const isCached = await OfflineCacheManager.isTourCached(selectedLanguage);
     
-    if (isCached) {
-      router.push('/tour');
-    } else {
-      setShowDownloadModal(true);
-    }
+    // if (isCached) {
+    //   router.push('/tour');
+    // } else {
+    //   setShowDownloadModal(true);
+    // }
+    
+    // For now, just go to tour directly
+    router.push('/tour');
   };
 
   const handleDownloadTour = async () => {
