@@ -63,7 +63,8 @@ export default function Tour() {
   const renderTourStop = ({ item }: { item: any }) => {
     const content = item.content?.[selectedLanguage] || item.content?.['en'] || { title: 'Loading...', description: '' };
     const completed = isStopCompleted(item.id);
-    const isLegendStop = item.stop_name && item.stop_name.startsWith('Legend ');
+    // Check if it's a legend - either by stop_name or by missing stop_number
+    const isLegendStop = !item.stop_number || (item.stop_name && item.stop_name.includes('Legend'));
     
     return (
       <TouchableOpacity
