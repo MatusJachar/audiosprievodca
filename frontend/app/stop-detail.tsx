@@ -38,11 +38,41 @@ export default function StopDetail() {
       
       setLoadingAudio(true);
       try {
+        // STEP 1: Check if audio is cached locally
+        const cachedUri = await OfflineCacheManager.getCachedAudioUri(stopId as string, selectedLanguage);
+        
+        if (cachedUri) {
+          console.log('[StopDetail] Using cached audio from:', cachedUri);
+          // Create a mock stop object with the cached audio URI
+          setStopWithAudio({
+            ...stop,
+            audio: {
+              ...stop?.audio,
+              [selectedLanguage]: cachedUri
+            }
+          } as any);
+          setLoadingAudio(false);
+          return;
+        }
+        
+        // STEP 2: If not cached, fetch from API
+        console.log('[StopDetail] No cache, fetching from API...');
         const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
         const response = await fetch(`${API_URL}/api/tour-stops/${stopId}`);
         if (response.ok) {
           const stopData = await response.json();
           setStopWithAudio(stopData);
+          
+          // STEP 3: Cache the audio for next time
+          const audioB64 = stopData.audio?.[selectedLanguage];
+          if (audioB64) {
+            try {
+              await OfflineCacheManager.downloadAudio(stopId as string, selectedLanguage, audioB64);
+              console.log('[StopDetail] Audio cached for offline use');
+            } catch (cacheError) {
+              console.warn('[StopDetail] Could not cache audio:', cacheError);
+            }
+          }
         }
       } catch (error) {
         console.error('[StopDetail] Error fetching audio:', error);
