@@ -16,7 +16,7 @@ export default function TourSelect() {
   const renderTourCard = (tourType: TourType) => {
     const route = TOUR_ROUTES[tourType];
     const isSelected = selectedTourType === tourType;
-    const totalStops = route.stopNumbers.length + route.legendIndexes.length;
+    const totalStops = route.stopNumbers.length; // Only count numbered stops, not legends
 
     return (
       <TouchableOpacity
