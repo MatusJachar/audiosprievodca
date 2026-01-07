@@ -11,6 +11,7 @@ interface TourRoute {
   duration: string;
   stopNumbers: number[];
   legendIndexes: number[]; // 0-based indexes for legends array
+  totalLegends: number; // Total legends including those embedded in tour stop descriptions
 }
 
 export const TOUR_ROUTES: Record<TourType, TourRoute> = {
