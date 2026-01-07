@@ -163,7 +163,7 @@ export default function TourSelect() {
         <View style={styles.footer}>
           <TouchableOpacity
             style={styles.continueButton}
-            onPress={() => router.push('/tour')}
+            onPress={handleContinue}
           >
             <Text style={styles.continueButtonText}>Continue</Text>
             <Ionicons name="arrow-forward" size={20} color="#000" />
