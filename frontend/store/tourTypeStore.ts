@@ -23,6 +23,7 @@ export const TOUR_ROUTES: Record<TourType, TourRoute> = {
     duration: '~1 hour',
     stopNumbers: [1, 2, 4, 8, 9, 11, 12],
     legendIndexes: [0, 3], // 1st and 4th legends
+    totalLegends: 5, // 2 dedicated legends + 3 embedded in descriptions
   },
   complete: {
     id: 'complete',
@@ -32,6 +33,7 @@ export const TOUR_ROUTES: Record<TourType, TourRoute> = {
     duration: '~2.5 hours',
     stopNumbers: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
     legendIndexes: [0, 1, 2, 3], // All 4 legends
+    totalLegends: 6, // 4 dedicated legends + 2 embedded in descriptions
   },
   express: {
     id: 'express',
@@ -41,6 +43,7 @@ export const TOUR_ROUTES: Record<TourType, TourRoute> = {
     duration: '~45 minutes',
     stopNumbers: [1, 2, 3, 7, 8, 11, 12],
     legendIndexes: [2], // 3rd legend
+    totalLegends: 3, // 1 dedicated legend + 2 embedded in descriptions
   },
 };
 
