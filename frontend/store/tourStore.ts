@@ -9,6 +9,7 @@ interface TourStopContent {
 export interface TourStop {
   id: string;
   stop_number: number;
+  stop_name?: string;
   image_base64?: string;
   content: Record<string, TourStopContent>;
   audio: Record<string, string>;
