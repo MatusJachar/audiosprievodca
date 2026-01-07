@@ -61,7 +61,7 @@ export default function Tour() {
   const progressPercentage = totalCount > 0 ? (completedInTour / totalCount) * 100 : 0;
 
   const renderTourStop = ({ item }: { item: any }) => {
-    const content = item.content[selectedLanguage];
+    const content = item.content?.[selectedLanguage] || item.content?.['en'] || { title: 'Loading...', description: '' };
     const completed = isStopCompleted(item.id);
     const isLegendStop = item.stop_name && item.stop_name.startsWith('Legend ');
     
