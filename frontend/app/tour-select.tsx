@@ -13,9 +13,69 @@ const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 export default function TourSelect() {
   const { selectedTourType, setTourType } = useTourTypeStore();
+  const selectedLanguage = useLanguageStore((state) => state.selectedLanguage);
+  const { tourStops, fetchTourStops } = useTourStore();
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState({ total: 0, downloaded: 0, currentItem: '' });
 
   const handleTourSelect = async (tourType: TourType) => {
     await setTourType(tourType);
+  };
+
+  const handleContinue = async () => {
+    // Check if already cached
+    const isCached = await OfflineCacheManager.isTourCached(selectedLanguage);
+    
+    if (isCached) {
+      router.push('/tour');
+    } else {
+      setShowDownloadModal(true);
+    }
+  };
+
+  const handleDownloadTour = async () => {
+    try {
+      setDownloading(true);
+      
+      // Fetch tour stops if not already loaded
+      if (tourStops.length === 0) {
+        await fetchTourStops();
+      }
+
+      // Download tour data for offline use
+      await OfflineCacheManager.downloadTourForOffline(
+        tourStops,
+        selectedLanguage,
+        API_URL || '',
+        (progress) => {
+          setDownloadProgress(progress);
+        }
+      );
+
+      setDownloading(false);
+      setShowDownloadModal(false);
+      
+      Alert.alert(
+        'Download Complete!',
+        'Tour is now available offline. Enjoy your visit!',
+        [{ text: 'Start Tour', onPress: () => router.push('/tour') }]
+      );
+    } catch (error) {
+      setDownloading(false);
+      Alert.alert(
+        'Download Failed',
+        'Unable to download tour. You can still use online mode.',
+        [
+          { text: 'Try Again', onPress: handleDownloadTour },
+          { text: 'Use Online', onPress: () => router.push('/tour') }
+        ]
+      );
+    }
+  };
+
+  const handleSkipDownload = () => {
+    setShowDownloadModal(false);
     router.push('/tour');
   };
 
