@@ -19,6 +19,7 @@ export default function EditStop() {
   const languages = [
     { code: 'en', name: 'English' },
     { code: 'sk', name: 'Slovak' },
+    { code: 'fr', name: 'French' },
     { code: 'de', name: 'German' },
     { code: 'pl', name: 'Polish' },
     { code: 'ru', name: 'Russian' },
