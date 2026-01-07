@@ -30,6 +30,7 @@ def upload_french_audio():
     
     print("🇫🇷 French Audio Upload Script")
     print("=" * 50)
+    print(f"Found {len(tour_stops)} tour stops in database\n")
     
     uploaded_count = 0
     skipped_count = 0
@@ -38,7 +39,12 @@ def upload_french_audio():
     # Process each tour stop
     for stop in tour_stops:
         stop_number = stop.get('stop_number')
-        stop_id = str(stop['_id'])
+        stop_id = stop.get('id')  # Use 'id' field, not '_id'
+        
+        if not stop_id:
+            print(f"⚠️  Stop has no 'id' field - skipping")
+            skipped_count += 1
+            continue
         
         # Skip legend stops (they don't have stop_number)
         if stop_number is None:
