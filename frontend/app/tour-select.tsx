@@ -1,9 +1,15 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal, ActivityIndicator, Alert } from 'react-native';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useTourTypeStore, TOUR_ROUTES, TourType } from '../store/tourTypeStore';
+import { useLanguageStore } from '../store/languageStore';
+import { useTourStore } from '../store/tourStore';
 import BackgroundWrapper from '../components/BackgroundWrapper';
+import { OfflineCacheManager } from '../utils/offlineCacheManager';
+import { useState } from 'react';
+
+const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 export default function TourSelect() {
   const { selectedTourType, setTourType } = useTourTypeStore();
