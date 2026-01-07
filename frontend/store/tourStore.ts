@@ -55,6 +55,8 @@ export const useTourStore = create<TourState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       console.log('[TourStore] Fetching tour stops from:', `${API_URL}/api/tour-stops`);
+      
+      // Try to fetch from network
       const response = await fetch(`${API_URL}/api/tour-stops`);
       if (!response.ok) throw new Error('Failed to fetch tour stops');
       const data = await response.json();
@@ -67,17 +69,43 @@ export const useTourStore = create<TourState>((set, get) => ({
         console.log('[TourStore] English audio length:', firstStop.audio?.en?.length || 0);
       }
       
-      set({ tourStops: data, loading: false });
+      set({ tourStops: data, loading: false, error: null });
       
-      // Cache only metadata (without audio) to avoid quota issues
-      // Audio files are too large (111MB total) for localStorage
+      // Cache metadata for offline use
       try {
         const metadataOnly = data.map((stop: TourStop) => ({
           id: stop.id,
           stop_number: stop.stop_number,
+          stop_name: stop.stop_name,
           content: stop.content,
           image_base64: stop.image_base64,
           created_at: stop.created_at,
+          updated_at: stop.updated_at,
+        }));
+        await AsyncStorage.setItem('tourStops', JSON.stringify(metadataOnly));
+        console.log('[TourStore] Cached metadata for', metadataOnly.length, 'tour stops');
+      } catch (cacheError) {
+        console.error('[TourStore] Cache error:', cacheError);
+      }
+    } catch (error) {
+      console.error('[TourStore] Network error:', error);
+      
+      // Try to load from cache for offline mode
+      try {
+        const cached = await AsyncStorage.getItem('tourStops');
+        if (cached) {
+          const data = JSON.parse(cached);
+          set({ tourStops: data, loading: false, isOfflineMode: true });
+          console.log('[TourStore] Loaded from cache (offline mode)');
+        } else {
+          set({ error: 'No internet connection and no cached data available', loading: false });
+        }
+      } catch (cacheError) {
+        set({ error: 'Failed to load tour data', loading: false });
+        console.error('[TourStore] Cache load error:', cacheError);
+      }
+    }
+  },
           updated_at: stop.updated_at,
           // Don't cache audio - it's too large
         }));
