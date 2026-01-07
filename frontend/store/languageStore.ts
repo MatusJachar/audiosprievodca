@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-type Language = 'sk' | 'en' | 'de' | 'pl' | 'ru' | 'es' | 'hu' | 'zh';
+type Language = 'sk' | 'en' | 'de' | 'pl' | 'ru' | 'es' | 'hu' | 'zh' | 'fr';
 
 interface LanguageState {
   selectedLanguage: Language;
@@ -12,6 +12,7 @@ interface LanguageState {
 export const LANGUAGES = [
   { code: 'sk', name: 'Slovenčina', flag: '🇸🇰' },
   { code: 'en', name: 'English', flag: '🇬🇧' },
+  { code: 'fr', name: 'Français', flag: '🇫🇷' },
   { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
   { code: 'pl', name: 'Polski', flag: '🇵🇱' },
   { code: 'ru', name: 'Русский', flag: '🇷🇺' },
