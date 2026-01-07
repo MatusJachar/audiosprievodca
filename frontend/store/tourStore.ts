@@ -107,20 +107,6 @@ export const useTourStore = create<TourState>((set, get) => ({
       }
     }
   },
-          updated_at: stop.updated_at,
-          // Don't cache audio - it's too large
-        }));
-        await AsyncStorage.setItem('tourStopsMetadata', JSON.stringify(metadataOnly));
-        console.log('[TourStore] Tour stops metadata cached (without audio)');
-      } catch (cacheError) {
-        console.warn('[TourStore] Could not cache metadata:', cacheError);
-        // Non-critical error, continue anyway
-      }
-    } catch (error) {
-      console.error('[TourStore] Error fetching tour stops:', error);
-      set({ error: 'Failed to load tour data. Please check your internet connection.', loading: false });
-    }
-  },
   
   fetchUserProgress: async (userId: string) => {
     try {
