@@ -7,6 +7,9 @@ import { useLanguageStore } from '../store/languageStore';
 import { useEffect, useState } from 'react';
 import { Audio } from 'expo-av';
 import BackgroundWrapper from '../components/BackgroundWrapper';
+import { OfflineCacheManager } from '../utils/offlineCacheManager';
+
+const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 export default function StopDetail() {
   const { stopId } = useLocalSearchParams();
