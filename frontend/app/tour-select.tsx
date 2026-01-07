@@ -61,7 +61,7 @@ export default function TourSelect() {
             • {route.stopNumbers.length} tour stops
           </Text>
           <Text style={styles.includesText}>
-            • {route.legendIndexes.length} legend{route.legendIndexes.length > 1 ? 's' : ''}
+            • {route.totalLegends} legend{route.totalLegends > 1 ? 's' : ''}
           </Text>
         </View>
       </TouchableOpacity>
