@@ -47,14 +47,17 @@ export default function TourSelect() {
       }
 
       // Download tour data for offline use
-      await OfflineCacheManager.downloadTourForOffline(
-        tourStops,
-        selectedLanguage,
-        API_URL || '',
-        (progress) => {
-          setDownloadProgress(progress);
-        }
-      );
+      // await OfflineCacheManager.downloadTourForOffline(
+      //   tourStops,
+      //   selectedLanguage,
+      //   API_URL || '',
+      //   (progress) => {
+      //     setDownloadProgress(progress);
+      //   }
+      // );
+
+      // Simulate download for now
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
       setDownloading(false);
       setShowDownloadModal(false);
