@@ -17,8 +17,9 @@ load_dotenv()
 
 # MongoDB connection
 MONGO_URL = os.getenv('MONGO_URL', 'mongodb://localhost:27017/')
+DB_NAME = os.getenv('DB_NAME', 'test_database')
 client = MongoClient(MONGO_URL)
-db = client['tour_guide_db']
+db = client[DB_NAME]
 tour_audio_collection = db['tour_audio']
 tour_stops_collection = db['tour_stops']
 
