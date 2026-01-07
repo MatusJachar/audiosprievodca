@@ -170,6 +170,54 @@ export default function TourSelect() {
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Download Modal */}
+      <Modal
+        visible={showDownloadModal}
+        transparent={true}
+        animationType="fade"
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Ionicons name="download" size={48} color="#FFD700" />
+              <Text style={styles.modalTitle}>Download Tour</Text>
+              <Text style={styles.modalSubtitle}>
+                Download tour content for offline access
+              </Text>
+            </View>
+
+            {downloading ? (
+              <View style={styles.downloadProgress}>
+                <ActivityIndicator size="large" color="#FFD700" />
+                <Text style={styles.progressText}>
+                  Downloading... {downloadProgress.downloaded}/{downloadProgress.total}
+                </Text>
+                <Text style={styles.progressItem}>
+                  {downloadProgress.currentItem}
+                </Text>
+              </View>
+            ) : (
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={styles.downloadButton}
+                  onPress={handleDownloadTour}
+                >
+                  <Ionicons name="download" size={20} color="#000" />
+                  <Text style={styles.downloadButtonText}>Download Now</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                  style={styles.skipButton}
+                  onPress={handleSkipDownload}
+                >
+                  <Text style={styles.skipButtonText}>Use Online Mode</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        </View>
+      </Modal>
     </BackgroundWrapper>
   );
 }
