@@ -24,22 +24,8 @@ export default function TourSelect() {
   };
 
   const handleContinue = async () => {
-    try {
-      // Check if already cached
-      const isCached = await OfflineCacheManager.isTourCached(selectedLanguage);
-      
-      if (isCached) {
-        console.log('[TourSelect] Tour already cached, going directly to tour');
-        router.push('/tour');
-      } else {
-        console.log('[TourSelect] Tour not cached, showing download modal');
-        setShowDownloadModal(true);
-      }
-    } catch (error) {
-      console.error('[TourSelect] Error checking cache:', error);
-      // If cache check fails, just go to tour (online mode)
-      router.push('/tour');
-    }
+    // Go directly to tour - let user browse first
+    router.push('/tour');
   };
 
   const handleDownloadTour = async () => {
