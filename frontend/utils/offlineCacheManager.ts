@@ -182,7 +182,7 @@ export class OfflineCacheManager {
     }
   }
 
-  // Download entire tour for offline use - PARALLEL DOWNLOADS
+  // Download entire tour for offline use - SEQUENTIAL with progress updates
   static async downloadTourForOffline(
     tourStops: any[],
     language: string,
@@ -191,7 +191,6 @@ export class OfflineCacheManager {
   ): Promise<void> {
     console.log('[Cache] ====== STARTING OFFLINE DOWNLOAD ======');
     console.log('[Cache] Platform:', Platform.OS);
-    console.log('[Cache] FileSystem available:', this.isFileSystemAvailable());
     console.log('[Cache] Tour stops:', tourStops.length);
     console.log('[Cache] Language:', language);
     console.log('[Cache] API URL:', apiUrl);
@@ -207,73 +206,66 @@ export class OfflineCacheManager {
     const total = tourStops.length;
     let downloaded = 0;
     let successCount = 0;
-    let skipCount = 0;
     let errorCount = 0;
 
-    // Process in parallel batches of 4 for faster download
-    const BATCH_SIZE = 4;
-    
-    const downloadStop = async (stop: any): Promise<{success: boolean, skipped: boolean}> => {
+    for (const stop of tourStops) {
       const stopTitle = stop.content?.[language]?.title || 
                         stop.content?.['en']?.title || 
-                        `Stop ${stop.stop_number || 'Legend'}`;
+                        `Stop ${stop.stop_number || 'Unknown'}`;
       
-      try {
-        // Check if already cached
-        const isCached = await this.isAudioCached(stop.id, language);
-        if (isCached) {
-          console.log(`[Cache] ✓ Already cached: ${stopTitle}`);
-          return { success: true, skipped: true };
-        }
+      // Update progress BEFORE starting download
+      onProgress?.({
+        total,
+        downloaded,
+        currentItem: `Downloading: ${stopTitle}`,
+      });
 
-        // Fetch audio from API
+      try {
+        console.log(`[Cache] Fetching: ${stopTitle}...`);
+        
+        // Fetch full stop data with audio
         const response = await fetch(`${apiUrl}/api/tour-stops/${stop.id}`, {
           method: 'GET',
           headers: { 'Accept': 'application/json' },
         });
         
         if (!response.ok) {
-          console.warn(`[Cache] ✗ API error for ${stop.id}: ${response.status}`);
-          return { success: false, skipped: false };
+          console.warn(`[Cache] ✗ API error for ${stopTitle}: ${response.status}`);
+          errorCount++;
+          downloaded++;
+          continue;
         }
 
         const stopData = await response.json();
         const audioBase64 = stopData.audio?.[language];
 
         if (audioBase64 && audioBase64.length > 0) {
-          const savedUri = await this.downloadAudio(stop.id, language, audioBase64);
-          if (savedUri) {
-            console.log(`[Cache] ✓ Downloaded: ${stopTitle}`);
-            return { success: true, skipped: false };
+          // Save to AsyncStorage (works on all platforms)
+          try {
+            const key = `offline_audio_${stop.id}_${language}`;
+            await AsyncStorage.setItem(key, audioBase64);
+            console.log(`[Cache] ✓ Saved: ${stopTitle} (${Math.round(audioBase64.length / 1024)}KB)`);
+            successCount++;
+          } catch (storageError) {
+            console.warn(`[Cache] Storage error for ${stopTitle}:`, storageError);
+            errorCount++;
           }
+        } else {
+          console.warn(`[Cache] No audio for ${stopTitle} in ${language}`);
+          errorCount++;
         }
-        return { success: false, skipped: false };
       } catch (error) {
-        console.error(`[Cache] ✗ Error: ${stop.id}`, error);
-        return { success: false, skipped: false };
+        console.error(`[Cache] ✗ Error downloading ${stopTitle}:`, error);
+        errorCount++;
       }
-    };
-
-    // Process in batches
-    for (let i = 0; i < tourStops.length; i += BATCH_SIZE) {
-      const batch = tourStops.slice(i, i + BATCH_SIZE);
-      const batchNames = batch.map(s => s.content?.[language]?.title || `Stop ${s.stop_number}`).join(', ');
       
+      downloaded++;
+      
+      // Update progress AFTER each download
       onProgress?.({
         total,
         downloaded,
-        currentItem: `Downloading: ${batchNames.substring(0, 40)}...`,
-      });
-
-      // Download batch in parallel
-      const results = await Promise.all(batch.map(stop => downloadStop(stop)));
-      
-      // Update counts
-      results.forEach(r => {
-        downloaded++;
-        if (r.skipped) skipCount++;
-        else if (r.success) successCount++;
-        else errorCount++;
+        currentItem: `Downloaded: ${stopTitle}`,
       });
     }
 
@@ -281,7 +273,7 @@ export class OfflineCacheManager {
     await AsyncStorage.setItem(`tour_cached_${language}`, 'true');
     
     console.log('[Cache] ====== DOWNLOAD COMPLETE ======');
-    console.log(`[Cache] Success: ${successCount}, Skipped: ${skipCount}, Errors: ${errorCount}`);
+    console.log(`[Cache] Success: ${successCount}, Errors: ${errorCount}`);
     
     onProgress?.({
       total,
