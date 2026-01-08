@@ -103,16 +103,27 @@ export default function StopDetail() {
       if (!sound) {
         setIsLoading(true);
         
-        // Check if audioBase64 is a file URI or base64 data
-        const audioUri = audioBase64.startsWith('file://') 
-          ? audioBase64  // It's a cached file path
-          : `data:audio/mp3;base64,${audioBase64}`; // It's base64 data
+        // Check if audioBase64 is a streaming URL, file URI, or base64 data
+        let audioUri: string;
+        if (audioBase64.startsWith('http://') || audioBase64.startsWith('https://')) {
+          // It's a streaming URL - use directly
+          audioUri = audioBase64;
+          console.log('[StopDetail] STREAMING from URL');
+        } else if (audioBase64.startsWith('file://')) {
+          // It's a cached file path
+          audioUri = audioBase64;
+          console.log('[StopDetail] Playing from FILE');
+        } else {
+          // It's base64 data
+          audioUri = `data:audio/mp3;base64,${audioBase64}`;
+          console.log('[StopDetail] Playing from BASE64');
+        }
         
-        console.log('[StopDetail] Loading audio from:', audioUri.substring(0, 50) + '...');
+        console.log('[StopDetail] Loading audio from:', audioUri.substring(0, 60) + '...');
         
         const { sound: newSound } = await Audio.Sound.createAsync(
           { uri: audioUri },
-          { shouldPlay: true, rate: playbackSpeed },
+          { shouldPlay: true, rate: playbackSpeed, progressUpdateIntervalMillis: 100 },
           onPlaybackStatusUpdate
         );
         
