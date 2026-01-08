@@ -48,12 +48,47 @@ export default function TourSelect() {
       
       // Fetch tour stops if not already loaded
       if (tourStops.length === 0) {
+        console.log('[TourSelect] Fetching tour stops...');
         await fetchTourStops();
       }
 
+      console.log('[TourSelect] Starting download of', tourStops.length, 'stops');
+      
       // Download tour data for offline use
-      // await OfflineCacheManager.downloadTourForOffline(
-      //   tourStops,
+      await OfflineCacheManager.downloadTourForOffline(
+        tourStops,
+        selectedLanguage,
+        API_URL || '',
+        (progress) => {
+          console.log('[TourSelect] Progress:', progress.downloaded, '/', progress.total);
+          setDownloadProgress(progress);
+        }
+      );
+
+      setDownloading(false);
+      setShowDownloadModal(false);
+      
+      Alert.alert(
+        'Download Complete!',
+        'Tour is now available offline. Enjoy your visit!',
+        [{ text: 'Start Tour', onPress: () => router.push('/tour') }]
+      );
+    } catch (error) {
+      console.error('[TourSelect] Download error:', error);
+      setDownloading(false);
+      Alert.alert(
+        'Download Failed',
+        'Unable to download tour. You can still use online mode.',
+        [
+          { text: 'Try Again', onPress: handleDownloadTour },
+          { text: 'Use Online', onPress: () => {
+            setShowDownloadModal(false);
+            router.push('/tour');
+          }}
+        ]
+      );
+    }
+  };
       //   selectedLanguage,
       //   API_URL || '',
       //   (progress) => {
