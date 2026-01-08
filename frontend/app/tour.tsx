@@ -44,33 +44,6 @@ export default function Tour() {
 
   // Handle download for offline mode
   const handleDownloadForOffline = async () => {
-    // Check if on web - offline not supported
-    if (Platform.OS === 'web') {
-      Alert.alert(
-        'Not Available on Web',
-        'Offline mode is only available in the mobile app.',
-        [{ text: 'OK', onPress: () => setShowDownloadModal(false) }]
-      );
-      return;
-    }
-    
-    // Check if FileSystem is available (not available in Expo Go)
-    if (!OfflineCacheManager.isFileSystemAvailable()) {
-      Alert.alert(
-        'Expo Go Limitation',
-        'Offline downloads require a standalone app build. Expo Go has storage restrictions.\n\nThe online streaming mode works great - just use the app with internet connection!',
-        [
-          { text: 'OK', onPress: () => setShowDownloadModal(false) },
-          { text: 'Clear Old Cache', onPress: async () => {
-            await OfflineCacheManager.clearCache();
-            Alert.alert('Cache Cleared', 'Old cache data has been removed.');
-            setShowDownloadModal(false);
-          }}
-        ]
-      );
-      return;
-    }
-    
     try {
       setDownloadStatus('downloading');
       setDownloading(true);
@@ -81,7 +54,6 @@ export default function Tour() {
       console.log('[Tour] API_URL:', API_URL);
       console.log('[Tour] Starting offline download for language:', selectedLanguage);
       console.log('[Tour] Tour stops to download:', stopsToDownload.length);
-      console.log('[Tour] First stop:', stopsToDownload[0]?.id);
       
       if (stopsToDownload.length === 0) {
         throw new Error('No tour stops available to download');
