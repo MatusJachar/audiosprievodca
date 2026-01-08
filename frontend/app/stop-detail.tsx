@@ -31,12 +31,14 @@ export default function StopDetail() {
   const audioBase64 = stopWithAudio?.audio?.[selectedLanguage] || stop?.audio?.[selectedLanguage];
   const isCompleted = userProgress?.completed_stops.includes(stopId as string) || false;
 
-  // Fetch audio separately when stop detail opens
+  // Fetch audio separately when stop detail opens - OPTIMIZED
   useEffect(() => {
     const fetchStopWithAudio = async () => {
       if (!stopId || stopWithAudio) return;
       
       setLoadingAudio(true);
+      const startTime = Date.now();
+      
       try {
         console.log('[StopDetail] Starting audio fetch for stop:', stopId);
         
@@ -47,30 +49,43 @@ export default function StopDetail() {
           console.log('[StopDetail] Cache check result:', cachedUri ? 'FOUND' : 'NOT FOUND');
         } catch (cacheError) {
           console.warn('[StopDetail] Cache check failed:', cacheError);
-          // Continue to API fetch if cache fails
         }
         
-        if (cachedUri) {
-          console.log('[StopDetail] Using cached audio from:', cachedUri.substring(0, 50));
-          // Create a mock stop object with the cached audio URI
-          // Mark it as from cache so UI knows it's instant
+        if (cachedUri && !cachedUri.startsWith('stream://')) {
+          console.log('[StopDetail] Using cached audio');
           setStopWithAudio({
             ...stop,
-            audio: {
-              ...stop?.audio,
-              [selectedLanguage]: cachedUri
-            },
-            _fromCache: true // Mark as cached for UI feedback
+            audio: { ...stop?.audio, [selectedLanguage]: cachedUri },
+            _fromCache: true
           } as any);
           setLoadingAudio(false);
+          console.log(`[StopDetail] Loaded from cache in ${Date.now() - startTime}ms`);
           return;
         }
         
-        // STEP 2: If not cached, fetch from API
-        console.log('[StopDetail] No cache, fetching from API...');
+        // STEP 2: Fetch audio only (lighter endpoint)
+        console.log('[StopDetail] Fetching audio from API...');
         const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
-        const response = await fetch(`${API_URL}/api/tour-stops/${stopId}`);
         
+        // Try the audio-only endpoint first (faster)
+        try {
+          const audioResponse = await fetch(`${API_URL}/api/tour-stops/${stopId}/audio/${selectedLanguage}`);
+          if (audioResponse.ok) {
+            const audioData = await audioResponse.json();
+            console.log(`[StopDetail] Audio fetched: ${audioData.size_kb}KB in ${Date.now() - startTime}ms`);
+            setStopWithAudio({
+              ...stop,
+              audio: { ...stop?.audio, [selectedLanguage]: audioData.audio_base64 }
+            } as any);
+            setLoadingAudio(false);
+            return;
+          }
+        } catch (e) {
+          console.log('[StopDetail] Audio-only endpoint not available, using full endpoint');
+        }
+        
+        // Fallback to full stop data
+        const response = await fetch(`${API_URL}/api/tour-stops/${stopId}`);
         if (!response.ok) {
           console.error('[StopDetail] API fetch failed:', response.status);
           setLoadingAudio(false);
@@ -78,18 +93,8 @@ export default function StopDetail() {
         }
         
         const stopData = await response.json();
-        console.log('[StopDetail] API data received, has audio:', !!stopData.audio?.[selectedLanguage]);
+        console.log(`[StopDetail] Full data fetched in ${Date.now() - startTime}ms`);
         setStopWithAudio(stopData);
-        
-        // STEP 3: Try to cache the audio for next time (don't block on this)
-        const audioB64 = stopData.audio?.[selectedLanguage];
-        if (audioB64 && audioB64.length > 0) {
-          // Cache in background without blocking
-          OfflineCacheManager.downloadAudio(stopId as string, selectedLanguage, audioB64)
-            .then(() => console.log('[StopDetail] Audio cached successfully for next time'))
-            .catch((err) => console.warn('[StopDetail] Could not cache audio (non-critical):', err));
-        }
-        
         setLoadingAudio(false);
       } catch (error) {
         console.error('[StopDetail] Error in fetchStopWithAudio:', error);
