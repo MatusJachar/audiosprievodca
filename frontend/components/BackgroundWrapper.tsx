@@ -37,7 +37,12 @@ export default function BackgroundWrapper({ children, showOverlay = true }: Back
     );
   }
 
-  return <>{children}</>;
+  // Fallback with dark background when image not loaded
+  return (
+    <View style={styles.fallbackBackground}>
+      {children}
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
