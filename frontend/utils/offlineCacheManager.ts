@@ -110,25 +110,9 @@ export class OfflineCacheManager {
   // Check if audio is cached
   static async isAudioCached(stopId: string, language: string): Promise<boolean> {
     try {
-      // Check FileSystem first
-      const cacheDir = getCacheDir();
-      if (cacheDir && !IS_WEB) {
-        const fileName = `${stopId}_${language}.mp3`;
-        const fileUri = `${cacheDir}${fileName}`;
-        const info = await FileSystem.getInfoAsync(fileUri);
-        if (info.exists) return true;
-      }
-      
-      // Check AsyncStorage
-      const key = `audio_${stopId}_${language}`;
+      const key = `offline_audio_${stopId}_${language}`;
       const cached = await AsyncStorage.getItem(key);
-      if (cached) return true;
-      
-      // Check chunked storage
-      const chunks = await AsyncStorage.getItem(`${key}_chunks`);
-      if (chunks) return true;
-      
-      return false;
+      return cached !== null && cached.length > 0;
     } catch (error) {
       console.warn('[Cache] Error checking cache:', error);
       return false;
@@ -138,40 +122,11 @@ export class OfflineCacheManager {
   // Get cached audio
   static async getCachedAudioUri(stopId: string, language: string): Promise<string | null> {
     try {
-      // Check FileSystem first
-      const cacheDir = getCacheDir();
-      if (cacheDir && !IS_WEB) {
-        const fileName = `${stopId}_${language}.mp3`;
-        const fileUri = `${cacheDir}${fileName}`;
-        const info = await FileSystem.getInfoAsync(fileUri);
-        if (info.exists) {
-          console.log(`[Cache] Found in FileSystem: ${fileUri}`);
-          return fileUri;
-        }
-      }
-      
-      // Check AsyncStorage
-      const key = `audio_${stopId}_${language}`;
-      
-      // Check for chunked storage first
-      const numChunksStr = await AsyncStorage.getItem(`${key}_chunks`);
-      if (numChunksStr) {
-        const numChunks = parseInt(numChunksStr);
-        let audioBase64 = '';
-        for (let i = 0; i < numChunks; i++) {
-          const chunk = await AsyncStorage.getItem(`${key}_${i}`);
-          if (chunk) audioBase64 += chunk;
-        }
-        if (audioBase64) {
-          console.log(`[Cache] Retrieved from AsyncStorage (chunked): ${stopId}`);
-          return `data:audio/mp3;base64,${audioBase64}`;
-        }
-      }
-      
-      // Check single-key storage
+      const key = `offline_audio_${stopId}_${language}`;
       const cached = await AsyncStorage.getItem(key);
-      if (cached) {
-        console.log(`[Cache] Retrieved from AsyncStorage: ${stopId}`);
+      
+      if (cached && cached.length > 0) {
+        console.log(`[Cache] Found cached audio for ${stopId}`);
         return `data:audio/mp3;base64,${cached}`;
       }
       
