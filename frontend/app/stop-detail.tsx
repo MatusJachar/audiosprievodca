@@ -64,19 +64,35 @@ export default function StopDetail() {
   };
 
   const handlePlay = async () => {
-    const audioUrl = `${API_URL}/api/audio/stream/${stopId}/${selectedLanguage}`;
-    
     try {
       setIsLoading(true);
       
       if (!sound) {
+        // First check for cached offline audio
+        let audioUri: string | null = null;
+        
+        try {
+          audioUri = await OfflineCacheManager.getCachedAudioUri(stopId as string, selectedLanguage);
+          if (audioUri) {
+            console.log('[StopDetail] Using OFFLINE cached audio:', audioUri);
+          }
+        } catch (cacheError) {
+          console.warn('[StopDetail] Offline cache check failed:', cacheError);
+        }
+        
+        // Fallback to streaming URL if no cached audio
+        if (!audioUri) {
+          audioUri = `${API_URL}/api/audio/stream/${stopId}/${selectedLanguage}`;
+          console.log('[StopDetail] Using STREAMING audio:', audioUri);
+        }
+        
         await Audio.setAudioModeAsync({
           playsInSilentModeIOS: true,
           staysActiveInBackground: true,
         });
         
         const { sound: newSound } = await Audio.Sound.createAsync(
-          { uri: audioUrl },
+          { uri: audioUri },
           { shouldPlay: true, progressUpdateIntervalMillis: 250 },
           onStatus
         );
