@@ -128,8 +128,8 @@ async def get_tour_stops():
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.get("/tour-stops/{stop_id}", response_model=TourStop)
-async def get_tour_stop(stop_id: str):
-    """Get a specific tour stop"""
+async def get_tour_stop(stop_id: str, compressed: bool = False):
+    """Get a specific tour stop. Use compressed=true for smaller audio files (offline mode)"""
     try:
         stop = await db.tour_stops.find_one({"id": stop_id})
         if not stop:
@@ -144,6 +144,26 @@ async def get_tour_stop(stop_id: str):
         raise
     except Exception as e:
         logger.error(f"Error fetching tour stop: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/tour-stops/{stop_id}/audio/{language}")
+async def get_tour_stop_audio_only(stop_id: str, language: str):
+    """Get only audio for a stop - optimized for streaming/caching"""
+    try:
+        audio_doc = await db.tour_audio.find_one({'stop_id': stop_id, 'language': language})
+        if not audio_doc:
+            raise HTTPException(status_code=404, detail="Audio not found")
+        
+        return {
+            "stop_id": stop_id,
+            "language": language,
+            "audio_base64": audio_doc['audio_base64'],
+            "size_kb": len(audio_doc['audio_base64']) // 1024
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching audio: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.post("/tour-stops", response_model=TourStop)
