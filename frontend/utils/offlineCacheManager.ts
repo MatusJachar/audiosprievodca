@@ -1,286 +1,100 @@
-import * as FileSystem from 'expo-file-system';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Platform } from 'react-native';
 
-// FileSystem doesn't work on web - use AsyncStorage as fallback
-const IS_WEB = Platform.OS === 'web';
-
-// Safely get cache directory with fallbacks
-const getCacheDir = (): string | null => {
-  if (IS_WEB) return null;
-  
-  // Try documentDirectory first, then cacheDirectory
-  const baseDir = FileSystem.documentDirectory || FileSystem.cacheDirectory;
-  if (!baseDir) {
-    console.warn('[Cache] No FileSystem directory available');
-    return null;
-  }
-  return `${baseDir}tour_cache/`;
-};
-
-interface DownloadProgress {
-  total: number;
-  downloaded: number;
-  currentItem: string;
-}
+const CACHE_PREFIX = 'offline_audio_';
+const TOUR_CACHED_PREFIX = 'tour_cached_';
 
 export class OfflineCacheManager {
   
-  // Check if FileSystem is available
-  static isFileSystemAvailable(): boolean {
-    if (IS_WEB) return false;
-    return !!(FileSystem.documentDirectory || FileSystem.cacheDirectory);
-  }
-
-  // Ensure cache directory exists (mobile only)
-  static async ensureCacheDir(): Promise<boolean> {
-    if (IS_WEB) return false;
-    
-    const cacheDir = getCacheDir();
-    if (!cacheDir) {
-      console.warn('[Cache] Using AsyncStorage fallback (FileSystem not available)');
-      return false; // Will use AsyncStorage fallback
-    }
+  // Save audio to cache
+  static async saveAudio(stopId: string, language: string, audioBase64: string): Promise<boolean> {
+    if (!audioBase64 || audioBase64.length === 0) return false;
     
     try {
-      const dirInfo = await FileSystem.getInfoAsync(cacheDir);
-      if (!dirInfo.exists) {
-        await FileSystem.makeDirectoryAsync(cacheDir, { intermediates: true });
-        console.log('[Cache] Created cache directory:', cacheDir);
-      }
+      const key = `${CACHE_PREFIX}${stopId}_${language}`;
+      await AsyncStorage.setItem(key, audioBase64);
       return true;
     } catch (error) {
-      console.error('[Cache] Error creating cache directory, using AsyncStorage:', error);
-      return false; // Will use AsyncStorage fallback
-    }
-  }
-
-  // Download and cache audio for a specific stop
-  static async downloadAudio(stopId: string, language: string, audioBase64: string): Promise<string | null> {
-    if (!audioBase64 || audioBase64.length === 0) {
-      console.warn('[Cache] No audio data to download for stop:', stopId);
-      return null;
-    }
-
-    const cacheDir = getCacheDir();
-    const useFileSystem = cacheDir && !IS_WEB;
-
-    if (useFileSystem) {
-      // Try FileSystem first
-      try {
-        const dirReady = await this.ensureCacheDir();
-        if (dirReady) {
-          const fileName = `${stopId}_${language}.mp3`;
-          const fileUri = `${cacheDir}${fileName}`;
-          
-          await FileSystem.writeAsStringAsync(fileUri, audioBase64, {
-            encoding: FileSystem.EncodingType.Base64,
-          });
-          
-          const info = await FileSystem.getInfoAsync(fileUri);
-          if (info.exists) {
-            console.log(`[Cache] Saved to FileSystem: ${fileName} (${Math.round((info.size || 0) / 1024)}KB)`);
-            return fileUri;
-          }
-        }
-      } catch (error) {
-        console.warn('[Cache] FileSystem failed:', error);
-      }
-    }
-
-    // For Expo Go where storage is limited, just mark as "streamable"
-    // Don't actually store the huge base64 - it will be fetched on-demand
-    try {
-      const key = `audio_meta_${stopId}_${language}`;
-      await AsyncStorage.setItem(key, JSON.stringify({
-        stopId,
-        language,
-        size: audioBase64.length,
-        cached: false, // Mark as metadata only, will stream when needed
-        timestamp: Date.now()
-      }));
-      console.log(`[Cache] Marked for streaming: ${stopId} (${Math.round(audioBase64.length / 1024)}KB)`);
-      return `stream://${stopId}/${language}`;
-    } catch (error) {
-      console.error('[Cache] Failed to save metadata:', error);
-      return null;
-    }
-  }
-
-  // Check if audio is cached
-  static async isAudioCached(stopId: string, language: string): Promise<boolean> {
-    try {
-      const key = `offline_audio_${stopId}_${language}`;
-      console.log('[Cache] Checking key:', key);
-      const cached = await AsyncStorage.getItem(key);
-      const result = cached !== null && cached.length > 0;
-      console.log('[Cache] isAudioCached result:', result, cached ? `(${cached.length} chars)` : '(null)');
-      return result;
-    } catch (error) {
-      console.warn('[Cache] Error checking cache:', error);
+      console.error('Failed to save audio:', error);
       return false;
     }
   }
 
-  // Get cached audio
+  // Get cached audio as data URI
   static async getCachedAudioUri(stopId: string, language: string): Promise<string | null> {
     try {
-      const key = `offline_audio_${stopId}_${language}`;
-      console.log('[Cache] Getting audio for key:', key);
+      const key = `${CACHE_PREFIX}${stopId}_${language}`;
       const cached = await AsyncStorage.getItem(key);
       
       if (cached && cached.length > 0) {
-        console.log(`[Cache] FOUND cached audio: ${cached.length} chars`);
         return `data:audio/mp3;base64,${cached}`;
       }
-      
-      console.log('[Cache] NOT FOUND in cache');
       return null;
     } catch (error) {
-      console.warn('[Cache] Error getting cached audio:', error);
       return null;
     }
-  }
-
-  // Download entire tour for offline use - SEQUENTIAL with progress updates
-  static async downloadTourForOffline(
-    tourStops: any[],
-    language: string,
-    apiUrl: string,
-    onProgress?: (progress: DownloadProgress) => void
-  ): Promise<void> {
-    console.log('[Cache] ====== STARTING OFFLINE DOWNLOAD ======');
-    console.log('[Cache] Platform:', Platform.OS);
-    console.log('[Cache] Tour stops:', tourStops.length);
-    console.log('[Cache] Language:', language);
-    console.log('[Cache] API URL:', apiUrl);
-
-    if (!tourStops || tourStops.length === 0) {
-      throw new Error('No tour stops to download');
-    }
-
-    if (!apiUrl) {
-      throw new Error('API URL not configured');
-    }
-
-    const total = tourStops.length;
-    let downloaded = 0;
-    let successCount = 0;
-    let errorCount = 0;
-
-    for (const stop of tourStops) {
-      const stopTitle = stop.content?.[language]?.title || 
-                        stop.content?.['en']?.title || 
-                        `Stop ${stop.stop_number || 'Unknown'}`;
-      
-      // Update progress BEFORE starting download
-      onProgress?.({
-        total,
-        downloaded,
-        currentItem: `Downloading: ${stopTitle}`,
-      });
-
-      try {
-        console.log(`[Cache] Fetching: ${stopTitle}...`);
-        
-        // Fetch full stop data with audio
-        const response = await fetch(`${apiUrl}/api/tour-stops/${stop.id}`, {
-          method: 'GET',
-          headers: { 'Accept': 'application/json' },
-        });
-        
-        if (!response.ok) {
-          console.warn(`[Cache] ✗ API error for ${stopTitle}: ${response.status}`);
-          errorCount++;
-          downloaded++;
-          continue;
-        }
-
-        const stopData = await response.json();
-        const audioBase64 = stopData.audio?.[language];
-
-        if (audioBase64 && audioBase64.length > 0) {
-          // Save to AsyncStorage (works on all platforms)
-          try {
-            const key = `offline_audio_${stop.id}_${language}`;
-            await AsyncStorage.setItem(key, audioBase64);
-            console.log(`[Cache] ✓ Saved: ${stopTitle} (${Math.round(audioBase64.length / 1024)}KB)`);
-            successCount++;
-          } catch (storageError) {
-            console.warn(`[Cache] Storage error for ${stopTitle}:`, storageError);
-            errorCount++;
-          }
-        } else {
-          console.warn(`[Cache] No audio for ${stopTitle} in ${language}`);
-          errorCount++;
-        }
-      } catch (error) {
-        console.error(`[Cache] ✗ Error downloading ${stopTitle}:`, error);
-        errorCount++;
-      }
-      
-      downloaded++;
-      
-      // Update progress AFTER each download
-      onProgress?.({
-        total,
-        downloaded,
-        currentItem: `Downloaded: ${stopTitle}`,
-      });
-    }
-
-    // Mark tour as cached
-    await AsyncStorage.setItem(`tour_cached_${language}`, 'true');
-    
-    console.log('[Cache] ====== DOWNLOAD COMPLETE ======');
-    console.log(`[Cache] Success: ${successCount}, Errors: ${errorCount}`);
-    
-    onProgress?.({
-      total,
-      downloaded: total,
-      currentItem: 'Complete!',
-    });
   }
 
   // Check if tour is cached
   static async isTourCached(language: string): Promise<boolean> {
     try {
-      const cached = await AsyncStorage.getItem(`tour_cached_${language}`);
+      const cached = await AsyncStorage.getItem(`${TOUR_CACHED_PREFIX}${language}`);
       return cached === 'true';
     } catch {
       return false;
     }
   }
 
-  // Clear all cache
-  static async clearCache(): Promise<void> {
-    try {
-      // Clear FileSystem cache
-      const cacheDir = getCacheDir();
-      if (cacheDir && !IS_WEB) {
-        try {
-          const info = await FileSystem.getInfoAsync(cacheDir);
-          if (info.exists) {
-            await FileSystem.deleteAsync(cacheDir, { idempotent: true });
+  // Download tour for offline
+  static async downloadTourForOffline(
+    tourStops: any[],
+    language: string,
+    apiUrl: string,
+    onProgress?: (progress: { total: number; downloaded: number; currentItem: string }) => void
+  ): Promise<void> {
+    const total = tourStops.length;
+    let downloaded = 0;
+
+    for (const stop of tourStops) {
+      const title = stop.content?.[language]?.title || stop.content?.['en']?.title || `Stop ${stop.stop_number}`;
+      
+      onProgress?.({ total, downloaded, currentItem: title });
+
+      try {
+        const response = await fetch(`${apiUrl}/api/tour-stops/${stop.id}`);
+        if (response.ok) {
+          const data = await response.json();
+          const audio = data.audio?.[language];
+          if (audio) {
+            await this.saveAudio(stop.id, language, audio);
           }
-        } catch (e) {
-          console.warn('[Cache] Could not clear FileSystem:', e);
         }
+      } catch (e) {
+        // Continue even if one fails
       }
       
-      // Clear AsyncStorage cache
+      downloaded++;
+      onProgress?.({ total, downloaded, currentItem: title });
+    }
+
+    await AsyncStorage.setItem(`${TOUR_CACHED_PREFIX}${language}`, 'true');
+    onProgress?.({ total, downloaded: total, currentItem: 'Complete!' });
+  }
+
+  // Clear cache
+  static async clearCache(): Promise<void> {
+    try {
       const keys = await AsyncStorage.getAllKeys();
-      const cacheKeys = keys.filter(key => 
-        key.startsWith('tour_cached_') || 
-        key.startsWith('audio_')
-      );
+      const cacheKeys = keys.filter(k => k.startsWith(CACHE_PREFIX) || k.startsWith(TOUR_CACHED_PREFIX));
       if (cacheKeys.length > 0) {
         await AsyncStorage.multiRemove(cacheKeys);
       }
-      
-      console.log('[Cache] Cache cleared');
-    } catch (error) {
-      console.error('[Cache] Error clearing cache:', error);
+    } catch (e) {
+      // Ignore
     }
+  }
+
+  // For compatibility
+  static isFileSystemAvailable(): boolean {
+    return false;
   }
 }
