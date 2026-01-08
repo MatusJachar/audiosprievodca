@@ -246,6 +246,34 @@ export default function Tour() {
         </View>
       </View>
       
+      {/* PROMINENT OFFLINE DOWNLOAD BANNER */}
+      {!isOfflineCached && (
+        <TouchableOpacity 
+          style={styles.offlineBanner}
+          onPress={() => setShowDownloadModal(true)}
+        >
+          <View style={styles.offlineBannerIcon}>
+            <Ionicons name="cloud-download" size={32} color="#000" />
+          </View>
+          <View style={styles.offlineBannerText}>
+            <Text style={styles.offlineBannerTitle}>Download for Offline Use</Text>
+            <Text style={styles.offlineBannerSubtitle}>
+              Tap here to save tour for use without internet
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={24} color="#000" />
+        </TouchableOpacity>
+      )}
+      
+      {isOfflineCached && (
+        <View style={styles.offlineBannerCached}>
+          <Ionicons name="checkmark-circle" size={24} color="#4CAF50" />
+          <Text style={styles.offlineBannerCachedText}>
+            ✓ Tour downloaded - Ready for offline use
+          </Text>
+        </View>
+      )}
+      
       {/* Tour Stops List */}
       <FlatList
         data={filteredTourStops}
