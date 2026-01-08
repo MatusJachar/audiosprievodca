@@ -166,6 +166,35 @@ async def get_tour_stop_audio_only(stop_id: str, language: str):
         logger.error(f"Error fetching audio: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.get("/audio/stream/{stop_id}/{language}")
+async def stream_audio(stop_id: str, language: str):
+    """Stream audio as MP3 file - much faster than base64"""
+    from fastapi.responses import Response
+    
+    try:
+        audio_doc = await db.tour_audio.find_one({'stop_id': stop_id, 'language': language})
+        if not audio_doc:
+            raise HTTPException(status_code=404, detail="Audio not found")
+        
+        # Decode base64 to binary
+        audio_bytes = base64.b64decode(audio_doc['audio_base64'])
+        
+        # Return as streamable MP3
+        return Response(
+            content=audio_bytes,
+            media_type="audio/mpeg",
+            headers={
+                "Content-Disposition": f"inline; filename={stop_id}_{language}.mp3",
+                "Cache-Control": "public, max-age=31536000",  # Cache for 1 year
+                "Accept-Ranges": "bytes"
+            }
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error streaming audio: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.post("/tour-stops", response_model=TourStop)
 async def create_tour_stop(tour_stop: TourStopCreate):
     """Create a new tour stop"""
