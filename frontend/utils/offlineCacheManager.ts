@@ -5,11 +5,17 @@ import { Platform } from 'react-native';
 // FileSystem doesn't work on web - use AsyncStorage as fallback
 const IS_WEB = Platform.OS === 'web';
 
-// Safely get cache directory - FileSystem.documentDirectory can be null on web
+// Safely get cache directory with fallbacks
 const getCacheDir = (): string | null => {
   if (IS_WEB) return null;
-  if (!FileSystem.documentDirectory) return null;
-  return `${FileSystem.documentDirectory}tour_cache/`;
+  
+  // Try documentDirectory first, then cacheDirectory
+  const baseDir = FileSystem.documentDirectory || FileSystem.cacheDirectory;
+  if (!baseDir) {
+    console.warn('[Cache] No FileSystem directory available');
+    return null;
+  }
+  return `${baseDir}tour_cache/`;
 };
 
 interface DownloadProgress {
@@ -20,14 +26,20 @@ interface DownloadProgress {
 
 export class OfflineCacheManager {
   
+  // Check if FileSystem is available
+  static isFileSystemAvailable(): boolean {
+    if (IS_WEB) return false;
+    return !!(FileSystem.documentDirectory || FileSystem.cacheDirectory);
+  }
+
   // Ensure cache directory exists (mobile only)
   static async ensureCacheDir(): Promise<boolean> {
-    if (IS_WEB) return false; // Not supported on web
+    if (IS_WEB) return false;
     
     const cacheDir = getCacheDir();
     if (!cacheDir) {
-      console.warn('[Cache] Cache directory not available');
-      return false;
+      console.warn('[Cache] Using AsyncStorage fallback (FileSystem not available)');
+      return false; // Will use AsyncStorage fallback
     }
     
     try {
@@ -38,68 +50,68 @@ export class OfflineCacheManager {
       }
       return true;
     } catch (error) {
-      console.error('[Cache] Error creating cache directory:', error);
-      return false;
+      console.error('[Cache] Error creating cache directory, using AsyncStorage:', error);
+      return false; // Will use AsyncStorage fallback
     }
   }
 
   // Download and cache audio for a specific stop
   static async downloadAudio(stopId: string, language: string, audioBase64: string): Promise<string | null> {
-    // Validate input
     if (!audioBase64 || audioBase64.length === 0) {
       console.warn('[Cache] No audio data to download for stop:', stopId);
       return null;
     }
 
-    if (IS_WEB) {
-      // On web, store in AsyncStorage (has size limits but works for small files)
-      try {
-        const key = `audio_${stopId}_${language}`;
-        // AsyncStorage has ~6MB limit per key on some platforms
-        if (audioBase64.length > 5 * 1024 * 1024) {
-          console.warn('[Cache] Audio too large for web storage:', stopId);
-          return null;
-        }
-        await AsyncStorage.setItem(key, audioBase64);
-        return `data:audio/mp3;base64,${audioBase64}`;
-      } catch (error) {
-        console.warn('[Cache] Failed to store audio on web:', error);
-        return null;
-      }
-    }
-    
-    // On mobile, use FileSystem
     const cacheDir = getCacheDir();
-    if (!cacheDir) {
-      console.warn('[Cache] Cache directory not available');
-      return null;
+    const useFileSystem = cacheDir && !IS_WEB;
+
+    if (useFileSystem) {
+      // Try FileSystem first
+      try {
+        const dirReady = await this.ensureCacheDir();
+        if (dirReady) {
+          const fileName = `${stopId}_${language}.mp3`;
+          const fileUri = `${cacheDir}${fileName}`;
+          
+          await FileSystem.writeAsStringAsync(fileUri, audioBase64, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+          
+          const info = await FileSystem.getInfoAsync(fileUri);
+          if (info.exists) {
+            console.log(`[Cache] Saved to FileSystem: ${fileName} (${Math.round((info.size || 0) / 1024)}KB)`);
+            return fileUri;
+          }
+        }
+      } catch (error) {
+        console.warn('[Cache] FileSystem failed, falling back to AsyncStorage:', error);
+      }
     }
 
-    const dirReady = await this.ensureCacheDir();
-    if (!dirReady) {
-      console.warn('[Cache] Could not prepare cache directory');
-      return null;
-    }
-    
-    const fileName = `${stopId}_${language}.mp3`;
-    const fileUri = `${cacheDir}${fileName}`;
-    
+    // Fallback to AsyncStorage (works everywhere but has size limits)
     try {
-      await FileSystem.writeAsStringAsync(fileUri, audioBase64, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
+      const key = `audio_${stopId}_${language}`;
+      // Split large audio into chunks if needed (AsyncStorage has ~2MB limit per key on some platforms)
+      const chunkSize = 1.5 * 1024 * 1024; // 1.5MB chunks
       
-      // Verify file was written
-      const info = await FileSystem.getInfoAsync(fileUri);
-      if (info.exists) {
-        console.log(`[Cache] Successfully cached audio: ${fileName} (${Math.round((info.size || 0) / 1024)}KB)`);
-        return fileUri;
+      if (audioBase64.length > chunkSize) {
+        // Store in chunks
+        const numChunks = Math.ceil(audioBase64.length / chunkSize);
+        await AsyncStorage.setItem(`${key}_chunks`, String(numChunks));
+        
+        for (let i = 0; i < numChunks; i++) {
+          const chunk = audioBase64.slice(i * chunkSize, (i + 1) * chunkSize);
+          await AsyncStorage.setItem(`${key}_${i}`, chunk);
+        }
+        console.log(`[Cache] Saved to AsyncStorage in ${numChunks} chunks: ${stopId}`);
+      } else {
+        await AsyncStorage.setItem(key, audioBase64);
+        console.log(`[Cache] Saved to AsyncStorage: ${stopId} (${Math.round(audioBase64.length / 1024)}KB)`);
       }
       
-      console.warn('[Cache] File not found after write:', fileUri);
-      return null;
+      return `asyncstorage://${key}`;
     } catch (error) {
-      console.error('[Cache] Error downloading audio:', error);
+      console.error('[Cache] AsyncStorage failed:', error);
       return null;
     }
   }
@@ -107,50 +119,71 @@ export class OfflineCacheManager {
   // Check if audio is cached
   static async isAudioCached(stopId: string, language: string): Promise<boolean> {
     try {
-      if (IS_WEB) {
-        const key = `audio_${stopId}_${language}`;
-        const cached = await AsyncStorage.getItem(key);
-        return cached !== null && cached.length > 0;
+      // Check FileSystem first
+      const cacheDir = getCacheDir();
+      if (cacheDir && !IS_WEB) {
+        const fileName = `${stopId}_${language}.mp3`;
+        const fileUri = `${cacheDir}${fileName}`;
+        const info = await FileSystem.getInfoAsync(fileUri);
+        if (info.exists) return true;
       }
       
-      const cacheDir = getCacheDir();
-      if (!cacheDir) return false;
+      // Check AsyncStorage
+      const key = `audio_${stopId}_${language}`;
+      const cached = await AsyncStorage.getItem(key);
+      if (cached) return true;
       
-      const fileName = `${stopId}_${language}.mp3`;
-      const fileUri = `${cacheDir}${fileName}`;
+      // Check chunked storage
+      const chunks = await AsyncStorage.getItem(`${key}_chunks`);
+      if (chunks) return true;
       
-      const info = await FileSystem.getInfoAsync(fileUri);
-      return info.exists;
+      return false;
     } catch (error) {
-      console.warn('[Cache] Error checking cache status:', error);
+      console.warn('[Cache] Error checking cache:', error);
       return false;
     }
   }
 
-  // Get cached audio file URI or base64
+  // Get cached audio
   static async getCachedAudioUri(stopId: string, language: string): Promise<string | null> {
     try {
-      if (IS_WEB) {
-        const key = `audio_${stopId}_${language}`;
-        const cached = await AsyncStorage.getItem(key);
-        if (cached && cached.length > 0) {
-          console.log(`[Cache] Found web-cached audio for stop ${stopId}`);
-          return `data:audio/mp3;base64,${cached}`;
-        }
-        return null;
-      }
-      
+      // Check FileSystem first
       const cacheDir = getCacheDir();
-      if (!cacheDir) return null;
-      
-      const fileName = `${stopId}_${language}.mp3`;
-      const fileUri = `${cacheDir}${fileName}`;
-      
-      const info = await FileSystem.getInfoAsync(fileUri);
-      if (info.exists) {
-        console.log(`[Cache] Found cached audio file: ${fileUri}`);
-        return fileUri;
+      if (cacheDir && !IS_WEB) {
+        const fileName = `${stopId}_${language}.mp3`;
+        const fileUri = `${cacheDir}${fileName}`;
+        const info = await FileSystem.getInfoAsync(fileUri);
+        if (info.exists) {
+          console.log(`[Cache] Found in FileSystem: ${fileUri}`);
+          return fileUri;
+        }
       }
+      
+      // Check AsyncStorage
+      const key = `audio_${stopId}_${language}`;
+      
+      // Check for chunked storage first
+      const numChunksStr = await AsyncStorage.getItem(`${key}_chunks`);
+      if (numChunksStr) {
+        const numChunks = parseInt(numChunksStr);
+        let audioBase64 = '';
+        for (let i = 0; i < numChunks; i++) {
+          const chunk = await AsyncStorage.getItem(`${key}_${i}`);
+          if (chunk) audioBase64 += chunk;
+        }
+        if (audioBase64) {
+          console.log(`[Cache] Retrieved from AsyncStorage (chunked): ${stopId}`);
+          return `data:audio/mp3;base64,${audioBase64}`;
+        }
+      }
+      
+      // Check single-key storage
+      const cached = await AsyncStorage.getItem(key);
+      if (cached) {
+        console.log(`[Cache] Retrieved from AsyncStorage: ${stopId}`);
+        return `data:audio/mp3;base64,${cached}`;
+      }
+      
       return null;
     } catch (error) {
       console.warn('[Cache] Error getting cached audio:', error);
@@ -165,20 +198,21 @@ export class OfflineCacheManager {
     apiUrl: string,
     onProgress?: (progress: DownloadProgress) => void
   ): Promise<void> {
-    console.log('[Cache] Starting offline download...');
+    console.log('[Cache] ====== STARTING OFFLINE DOWNLOAD ======');
     console.log('[Cache] Platform:', Platform.OS);
+    console.log('[Cache] FileSystem available:', this.isFileSystemAvailable());
     console.log('[Cache] Tour stops:', tourStops.length);
     console.log('[Cache] Language:', language);
     console.log('[Cache] API URL:', apiUrl);
 
-    // Check if caching is supported
-    if (!IS_WEB) {
-      const dirReady = await this.ensureCacheDir();
-      if (!dirReady) {
-        throw new Error('Unable to create cache directory');
-      }
+    if (!tourStops || tourStops.length === 0) {
+      throw new Error('No tour stops to download');
     }
-    
+
+    if (!apiUrl) {
+      throw new Error('API URL not configured');
+    }
+
     const total = tourStops.length;
     let downloaded = 0;
     let successCount = 0;
@@ -200,23 +234,21 @@ export class OfflineCacheManager {
         // Check if already cached
         const isCached = await this.isAudioCached(stop.id, language);
         if (isCached) {
-          console.log(`[Cache] Stop ${stop.stop_number || stop.stop_name} already cached, skipping`);
+          console.log(`[Cache] ✓ Already cached: ${stopTitle}`);
           skipCount++;
           downloaded++;
           continue;
         }
 
-        // Fetch full stop data with audio
-        console.log(`[Cache] Fetching stop ${stop.stop_number || stop.stop_name}...`);
+        // Fetch audio from API
+        console.log(`[Cache] Fetching: ${stopTitle}...`);
         const response = await fetch(`${apiUrl}/api/tour-stops/${stop.id}`, {
           method: 'GET',
-          headers: {
-            'Accept': 'application/json',
-          },
+          headers: { 'Accept': 'application/json' },
         });
         
         if (!response.ok) {
-          console.warn(`[Cache] Failed to fetch stop ${stop.id}: ${response.status}`);
+          console.warn(`[Cache] ✗ API error for ${stop.id}: ${response.status}`);
           errorCount++;
           downloaded++;
           continue;
@@ -226,31 +258,32 @@ export class OfflineCacheManager {
         const audioBase64 = stopData.audio?.[language];
 
         if (audioBase64 && audioBase64.length > 0) {
-          console.log(`[Cache] Downloaded audio for stop ${stop.stop_number || stop.stop_name} (${Math.round(audioBase64.length / 1024)}KB)`);
           const savedUri = await this.downloadAudio(stop.id, language, audioBase64);
           if (savedUri) {
+            console.log(`[Cache] ✓ Downloaded: ${stopTitle}`);
             successCount++;
           } else {
+            console.warn(`[Cache] ✗ Save failed: ${stopTitle}`);
             errorCount++;
           }
         } else {
-          console.warn(`[Cache] No audio available for stop ${stop.id} in language ${language}`);
+          console.warn(`[Cache] ✗ No audio for ${stopTitle} in ${language}`);
           errorCount++;
         }
 
         downloaded++;
       } catch (error) {
-        console.error(`[Cache] Error downloading stop ${stop.id}:`, error);
+        console.error(`[Cache] ✗ Error downloading ${stop.id}:`, error);
         errorCount++;
         downloaded++;
       }
     }
 
-    // Mark tour as cached (even if some stops failed - they can be fetched online)
+    // Mark tour as cached
     await AsyncStorage.setItem(`tour_cached_${language}`, 'true');
     
-    console.log('[Cache] Download complete!');
-    console.log(`[Cache] Summary: ${successCount} downloaded, ${skipCount} already cached, ${errorCount} errors`);
+    console.log('[Cache] ====== DOWNLOAD COMPLETE ======');
+    console.log(`[Cache] Success: ${successCount}, Skipped: ${skipCount}, Errors: ${errorCount}`);
     
     onProgress?.({
       total,
@@ -259,83 +292,45 @@ export class OfflineCacheManager {
     });
   }
 
-  // Check if tour is fully cached
+  // Check if tour is cached
   static async isTourCached(language: string): Promise<boolean> {
     try {
       const cached = await AsyncStorage.getItem(`tour_cached_${language}`);
       return cached === 'true';
-    } catch (error) {
-      console.warn('[Cache] Error checking tour cache status:', error);
+    } catch {
       return false;
     }
   }
 
-  // Clear all cached audio
+  // Clear all cache
   static async clearCache(): Promise<void> {
     try {
-      // Clear file cache on mobile
-      if (!IS_WEB) {
-        const cacheDir = getCacheDir();
-        if (cacheDir) {
-          const dirInfo = await FileSystem.getInfoAsync(cacheDir);
-          if (dirInfo.exists) {
+      // Clear FileSystem cache
+      const cacheDir = getCacheDir();
+      if (cacheDir && !IS_WEB) {
+        try {
+          const info = await FileSystem.getInfoAsync(cacheDir);
+          if (info.exists) {
             await FileSystem.deleteAsync(cacheDir, { idempotent: true });
-            console.log('[Cache] Deleted cache directory');
           }
+        } catch (e) {
+          console.warn('[Cache] Could not clear FileSystem:', e);
         }
       }
       
-      // Clear AsyncStorage cache markers and web audio cache
+      // Clear AsyncStorage cache
       const keys = await AsyncStorage.getAllKeys();
       const cacheKeys = keys.filter(key => 
-        key.startsWith('tour_cached_') || key.startsWith('audio_')
+        key.startsWith('tour_cached_') || 
+        key.startsWith('audio_')
       );
-      
       if (cacheKeys.length > 0) {
         await AsyncStorage.multiRemove(cacheKeys);
-        console.log(`[Cache] Cleared ${cacheKeys.length} cache entries from AsyncStorage`);
       }
       
-      console.log('[Cache] Cache cleared successfully');
+      console.log('[Cache] Cache cleared');
     } catch (error) {
       console.error('[Cache] Error clearing cache:', error);
     }
-  }
-
-  // Get cache size (mobile only)
-  static async getCacheSize(): Promise<number> {
-    if (IS_WEB) return 0;
-    
-    try {
-      const cacheDir = getCacheDir();
-      if (!cacheDir) return 0;
-      
-      const dirInfo = await FileSystem.getInfoAsync(cacheDir);
-      if (!dirInfo.exists) return 0;
-      
-      const files = await FileSystem.readDirectoryAsync(cacheDir);
-      let totalSize = 0;
-      
-      for (const file of files) {
-        const fileInfo = await FileSystem.getInfoAsync(`${cacheDir}${file}`);
-        if (fileInfo.exists && 'size' in fileInfo) {
-          totalSize += fileInfo.size || 0;
-        }
-      }
-      
-      return totalSize;
-    } catch (error) {
-      console.error('[Cache] Error getting cache size:', error);
-      return 0;
-    }
-  }
-
-  // Format bytes to human readable string
-  static formatBytes(bytes: number): string {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   }
 }
