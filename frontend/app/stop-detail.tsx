@@ -47,6 +47,7 @@ export default function StopDetail() {
       setIsPlaying(false);
       setPosition(0);
       setDuration(0);
+      setIsOfflineMode(false);
     };
     cleanup();
   }, [stopId, selectedLanguage]);
