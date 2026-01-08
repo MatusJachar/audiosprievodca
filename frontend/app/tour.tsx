@@ -28,7 +28,77 @@ export default function Tour() {
     if (!userProgress) {
       fetchUserProgress('default-user');
     }
-  }, []);
+    
+    // Check if tour is already cached for offline use
+    const checkOfflineStatus = async () => {
+      try {
+        const isCached = await OfflineCacheManager.isTourCached(selectedLanguage);
+        setIsOfflineCached(isCached);
+        console.log('[Tour] Offline cache status:', isCached ? 'CACHED' : 'NOT CACHED');
+      } catch (error) {
+        console.warn('[Tour] Could not check offline status:', error);
+      }
+    };
+    checkOfflineStatus();
+  }, [selectedLanguage]);
+
+  // Handle download for offline mode
+  const handleDownloadForOffline = async () => {
+    // Check if on web - offline not supported
+    if (Platform.OS === 'web') {
+      Alert.alert(
+        'Not Available on Web',
+        'Offline mode is only available in the mobile app. Please use Expo Go to download tour for offline access.',
+        [{ text: 'OK', onPress: () => setShowDownloadModal(false) }]
+      );
+      return;
+    }
+    
+    try {
+      setDownloadStatus('downloading');
+      setDownloading(true);
+      
+      console.log('[Tour] Starting offline download for language:', selectedLanguage);
+      console.log('[Tour] Tour stops to download:', filteredTourStops.length);
+      
+      await OfflineCacheManager.downloadTourForOffline(
+        filteredTourStops,
+        selectedLanguage,
+        API_URL || '',
+        (progress) => {
+          console.log('[Tour] Download progress:', progress.downloaded, '/', progress.total, '-', progress.currentItem);
+          setDownloadProgress(progress);
+        }
+      );
+
+      setDownloadStatus('complete');
+      setIsOfflineCached(true);
+      setDownloading(false);
+      
+      // Auto-close modal after success
+      setTimeout(() => {
+        setShowDownloadModal(false);
+        setDownloadStatus('idle');
+        Alert.alert(
+          '✅ Download Complete!',
+          `Tour is now available offline in ${getLanguageName(selectedLanguage)}. Enjoy your visit to Spiš Castle!`
+        );
+      }, 1500);
+      
+    } catch (error) {
+      console.error('[Tour] Download error:', error);
+      setDownloadStatus('error');
+      setDownloading(false);
+    }
+  };
+
+  const getLanguageName = (code: string) => {
+    const names: Record<string, string> = {
+      en: 'English', sk: 'Slovak', de: 'German', pl: 'Polish',
+      ru: 'Russian', es: 'Spanish', hu: 'Hungarian', zh: 'Chinese', fr: 'French'
+    };
+    return names[code] || code;
+  };
 
   // Filter tour stops based on selected tour type
   const filteredTourStops = useMemo(() => {
