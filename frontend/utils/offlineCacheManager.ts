@@ -1,7 +1,10 @@
 import * as FileSystem from 'expo-file-system';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 
-const CACHE_DIR = `${FileSystem.documentDirectory}tour_cache/`;
+// FileSystem doesn't work on web - use AsyncStorage as fallback
+const IS_WEB = Platform.OS === 'web';
+const CACHE_DIR = IS_WEB ? null : `${FileSystem.documentDirectory}tour_cache/`;
 
 interface DownloadProgress {
   total: number;
@@ -11,8 +14,14 @@ interface DownloadProgress {
 
 export class OfflineCacheManager {
   
-  // Ensure cache directory exists
+  // Ensure cache directory exists (mobile only)
   static async ensureCacheDir() {
+    if (IS_WEB) return; // Skip on web
+    
+    if (!CACHE_DIR) {
+      throw new Error('Cache directory not available');
+    }
+    
     const dirInfo = await FileSystem.getInfoAsync(CACHE_DIR);
     if (!dirInfo.exists) {
       await FileSystem.makeDirectoryAsync(CACHE_DIR, { intermediates: true });
@@ -21,13 +30,20 @@ export class OfflineCacheManager {
 
   // Download and cache audio for a specific stop
   static async downloadAudio(stopId: string, language: string, audioBase64: string): Promise<string> {
+    if (IS_WEB) {
+      // On web, store in AsyncStorage (has size limits but works)
+      const key = `audio_${stopId}_${language}`;
+      await AsyncStorage.setItem(key, audioBase64);
+      return `data:audio/mp3;base64,${audioBase64}`;
+    }
+    
+    // On mobile, use FileSystem
     await this.ensureCacheDir();
     
     const fileName = `${stopId}_${language}.mp3`;
     const fileUri = `${CACHE_DIR}${fileName}`;
     
     try {
-      // Convert base64 to file
       await FileSystem.writeAsStringAsync(fileUri, audioBase64, {
         encoding: FileSystem.EncodingType.Base64,
       });
@@ -41,6 +57,12 @@ export class OfflineCacheManager {
 
   // Check if audio is cached
   static async isAudioCached(stopId: string, language: string): Promise<boolean> {
+    if (IS_WEB) {
+      const key = `audio_${stopId}_${language}`;
+      const cached = await AsyncStorage.getItem(key);
+      return cached !== null;
+    }
+    
     const fileName = `${stopId}_${language}.mp3`;
     const fileUri = `${CACHE_DIR}${fileName}`;
     
@@ -48,8 +70,17 @@ export class OfflineCacheManager {
     return info.exists;
   }
 
-  // Get cached audio file URI
+  // Get cached audio file URI or base64
   static async getCachedAudioUri(stopId: string, language: string): Promise<string | null> {
+    if (IS_WEB) {
+      const key = `audio_${stopId}_${language}`;
+      const cached = await AsyncStorage.getItem(key);
+      if (cached) {
+        return `data:audio/mp3;base64,${cached}`;
+      }
+      return null;
+    }
+    
     const fileName = `${stopId}_${language}.mp3`;
     const fileUri = `${CACHE_DIR}${fileName}`;
     
