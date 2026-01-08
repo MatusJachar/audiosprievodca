@@ -373,21 +373,12 @@ export default function Tour() {
               </View>
             )}
 
-            {/* Platform Notice - IMPORTANT */}
-            {Platform.OS !== 'web' && (
+            {/* Info Notice */}
+            {!downloading && downloadStatus !== 'complete' && (
               <View style={styles.platformNotice}>
                 <Ionicons name="information-circle" size={20} color="#FFD700" />
                 <Text style={styles.platformNoticeText}>
-                  Note: Expo Go has storage limits. For full offline mode, build a standalone app. Online streaming works great!
-                </Text>
-              </View>
-            )}
-            
-            {Platform.OS === 'web' && (
-              <View style={styles.platformNotice}>
-                <Ionicons name="information-circle" size={20} color="#FFD700" />
-                <Text style={styles.platformNoticeText}>
-                  Offline mode is only available in the mobile app (Expo Go)
+                  Downloads audio for offline use. Works on all platforms.
                 </Text>
               </View>
             )}
