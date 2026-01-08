@@ -53,12 +53,14 @@ export default function StopDetail() {
         if (cachedUri) {
           console.log('[StopDetail] Using cached audio from:', cachedUri.substring(0, 50));
           // Create a mock stop object with the cached audio URI
+          // Mark it as from cache so UI knows it's instant
           setStopWithAudio({
             ...stop,
             audio: {
               ...stop?.audio,
               [selectedLanguage]: cachedUri
-            }
+            },
+            _fromCache: true // Mark as cached for UI feedback
           } as any);
           setLoadingAudio(false);
           return;
@@ -81,13 +83,11 @@ export default function StopDetail() {
         
         // STEP 3: Try to cache the audio for next time (don't block on this)
         const audioB64 = stopData.audio?.[selectedLanguage];
-        if (audioB64) {
-          try {
-            await OfflineCacheManager.downloadAudio(stopId as string, selectedLanguage, audioB64);
-            console.log('[StopDetail] Audio cached successfully');
-          } catch (cacheError) {
-            console.warn('[StopDetail] Could not cache audio (non-critical):', cacheError);
-          }
+        if (audioB64 && audioB64.length > 0) {
+          // Cache in background without blocking
+          OfflineCacheManager.downloadAudio(stopId as string, selectedLanguage, audioB64)
+            .then(() => console.log('[StopDetail] Audio cached successfully for next time'))
+            .catch((err) => console.warn('[StopDetail] Could not cache audio (non-critical):', err));
         }
         
         setLoadingAudio(false);
