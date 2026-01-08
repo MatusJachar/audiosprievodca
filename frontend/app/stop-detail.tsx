@@ -294,67 +294,47 @@ export default function StopDetail() {
             
               {/* Controls */}
               <View style={styles.controlsRow}>
-                <TouchableOpacity 
-                  onPress={() => {
-                    console.log('Speed button pressed');
-                    changeSpeed();
-                  }} 
+                <Pressable 
+                  onPress={changeSpeed}
                   style={styles.speedButton}
-                  accessibilityRole="button"
                 >
                   <Text style={styles.speedText}>{playbackSpeed}x</Text>
-                </TouchableOpacity>
+                </Pressable>
               
-                <TouchableOpacity 
-                  onPress={() => {
-                    console.log('-10s button pressed');
-                    skipBackward();
-                  }} 
+                <Pressable 
+                  onPress={skipBackward}
                   style={styles.controlButton}
-                  accessibilityRole="button"
                 >
                   <Ionicons name="play-back" size={28} color="#fff" />
                   <Text style={styles.skipLabel}>-10s</Text>
-                </TouchableOpacity>
+                </Pressable>
               
-                <TouchableOpacity 
-                  onPress={() => {
-                    console.log('Play button pressed, audioUri:', audioUri ? 'exists' : 'null');
-                    playAudio();
-                  }} 
+                <Pressable 
+                  onPress={playAudio}
                   style={styles.playButton} 
                   disabled={isLoading}
-                  accessibilityRole="button"
                 >
                   {isLoading ? (
                     <ActivityIndicator size="small" color="#000" />
                   ) : (
                     <Ionicons name={isPlaying ? 'pause' : 'play'} size={32} color="#000" />
                   )}
-                </TouchableOpacity>
+                </Pressable>
               
-                <TouchableOpacity 
-                  onPress={() => {
-                    console.log('+10s button pressed');
-                    skipForward();
-                  }} 
+                <Pressable 
+                  onPress={skipForward}
                   style={styles.controlButton}
-                  accessibilityRole="button"
                 >
                   <Ionicons name="play-forward" size={28} color="#fff" />
                   <Text style={styles.skipLabel}>+10s</Text>
-                </TouchableOpacity>
+                </Pressable>
               
-                <TouchableOpacity 
-                  onPress={() => {
-                    console.log('Stop button pressed');
-                    handleStop();
-                  }} 
+                <Pressable 
+                  onPress={handleStop}
                   style={styles.stopButton}
-                  accessibilityRole="button"
                 >
                   <Ionicons name="stop" size={24} color="#FF5252" />
-                </TouchableOpacity>
+                </Pressable>
               </View>
             </View>
           ) : (
