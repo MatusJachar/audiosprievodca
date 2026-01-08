@@ -10,7 +10,7 @@ import sys
 from typing import Dict, Any
 
 # Backend URL from frontend/.env
-BACKEND_URL = "https://spistour.preview.emergentagent.com/api"
+BACKEND_URL = "https://spiscastle.preview.emergentagent.com/api"
 
 class ProgressTrackingTester:
     def __init__(self):

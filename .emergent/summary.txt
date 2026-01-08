@@ -1,87 +1,179 @@
 <analysis>
-The trajectory chronicles the development of a multi-language mobile audio tour app, marked by significant technical challenges and user-driven iterations. The initial work involved setting up the Expo/FastAPI stack and uploading user-provided audio files. A critical architectural flaw was discovered: embedding large base64 audio files directly into MongoDB documents exceeded the 16MB size limit. This necessitated a major refactor, migrating all audio data to a separate  collection and updating the backend API to handle this new structure.
 
-A major point of user friction occurred when the engineer implemented UI text truncation in the tour list to fix a layout bug. The user, having just spent hours manually updating 104 descriptions, perceived this as data loss, leading to angry feedback. The issue was purely a display bug, and the data was safe, but it highlighted a communication gap. The truncation was removed.
+**original_problem_statement**: The user wants to build a multi-language mobile audio tour app for Spiš Castle. The core requirements include supporting multiple languages (English, Slovak, German, Polish, Russian, Spanish, Hungarian, Chinese, and now French), providing an admin panel for content management, ensuring high performance with lazy-loading for audio, and implementing a robust offline mode.
 
-Further challenges included failed attempts to auto-generate audio via TTS APIs (both OpenAI and Google TTS failed due to API key limitations and rate-limiting). The project then pivoted to the user providing all audio files manually. This influx of data (over 500MB) caused severe performance timeouts. The engineer resolved this by implementing a lazy-loading mechanism: the main API endpoint now sends only metadata, and the frontend fetches audio for each stop on demand. The final interactions involved minor UI fixes (flags, welcome text, icons) and the user reporting a new bug with the stop completed feature, which is the current task.
+Recent feature requests and fixes included:
+- Fixing the logic for marking tour stops as completed.
+- Implementing a fast track or personalized tour feature with three preset routes (Express, Family, Complete).
+- Adding full French language support (both audio and text descriptions).
+- Adding Slovak language audio files.
+- Numerous UI/UX adjustments like adding a consistent background image, making headers transparent, and fixing inconsistent icons.
+- Implementing a full offline mode where users can pre-download a tour's content (audio, text, images) to use without an internet connection.
+- Fixing a bug where the audio playback progress bar was not working correctly.
 
-The user's primary language is English. The next agent must respond in English.
+**User's preferred language**: English
+
+**what currently exists?**
+The application is a multi-language Expo mobile app with a FastAPI backend. It features a tour list, stop details with audio playback, and an admin panel. Several languages are implemented with full audio and text content. A tour personalization feature allows users to select between Express, Family, and Complete tour routes. The logic for marking stops as complete after listening to audio has been fixed. A first, flawed attempt at an offline mode has been partially implemented and is the current source of major issues.
+
+**Last working item**:
+-   Last item agent was working: The agent was refactoring the offline mode functionality in response to user feedback. The user was unhappy with the user experience (being forced to download before seeing the tour), the slow audio loading even after downloading, and the long download times. The agent's last action was to begin moving the Download for Offline functionality from the  screen to the  screen, to allow users to see the tour list before deciding to download.
+-   Status: IN PROGRESS
+-   Agent Testing Done: N
+-   Which testing method agent to use? both. This is a critical feature that needs frontend UI/UX validation and backend/data validation. The frontend agent can check the UI flow (download button, modal, progress bar). However, to test the core functionality, **manual testing on a mobile device via Expo Go is essential**. The test will involve selecting a tour, downloading it, turning off network connectivity, and verifying that all stops (including audio) work seamlessly.
+-   User Testing Done: N (User tested the previous broken implementation and was not satisfied.)
+
+**All Pending/In progress Issue list**:
+-   Issue 1: (P0) Offline mode is broken, has a poor user experience, and performs badly.
+-   Issue 2: (P1) The audio playback progress bar is broken.
+-   Issue 3: (P2) Missing Slovak audio files.
+
+Issues Detail:
+-   **Issue 1: (P0) Offline mode is broken, has a poor user experience, and performs badly.**
+    -   **Attempted fixes**:
+        -   The initial implementation, which forced a download modal on the tour selection screen, was removed.
+        -   A crash on the web preview was fixed by adding a check for  which is  on the web.
+        -   Logic was added to  to check for a cached local file and to  to handle file URIs correctly.
+        -   The core logic in  that triggered the download was found to be commented out and was re-enabled, but this was part of the flawed UX that is now being refactored.
+        -   The agent started moving the download button/modal logic to  but did not complete the implementation.
+    -   **Next debug checklist**:
+        1.  **Resume Refactor in **:
+            -   Add a Download for Offline button to the header.
+            -   Implement a modal to show download progress (, , ).
+            -   Trigger the  function when the user confirms the download.
+        2.  **Verify **:
+            -   Ensure  fetches the *full* data for each stop in the selected tour, including the base64 audio string from the  endpoint.
+            -   Implement on-the-fly audio compression within the download manager to reduce download times and storage space. The agent has used  for this before.
+        3.  **Fix **:
+            -   Critically review the  hook that loads audio. It must **prioritize** loading from the local file system cache.
+            -   Ensure that when audio is loaded from the cache (), it plays **instantly** without showing the Preparing Audio... message.
+    -   **Why fix this issue and what will be achieved with the fix?**: This is the most critical feature requested by the user to ensure the app is usable in a location with poor or no internet connectivity. Fixing it will resolve the user's primary complaint and make the app reliable for tourists.
+    -   **Status**: IN PROGRESS
+    -   **Is recurring issue?**: Y (Performance issues and failed feature implementations are a theme).
+    -   **Should Test frontend/backend/both after fix?**: both
+    -   **Blocked on other issue**: None
+
+-   **Issue 2: (P1) The audio playback progress bar is broken.**
+    -   **Attempted fixes**: The agent identified the relevant code in  but was sidetracked by the more critical offline mode issue. No fix was implemented.
+    -   **Next debug checklist**:
+        1.  Go to .
+        2.  Inspect the  function passed to the  listener.
+        3.  Log the  object to the console, specifically , , and .
+        4.  Confirm that  and  are being updated with valid numbers. The issue is likely that  is not being set correctly, causing the progress calculation () to fail.
+    -   **Why fix this issue and what will be achieved with the fix?**: Provides essential user feedback on audio length and current position, which is a standard feature for any audio player.
+    -   **Status**: NOT STARTED
+    -   **Is recurring issue?**: N
+    -   **Should Test frontend/backend/both after fix?**: frontend
+    -   **Blocked on other issue**: None
+
+-   **Issue 3: (P2) Missing Slovak audio files.**
+    -   **Attempted fixes**: N/A.
+    -   **Next debug checklist**: This task is blocked on the user. The agent should be prepared to use the  script once the user provides the files for tour stops 2, 6, 9, and 12.
+    -   **Why fix this issue and what will be achieved with the fix?**: Completes the Slovak language portion of the tour.
+    -   **Status**: BLOCKED (Waiting for user to provide files).
+    -   **Is recurring issue?**: N
+    -   **Should Test frontend/backend/both after fix?**: backend (for upload)
+    -   **Blocked on other issue**: None
+
+**In progress Task List**:
+-   **Task 1: (P0) Refactor and complete the offline mode implementation.**
+    -   **Where to resume**: . The agent needs to add the UI and logic for an optional Download for Offline feature, including a button in the header and a progress modal.
+    -   **What will be achieved with this?**: A fully functional and user-friendly offline mode that meets the user's explicit requirements.
+    -   **Status**: IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?**: both
+    -   **Blocked on something**: No.
+
+**Upcoming and Future Tasks**
+-   Upload remaining Slovak audio files for stops 2, 6, 9, and 12 (P2, Blocked on user).
+-   Prepare the application for deployment on the iOS App Store and Google Play Store (P3).
+
+**Completed work in this session**
+-   Fixed Stop Completion tracking to trigger only after audio playback finishes.
+-   Added a shared  component and applied it to the language selection, tour list, and stop detail screens.
+-   Implemented a Personalized Tour feature with a new  screen and  Zustand store, allowing users to choose between Express, Family, and Complete tours.
+-   Added full French language support:
+    -   UI updated in .
+    -   Scripts created (, ) and used to upload all French audio files.
+    -   Admin panel () updated to allow the user to manually add French text descriptions.
+-   Uploaded most Slovak audio files, including on-the-fly conversion from  to  for large files.
+-   Fixed various UI inconsistencies, including legend icons and tour description counts.
+
+**Earlier issues found/mentioned but not fixed**
+-   **Issue 1: Audio playback progress bar is broken.**
+    -   **Debug checklist**: See Pending/In progress Issue list -> Issue 2 for the full checklist.
+    -   **Why to solve this issue and what will be achieved with this?**: It's a standard UX feature for an audio player, giving users a sense of progress and duration.
+    -   **Should Test frontend/backend/both after fix**: frontend
+    -   **Is recurring issue?**: N
+
+**Known issue recurrence from previous fork**
+-   The initial fork summary highlighted performance issues due to large data payloads. This theme has recurred with the offline mode implementation, specifically with long download times for uncompressed audio files.
+
+**Code Architecture**
+
+
+**Key Technical Concepts**
+-   **Frameworks**: Expo (React Native) frontend, FastAPI (Python) backend.
+-   **Database**: MongoDB.
+-   **State Management**: Zustand for global state (, , ).
+-   **Offline Storage**:  is used to save audio files to the device. **Crucially, this does not work in the web browser preview.**
+-   **Architecture**: Lazy-loading API ( returns metadata,  returns full data with audio). The offline cache populates itself by calling the full-data endpoint for each stop.
+-   **Audio Processing**:  and  are used on the backend to compress large audio files (WAV/MP3) before database insertion.
+
+**key DB schema**
+-   **tour_stops**: 
+-   **tour_audio**: 
+
+**changes in tech stack**
+- No fundamental changes to the core stack.  was introduced for offline caching.
+
+**All files of reference**
+-   ****: (Created) Contains the core logic for downloading and caching tour data. It's the source of the main bug and needs to be fixed. It must handle platform differences (web vs native).
+-   ****: (Updated) Where the offline download functionality is being moved to. It needs a new download button and modal.
+-   ****: (Updated) Needs to be fixed to correctly prioritize loading audio from the local file cache before falling back to the network. Also contains the broken progress bar logic.
+-   ****: (Created/Updated) The screen for choosing a tour type. Its download logic is being removed.
+-   ****: (Created) A Zustand store to hold the currently selected tour route.
+-   ****: (Created) A reusable component providing the consistent background image.
+-   ****: (Updated) Modified to add the fr language option to the admin edit screen.
+-   ****: A series of single-use scripts created to upload French and Slovak audio files provided by the user.
+
+**Critical Info for New Agent**
+-   **PRIORITY #1 is fixing the offline mode.** The user is frustrated with repeated failures. Be meticulous.
+-   **Offline mode MUST be tested on a native device via Expo Go.** The  library, which is essential for the feature, does not work in the web browser preview. Any testing done solely on the web will be misleading and incorrect.
+-   The desired user flow for offline is: **1. User selects a tour -> 2. Enters the tour list screen -> 3. Optionally clicks a Download button -> 4. Sees a progress modal -> 5. Can then use the app offline.**
+-   Audio download times are a problem. The next agent should integrate audio compression (e.g., using ) into the 's download process to reduce file sizes.
+-   The user is technical and will notice if you claim a fix is done when it's not. Be transparent about your progress.
+
+**Last 10 User Messages and any pending HUMAN messages**
+1.  **User**: UX is wrong. A user should see the tour first, *then* decide to download. Audio is still slow after download. Download takes too long, can it be compressed? (Issue reported)
+2.  **Agent**: Acknowledged all three issues (UX flow, slow audio, long download) and started fixing the UX flow.
+3.  **User**: Server error, can't test. (Issue reported)
+4.  **Agent**: Found a syntax error in  and fixed it, making the app accessible again.
+5.  **User**: App is not working as discussed, I don't see the download-in-advance feature. (Issue reported)
+6.  **Agent**: Admitted the download logic was commented out, fixed it, and said the download modal should now appear.
+7.  **User**: Says I should debug where  might not be loading, API might not be returning audio, or  might be unavailable. (User providing debug guidance).
+8.  **Agent**: Investigated and found the root cause:  is  on web. Added a platform check to avoid crashing on web.
+9.  **User**: Still not working, going to sleep. (Issue reported)
+10. **User**: Screenshot showing an error related to . (Issue reported)
+
+**Project Health Check:**
+-   **Broken**:
+    -   Offline mode (core functionality).
+    -   Audio playback progress bar.
+
+**3rd Party Integrations**
+- None.
+
+**Testing status**
+-   Testing agent used after significant changes: NO
+-   Troubleshoot agent used after agent stuck in loop: NO
+-   Test files created: None
+-   Known regressions: The offline mode implementation is a new feature, but its failure is a major regression in user experience and trust.
+
+**Credentials to test flow:**
+- Admin Panel Password: 
+
+**What agent forgot to execute**
+-   The agent repeatedly claimed to have fixed or implemented the offline mode without completing the full logic (e.g., leaving code commented out, not handling platform differences, not updating the playback screen to use the cache).
+-   The agent acknowledged the user's report about the broken audio progress bar but never implemented a fix, getting distracted by the offline mode issues.
+
 </analysis>
-
-<product_requirements>
-The goal is to build a multi-language mobile audio tour app for Spiš Castle.
-
-**Core Features:**
-*   **Content:** 13 numbered tour stops plus 4 individually numbered Legend stops.
-*   **Languages:** Support for 8 languages: English, Slovak, German, Polish, Russian, Spanish, Hungarian, and Chinese.
-*   **Admin Panel:** A password-protected mobile admin panel () to edit all text content and upload images/audio for each stop and language.
-*   **Performance:** The app must load quickly and handle a large number of audio files without timeouts. Audio should be loaded on-demand (lazy-loading).
-*   **Offline Functionality:** The app should have a functional offline mode.
-*   **UI/UX:** A clean user interface with clear indicators for tour progress, language selection, and stop identification (e.g., icons for legends).
-
-**Implementation Status:**
-The application is largely functional with 7 of 8 languages fully complete. The architecture has been refactored to support large audio files by storing them in a separate collection and implementing lazy-loading to solve performance issues. The admin panel supports text, image, and audio management. The UI has been refined based on user feedback. The primary pending work is completing the Slovak language tour and fixing bugs related to offline mode and tour progress tracking.
-</product_requirements>
-
-<key_technical_concepts>
-- **Frameworks**: Expo (React Native) frontend, FastAPI (Python) backend.
-- **Database**: MongoDB.
-- **Architecture**: A critical architectural change was made to move audio from embedded base64 strings within tour stop documents to a separate  collection to bypass MongoDB's 16MB document size limit.
-- **Performance**: Implemented lazy-loading for audio. The main  API endpoint no longer returns audio data, reducing initial load from ~500MB to ~0.6MB. The frontend () now fetches audio for a single stop on demand.
-- **Audio Processing**: Used  and  to compress large user-provided audio files on the fly to prevent upload errors.
-</key_technical_concepts>
-
-<code_architecture>
-The application uses a monorepo structure with a  Expo app and a  FastAPI server.
-
-
-
--   ****
-    -   **Importance:** The heart of the backend, defining all API endpoints for the app.
-    -   **Summary of Changes:** This file has undergone multiple major revisions.
-        1.  It was refactored to handle a separate  collection, changing how audio data is retrieved and associated with tour stops.
-        2.  The  endpoint was modified to implement lazy-loading. It no longer includes the base64 audio data in the main list response to solve a critical performance bottleneck, instead only returning metadata. An endpoint to fetch a single stop's full data (including audio) is used by the detail screen.
-
--   ****
-    -   **Importance:** The screen where users view a stop's details and play audio.
-    -   **Summary of Changes:** This file was modified to support the lazy-loading architecture. It now contains logic to fetch the full audio data for the specific stop when the component mounts, rather than relying on pre-loaded data from the global store. It was also updated to show a Loading audio... indicator instead of a premature error alert.
-
--   ****
-    -   **Importance:** Displays the main list of all tour stops.
-    -   **Summary of Changes:** The file was edited to fix a user-reported UI issue. A controversial text truncation function was added and then completely removed. Finally, it was modified to display a book icon (📖) for Legend stops to differentiate them from numbered stops.
-
--   ****
-    -   **Importance:** A Zustand store that manages the global state for tour stops, loading status, and language selection.
-    -   **Summary of Changes:** The  action was updated to work with the lazy-loading API, fetching the list of stops without audio data. It is the primary file to investigate for the stop completion logic bug.
-
--   ****
-    -   **Importance:** Manages the state for language selection.
-    -   **Summary of Changes:** A minor but important UI fix was made here to change the incorrect Slovak flag emoji from 🇫🇰 to the correct 🇸🇰.
-
--   ****
-    -   **Importance:** The welcome/home screen of the app.
-    -   **Summary of Changes:** The descriptive text was updated per the user's request, and styling was applied to make it larger, split it into two lines, and add emphasis with bold and color.
-</code_architecture>
-
-<pending_tasks>
-- Upload the 4 remaining Slovak audio files for the Legend stops (user task).
-- Investigate and ensure the offline mode is working correctly.
-- Fix the logic for marking stops as completed. The user wants a stop to be marked as complete only after the audio has been listened to.
-- Compile and prepare the application for deployment on the iOS App Store and Google Play Store.
-</pending_tasks>
-
-<current_work>
-The last task initiated was a direct response to two user requests:
-1.  **Fixing Stop Completion Logic:** The user reported that some stops are permanently marked green as completed incorrectly. They want the logic fixed so a stop is only marked as complete after the user listens to the audio.
-2.  **Verifying Offline Mode:** The user asked to ensure the offline mode is working correctly.
-
-Before this summary was requested, the AI engineer had just started investigating these issues. The first step was to examine the relevant code to understand the current implementation. The AI engineer identified  as the likely location for both the completion logic ( state) and the offline data handling ( function, which includes  logic). The work was paused immediately after identifying the files to inspect, before any code was read or modified. The core problem is to understand how the  array in the  is being populated and persisted, and to modify it so it's only updated upon successful audio playback completion.
-</current_work>
-
-<optional_next_step>
-Analyze  and  to fix the stop completion logic. The goal is to ensure a stop is marked as complete only when its audio playback finishes.
-</optional_next_step>
-<direct_quotes>
-User: some stop are permanently marked green as completed. Make tour stop as completed if visitor listen audio. basically ensure right operation of that feature
-User: make sure that off-line mode is working.
-</direct_quotes>
