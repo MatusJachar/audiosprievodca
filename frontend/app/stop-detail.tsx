@@ -259,19 +259,6 @@ export default function StopDetail() {
           )}
         
           <Text style={styles.title}>{content?.title || stop.stop_name}</Text>
-          
-          {audioSource && (
-            <View style={[styles.sourceIndicator, audioSource === 'cache' ? styles.sourceCache : styles.sourceStream]}>
-              <Ionicons 
-                name={audioSource === 'cache' ? 'cloud-done' : 'wifi'} 
-                size={14} 
-                color={audioSource === 'cache' ? '#4CAF50' : '#2196F3'} 
-              />
-              <Text style={[styles.sourceText, audioSource === 'cache' ? styles.sourceCacheText : styles.sourceStreamText]}>
-                {audioSource === 'cache' ? 'Offline Ready' : 'Streaming'}
-              </Text>
-            </View>
-          )}
         
           <Text style={styles.description}>{content?.description || 'No description available.'}</Text>
 
