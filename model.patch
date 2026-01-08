@@ -737,7 +737,7 @@ index bea61c9..e69de29 100644
 --------------+
 --------------+agent_communication:
 --------------+    - agent: "testing"
---------------+      message: "Comprehensive backend API testing completed successfully. All 9 core endpoints tested and working correctly. TTS audio generation functional, database operations working, user progress tracking operational. Backend URL correctly configured at https://spiscastle.preview.emergentagent.com/api. All tests passed with 100% success rate."
+--------------+      message: "Comprehensive backend API testing completed successfully. All 9 core endpoints tested and working correctly. TTS audio generation functional, database operations working, user progress tracking operational. Backend URL correctly configured at https://castleaudio.preview.emergentagent.com/api. All tests passed with 100% success rate."
 --------------\ No newline at end of file
 ------------diff --git a/test_result.md b/test_result.md
 ------------index 5d63878..2e0bbdd 100644
@@ -745,7 +745,7 @@ index bea61c9..e69de29 100644
 ------------+++ b/test_result.md
 ------------@@ -243,4 +243,6 @@ agent_communication:
 ------------     - agent: "testing"
-------------       message: "Comprehensive backend API testing completed successfully. All 9 core endpoints tested and working correctly. TTS audio generation functional, database operations working, user progress tracking operational. Backend URL correctly configured at https://spiscastle.preview.emergentagent.com/api. All tests passed with 100% success rate."
+------------       message: "Comprehensive backend API testing completed successfully. All 9 core endpoints tested and working correctly. TTS audio generation functional, database operations working, user progress tracking operational. Backend URL correctly configured at https://castleaudio.preview.emergentagent.com/api. All tests passed with 100% success rate."
 ------------     - agent: "main"
 -------------      message: "Investigating audio playback issue reported by user on mobile. Backend verified to be returning audio data correctly (1.16MB base64 for stop 1). Added debug logging to tourStore.ts and stop-detail.tsx to trace data flow. Created clear-cache.tsx utility page to help users resolve caching issues. Added troubleshooting section in settings. Restarted Expo service. Ready for backend testing."
 ------------\ No newline at end of file
