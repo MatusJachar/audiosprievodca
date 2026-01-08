@@ -384,7 +384,16 @@ export default function Tour() {
               </View>
             )}
 
-            {/* Platform Notice */}
+            {/* Platform Notice - IMPORTANT */}
+            {Platform.OS !== 'web' && (
+              <View style={styles.platformNotice}>
+                <Ionicons name="information-circle" size={20} color="#FFD700" />
+                <Text style={styles.platformNoticeText}>
+                  Note: Expo Go has storage limits. For full offline mode, build a standalone app. Online streaming works great!
+                </Text>
+              </View>
+            )}
+            
             {Platform.OS === 'web' && (
               <View style={styles.platformNotice}>
                 <Ionicons name="information-circle" size={20} color="#FFD700" />
