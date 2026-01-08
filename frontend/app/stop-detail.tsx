@@ -76,6 +76,7 @@ export default function StopDetail() {
           audioUri = await OfflineCacheManager.getCachedAudioUri(stopId as string, selectedLanguage);
           if (audioUri) {
             console.log('[StopDetail] Using OFFLINE cached audio:', audioUri);
+            setIsOfflineMode(true);
           }
         } catch (cacheError) {
           console.warn('[StopDetail] Offline cache check failed:', cacheError);
@@ -85,6 +86,7 @@ export default function StopDetail() {
         if (!audioUri) {
           audioUri = `${API_URL}/api/audio/stream/${stopId}/${selectedLanguage}`;
           console.log('[StopDetail] Using STREAMING audio:', audioUri);
+          setIsOfflineMode(false);
         }
         
         await Audio.setAudioModeAsync({
