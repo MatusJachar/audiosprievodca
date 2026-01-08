@@ -22,6 +22,7 @@ export default function StopDetail() {
   const [position, setPosition] = useState(0);
   const [duration, setDuration] = useState(0);
   const [speed, setSpeed] = useState(1.0);
+  const [isOfflineMode, setIsOfflineMode] = useState(false);
 
   const stop = tourStops.find((s) => s.id === stopId);
   const content = stop?.content?.[selectedLanguage];
