@@ -318,6 +318,14 @@ export default function StopDetail() {
           </View>
         )}
         
+        {/* Show cached indicator when audio loaded from cache */}
+        {stopWithAudio?._fromCache && !loadingAudio && audioBase64 && (
+          <View style={styles.cachedIndicator}>
+            <Ionicons name="cloud-done" size={16} color="#4CAF50" />
+            <Text style={styles.cachedIndicatorText}>Audio loaded from offline cache</Text>
+          </View>
+        )}
+        
         {!audioBase64 && !loadingAudio && (
           <View style={styles.noAudioCard}>
             <Ionicons name="information-circle" size={32} color="#FFD700" />
