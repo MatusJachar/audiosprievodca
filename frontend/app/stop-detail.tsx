@@ -462,4 +462,19 @@ const styles = StyleSheet.create({
   skipButtonText: { fontSize: 10, color: '#FFD700', fontWeight: 'bold', marginTop: 2 },
   stopButton: { alignItems: 'center', justifyContent: 'center', minWidth: 50 },
   stopLabel: { fontSize: 10, color: '#FF5252', marginTop: 2 },
+  cachedIndicator: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    backgroundColor: 'rgba(76, 175, 80, 0.15)', 
+    paddingHorizontal: 12, 
+    paddingVertical: 8, 
+    borderRadius: 8, 
+    gap: 8, 
+    marginBottom: 16 
+  },
+  cachedIndicatorText: { 
+    color: '#4CAF50', 
+    fontSize: 12, 
+    fontWeight: '500' 
+  },
 });
