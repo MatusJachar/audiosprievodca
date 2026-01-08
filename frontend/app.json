@@ -46,7 +46,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "spis-castle-tour"
+        "projectId": "your-expo-project-id"
       }
     }
   }
