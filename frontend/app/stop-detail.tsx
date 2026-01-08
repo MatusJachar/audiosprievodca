@@ -200,6 +200,14 @@ export default function StopDetail() {
 
           {/* Audio Player */}
           <View style={styles.player}>
+            {/* Offline Mode Indicator */}
+            {isOfflineMode && (
+              <View style={styles.offlineIndicator}>
+                <Ionicons name="cloud-offline" size={14} color="#4CAF50" />
+                <Text style={styles.offlineIndicatorText}>Playing from offline cache</Text>
+              </View>
+            )}
+            
             <View style={styles.progressRow}>
               <View style={styles.progressBg}>
                 <View style={[styles.progressFill, { width: `${duration > 0 ? (position / duration) * 100 : 0}%` }]} />
