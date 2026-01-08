@@ -84,34 +84,25 @@ export class OfflineCacheManager {
           }
         }
       } catch (error) {
-        console.warn('[Cache] FileSystem failed, falling back to AsyncStorage:', error);
+        console.warn('[Cache] FileSystem failed:', error);
       }
     }
 
-    // Fallback to AsyncStorage (works everywhere but has size limits)
+    // For Expo Go where storage is limited, just mark as "streamable"
+    // Don't actually store the huge base64 - it will be fetched on-demand
     try {
-      const key = `audio_${stopId}_${language}`;
-      // Split large audio into chunks if needed (AsyncStorage has ~2MB limit per key on some platforms)
-      const chunkSize = 1.5 * 1024 * 1024; // 1.5MB chunks
-      
-      if (audioBase64.length > chunkSize) {
-        // Store in chunks
-        const numChunks = Math.ceil(audioBase64.length / chunkSize);
-        await AsyncStorage.setItem(`${key}_chunks`, String(numChunks));
-        
-        for (let i = 0; i < numChunks; i++) {
-          const chunk = audioBase64.slice(i * chunkSize, (i + 1) * chunkSize);
-          await AsyncStorage.setItem(`${key}_${i}`, chunk);
-        }
-        console.log(`[Cache] Saved to AsyncStorage in ${numChunks} chunks: ${stopId}`);
-      } else {
-        await AsyncStorage.setItem(key, audioBase64);
-        console.log(`[Cache] Saved to AsyncStorage: ${stopId} (${Math.round(audioBase64.length / 1024)}KB)`);
-      }
-      
-      return `asyncstorage://${key}`;
+      const key = `audio_meta_${stopId}_${language}`;
+      await AsyncStorage.setItem(key, JSON.stringify({
+        stopId,
+        language,
+        size: audioBase64.length,
+        cached: false, // Mark as metadata only, will stream when needed
+        timestamp: Date.now()
+      }));
+      console.log(`[Cache] Marked for streaming: ${stopId} (${Math.round(audioBase64.length / 1024)}KB)`);
+      return `stream://${stopId}/${language}`;
     } catch (error) {
-      console.error('[Cache] AsyncStorage failed:', error);
+      console.error('[Cache] Failed to save metadata:', error);
       return null;
     }
   }
