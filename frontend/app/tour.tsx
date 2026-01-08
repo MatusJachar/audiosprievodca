@@ -201,9 +201,31 @@ export default function Tour() {
           <TouchableOpacity onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={24} color="#fff" />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.push('/settings')}>
-            <Ionicons name="settings" size={24} color="#fff" />
-          </TouchableOpacity>
+          <View style={styles.headerActions}>
+            {/* Download for Offline Button */}
+            <TouchableOpacity 
+              onPress={() => setShowDownloadModal(true)} 
+              style={[
+                styles.downloadHeaderButton,
+                isOfflineCached && styles.downloadHeaderButtonCached
+              ]}
+            >
+              <Ionicons 
+                name={isOfflineCached ? "checkmark-circle" : "cloud-download"} 
+                size={20} 
+                color={isOfflineCached ? "#4CAF50" : "#FFD700"} 
+              />
+              <Text style={[
+                styles.downloadHeaderText,
+                isOfflineCached && styles.downloadHeaderTextCached
+              ]}>
+                {isOfflineCached ? "Offline Ready" : "Download"}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push('/settings')}>
+              <Ionicons name="settings" size={24} color="#fff" />
+            </TouchableOpacity>
+          </View>
         </View>
         
         <View style={styles.headerTitleContainer}>
