@@ -265,6 +265,8 @@ const styles = StyleSheet.create({
   title: { fontSize: 26, fontWeight: 'bold', color: '#fff', marginBottom: 12 },
   desc: { fontSize: 15, color: '#ccc', lineHeight: 24, marginBottom: 20 },
   player: { backgroundColor: 'rgba(30,30,30,0.95)', borderRadius: 16, padding: 20 },
+  offlineIndicator: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(76,175,80,0.15)', paddingVertical: 6, paddingHorizontal: 12, borderRadius: 20, marginBottom: 12, alignSelf: 'center', gap: 6 },
+  offlineIndicatorText: { fontSize: 12, color: '#4CAF50', fontWeight: '500' },
   progressRow: { marginBottom: 8 },
   progressBg: { height: 6, backgroundColor: '#444', borderRadius: 3, overflow: 'hidden' },
   progressFill: { height: '100%', backgroundColor: '#FFD700' },
