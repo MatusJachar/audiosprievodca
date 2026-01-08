@@ -208,14 +208,30 @@ export default function Settings() {
           <Text style={styles.sectionTitle}>Troubleshooting</Text>
           <TouchableOpacity
             style={styles.settingCard}
+            onPress={handleClearAllCache}
+          >
+            <View style={styles.settingLeft}>
+              <Ionicons name="trash-bin" size={24} color="#FF5252" />
+              <View style={styles.settingInfo}>
+                <Text style={styles.settingLabel}>Clear All Cache</Text>
+                <Text style={styles.settingSubtext}>
+                  Fix "disk full" errors
+                </Text>
+              </View>
+            </View>
+            <Ionicons name="chevron-forward" size={24} color="#aaa" />
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={styles.settingCard}
             onPress={() => router.push('/clear-cache')}
           >
             <View style={styles.settingLeft}>
-              <Ionicons name="trash" size={24} color="#FF9800" />
+              <Ionicons name="refresh-circle" size={24} color="#FF9800" />
               <View style={styles.settingInfo}>
-                <Text style={styles.settingLabel}>Clear Cache</Text>
+                <Text style={styles.settingLabel}>Advanced Cache Options</Text>
                 <Text style={styles.settingSubtext}>
-                  Fix audio or content issues
+                  Debug and fix content issues
                 </Text>
               </View>
             </View>
