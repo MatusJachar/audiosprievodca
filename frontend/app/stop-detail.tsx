@@ -1,10 +1,10 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useTourStore } from '../store/tourStore';
 import { useLanguageStore } from '../store/languageStore';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Audio } from 'expo-av';
 import BackgroundWrapper from '../components/BackgroundWrapper';
 import { OfflineCacheManager } from '../utils/offlineCacheManager';
@@ -16,7 +16,7 @@ export default function StopDetail() {
   const { tourStops, userProgress, markStopComplete } = useTourStore();
   const selectedLanguage = useLanguageStore((state) => state.selectedLanguage);
   
-  const [sound, setSound] = useState<Audio.Sound | null>(null);
+  const soundRef = useRef<Audio.Sound | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [playbackPosition, setPlaybackPosition] = useState(0);
@@ -30,14 +30,31 @@ export default function StopDetail() {
   const content = stop?.content[selectedLanguage];
   const isCompleted = userProgress?.completed_stops.includes(stopId as string) || false;
 
-  // Load audio - check cache first
+  // Cleanup audio when leaving screen
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        // Stop and unload audio when leaving screen
+        if (soundRef.current) {
+          soundRef.current.stopAsync().catch(() => {});
+          soundRef.current.unloadAsync().catch(() => {});
+          soundRef.current = null;
+        }
+        setIsPlaying(false);
+        setPlaybackPosition(0);
+        setPlaybackDuration(0);
+      };
+    }, [])
+  );
+
+  // Load audio URI - check cache first
   useEffect(() => {
-    const loadAudio = async () => {
+    const loadAudioUri = async () => {
       if (!stopId) return;
       
       setLoadingAudio(true);
       
-      // Step 1: Check cache
+      // Check cache first
       const cached = await OfflineCacheManager.getCachedAudioUri(stopId as string, selectedLanguage);
       if (cached) {
         setAudioUri(cached);
@@ -46,21 +63,42 @@ export default function StopDetail() {
         return;
       }
       
-      // Step 2: Use streaming URL
+      // Use streaming URL
       const streamUrl = `${API_URL}/api/audio/stream/${stopId}/${selectedLanguage}`;
       setAudioUri(streamUrl);
       setAudioSource('stream');
       setLoadingAudio(false);
     };
 
-    loadAudio();
+    loadAudioUri();
     
+    // Cleanup on unmount or stopId change
     return () => {
-      if (sound) {
-        sound.unloadAsync();
+      if (soundRef.current) {
+        soundRef.current.stopAsync().catch(() => {});
+        soundRef.current.unloadAsync().catch(() => {});
+        soundRef.current = null;
       }
+      setIsPlaying(false);
+      setPlaybackPosition(0);
+      setPlaybackDuration(0);
     };
   }, [stopId, selectedLanguage]);
+
+  const onPlaybackStatusUpdate = useCallback((status: any) => {
+    if (status.isLoaded) {
+      setPlaybackPosition(status.positionMillis || 0);
+      if (status.durationMillis && status.durationMillis > 0) {
+        setPlaybackDuration(status.durationMillis);
+      }
+      setIsPlaying(status.isPlaying);
+      
+      if (status.didJustFinish) {
+        setIsPlaying(false);
+        markStopComplete('default-user', stopId as string);
+      }
+    }
+  }, [stopId, markStopComplete]);
 
   const playAudio = async () => {
     if (!audioUri) return;
@@ -68,7 +106,8 @@ export default function StopDetail() {
     try {
       setIsLoading(true);
       
-      if (!sound) {
+      if (!soundRef.current) {
+        // Create new sound
         await Audio.setAudioModeAsync({
           allowsRecordingIOS: false,
           playsInSilentModeIOS: true,
@@ -77,50 +116,39 @@ export default function StopDetail() {
         
         const { sound: newSound } = await Audio.Sound.createAsync(
           { uri: audioUri },
-          { shouldPlay: true, rate: playbackSpeed, progressUpdateIntervalMillis: 100 },
+          { shouldPlay: true, rate: playbackSpeed, progressUpdateIntervalMillis: 200 },
           onPlaybackStatusUpdate
         );
         
-        setSound(newSound);
+        soundRef.current = newSound;
         setIsPlaying(true);
-        setIsLoading(false);
       } else {
-        const status = await sound.getStatusAsync();
+        // Toggle play/pause
+        const status = await soundRef.current.getStatusAsync();
         if (status.isLoaded) {
-          if (isPlaying) {
-            await sound.pauseAsync();
+          if (status.isPlaying) {
+            await soundRef.current.pauseAsync();
             setIsPlaying(false);
           } else {
-            await sound.playAsync();
+            await soundRef.current.playAsync();
             setIsPlaying(true);
           }
         }
-        setIsLoading(false);
       }
+      setIsLoading(false);
     } catch (error) {
       console.error('Error playing audio:', error);
       setIsLoading(false);
     }
   };
 
-  const onPlaybackStatusUpdate = (status: any) => {
-    if (status.isLoaded) {
-      setPlaybackPosition(status.positionMillis || 0);
-      if (status.durationMillis && status.durationMillis > 0) {
-        setPlaybackDuration(status.durationMillis);
-      }
-      if (status.didJustFinish) {
-        setIsPlaying(false);
-        markStopComplete('default-user', stopId as string);
-      }
-    }
-  };
-
   const handleStop = async () => {
-    if (sound) {
-      await sound.stopAsync();
-      await sound.unloadAsync();
-      setSound(null);
+    if (soundRef.current) {
+      try {
+        await soundRef.current.stopAsync();
+        await soundRef.current.unloadAsync();
+      } catch (e) {}
+      soundRef.current = null;
       setIsPlaying(false);
       setPlaybackPosition(0);
     }
@@ -131,22 +159,56 @@ export default function StopDetail() {
     const currentIndex = speeds.indexOf(playbackSpeed);
     const nextSpeed = speeds[(currentIndex + 1) % speeds.length];
     setPlaybackSpeed(nextSpeed);
-    if (sound) {
-      await sound.setRateAsync(nextSpeed, true);
+    if (soundRef.current) {
+      try {
+        await soundRef.current.setRateAsync(nextSpeed, true);
+      } catch (e) {}
     }
   };
 
   const skipBackward = async () => {
-    if (sound) {
-      const newPosition = Math.max(0, playbackPosition - 10000);
-      await sound.setPositionAsync(newPosition);
+    if (soundRef.current) {
+      try {
+        const status = await soundRef.current.getStatusAsync();
+        if (status.isLoaded) {
+          const newPosition = Math.max(0, status.positionMillis - 10000);
+          await soundRef.current.setPositionAsync(newPosition);
+          setPlaybackPosition(newPosition);
+        }
+      } catch (e) {
+        console.error('Skip backward error:', e);
+      }
     }
   };
 
   const skipForward = async () => {
-    if (sound && playbackDuration > 0) {
-      const newPosition = Math.min(playbackDuration, playbackPosition + 10000);
-      await sound.setPositionAsync(newPosition);
+    if (soundRef.current) {
+      try {
+        const status = await soundRef.current.getStatusAsync();
+        if (status.isLoaded && status.durationMillis) {
+          const newPosition = Math.min(status.durationMillis, status.positionMillis + 10000);
+          await soundRef.current.setPositionAsync(newPosition);
+          setPlaybackPosition(newPosition);
+        }
+      } catch (e) {
+        console.error('Skip forward error:', e);
+      }
+    }
+  };
+
+  const seekToPosition = async (event: any) => {
+    if (!soundRef.current || playbackDuration === 0) return;
+    
+    try {
+      const { locationX } = event.nativeEvent;
+      const progressBarWidth = event.target?.offsetWidth || 300;
+      const percentage = locationX / progressBarWidth;
+      const newPosition = Math.floor(percentage * playbackDuration);
+      
+      await soundRef.current.setPositionAsync(newPosition);
+      setPlaybackPosition(newPosition);
+    } catch (e) {
+      console.error('Seek error:', e);
     }
   };
 
@@ -155,6 +217,12 @@ export default function StopDetail() {
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  const handleBack = async () => {
+    // Stop audio before navigating back
+    await handleStop();
+    router.back();
   };
 
   if (!stop) {
@@ -174,7 +242,7 @@ export default function StopDetail() {
         <StatusBar style="light" />
       
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <TouchableOpacity onPress={handleBack} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color="#fff" />
           </TouchableOpacity>
           <View style={styles.stopNumberBadge}>
@@ -192,7 +260,6 @@ export default function StopDetail() {
         
           <Text style={styles.title}>{content?.title || stop.stop_name}</Text>
           
-          {/* Audio source indicator */}
           {audioSource && (
             <View style={[styles.sourceIndicator, audioSource === 'cache' ? styles.sourceCache : styles.sourceStream]}>
               <Ionicons 
@@ -216,16 +283,29 @@ export default function StopDetail() {
             </View>
           ) : audioUri ? (
             <View style={styles.audioPlayerCard}>
+              {/* Progress Bar */}
               <View style={styles.progressContainer}>
-                <View style={styles.progressBar}>
-                  <View style={[styles.progressFill, { width: `${playbackDuration > 0 ? (playbackPosition / playbackDuration) * 100 : 0}%` }]} />
-                </View>
+                <TouchableOpacity 
+                  style={styles.progressBarTouchable}
+                  onPress={seekToPosition}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.progressBar}>
+                    <View 
+                      style={[
+                        styles.progressFill, 
+                        { width: `${playbackDuration > 0 ? (playbackPosition / playbackDuration) * 100 : 0}%` }
+                      ]} 
+                    />
+                  </View>
+                </TouchableOpacity>
                 <View style={styles.timeContainer}>
                   <Text style={styles.timeText}>{formatTime(playbackPosition)}</Text>
                   <Text style={styles.timeText}>{formatTime(playbackDuration)}</Text>
                 </View>
               </View>
             
+              {/* Controls */}
               <View style={styles.controlsRow}>
                 <TouchableOpacity onPress={changeSpeed} style={styles.speedButton}>
                   <Text style={styles.speedText}>{playbackSpeed}x</Text>
@@ -233,6 +313,7 @@ export default function StopDetail() {
               
                 <TouchableOpacity onPress={skipBackward} style={styles.controlButton}>
                   <Ionicons name="play-back" size={28} color="#fff" />
+                  <Text style={styles.skipLabel}>-10s</Text>
                 </TouchableOpacity>
               
                 <TouchableOpacity onPress={playAudio} style={styles.playButton} disabled={isLoading}>
@@ -245,6 +326,7 @@ export default function StopDetail() {
               
                 <TouchableOpacity onPress={skipForward} style={styles.controlButton}>
                   <Ionicons name="play-forward" size={28} color="#fff" />
+                  <Text style={styles.skipLabel}>+10s</Text>
                 </TouchableOpacity>
               
                 <TouchableOpacity onPress={handleStop} style={styles.stopButton}>
@@ -286,14 +368,16 @@ const styles = StyleSheet.create({
   loadingAudioText: { color: '#aaa', marginTop: 12, textAlign: 'center' },
   noAudioText: { color: '#aaa', textAlign: 'center' },
   progressContainer: { marginBottom: 20 },
+  progressBarTouchable: { paddingVertical: 10 },
   progressBar: { height: 6, backgroundColor: '#333', borderRadius: 3, overflow: 'hidden' },
   progressFill: { height: '100%', backgroundColor: '#FFD700', borderRadius: 3 },
   timeContainer: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 },
   timeText: { color: '#aaa', fontSize: 12 },
-  controlsRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 16 },
+  controlsRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 12 },
   speedButton: { backgroundColor: '#333', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8 },
-  speedText: { color: '#FFD700', fontWeight: 'bold' },
-  controlButton: { padding: 8 },
+  speedText: { color: '#FFD700', fontWeight: 'bold', fontSize: 14 },
+  controlButton: { padding: 8, alignItems: 'center' },
+  skipLabel: { color: '#aaa', fontSize: 10, marginTop: 2 },
   playButton: { width: 64, height: 64, borderRadius: 32, backgroundColor: '#FFD700', justifyContent: 'center', alignItems: 'center' },
   stopButton: { padding: 8 },
 });
