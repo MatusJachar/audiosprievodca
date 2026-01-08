@@ -48,8 +48,25 @@ export default function Tour() {
     if (Platform.OS === 'web') {
       Alert.alert(
         'Not Available on Web',
-        'Offline mode is only available in the mobile app. Please use Expo Go to download tour for offline access.',
+        'Offline mode is only available in the mobile app.',
         [{ text: 'OK', onPress: () => setShowDownloadModal(false) }]
+      );
+      return;
+    }
+    
+    // Check if FileSystem is available (not available in Expo Go)
+    if (!OfflineCacheManager.isFileSystemAvailable()) {
+      Alert.alert(
+        'Expo Go Limitation',
+        'Offline downloads require a standalone app build. Expo Go has storage restrictions.\n\nThe online streaming mode works great - just use the app with internet connection!',
+        [
+          { text: 'OK', onPress: () => setShowDownloadModal(false) },
+          { text: 'Clear Old Cache', onPress: async () => {
+            await OfflineCacheManager.clearCache();
+            Alert.alert('Cache Cleared', 'Old cache data has been removed.');
+            setShowDownloadModal(false);
+          }}
+        ]
       );
       return;
     }
