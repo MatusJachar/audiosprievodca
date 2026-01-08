@@ -58,13 +58,26 @@ export default function Tour() {
       setDownloadStatus('downloading');
       setDownloading(true);
       
+      // Use all tourStops if filteredTourStops is empty
+      const stopsToDownload = filteredTourStops.length > 0 ? filteredTourStops : tourStops;
+      
+      console.log('[Tour] API_URL:', API_URL);
       console.log('[Tour] Starting offline download for language:', selectedLanguage);
-      console.log('[Tour] Tour stops to download:', filteredTourStops.length);
+      console.log('[Tour] Tour stops to download:', stopsToDownload.length);
+      console.log('[Tour] First stop:', stopsToDownload[0]?.id);
+      
+      if (stopsToDownload.length === 0) {
+        throw new Error('No tour stops available to download');
+      }
+      
+      if (!API_URL) {
+        throw new Error('API URL not configured');
+      }
       
       await OfflineCacheManager.downloadTourForOffline(
-        filteredTourStops,
+        stopsToDownload,
         selectedLanguage,
-        API_URL || '',
+        API_URL,
         (progress) => {
           console.log('[Tour] Download progress:', progress.downloaded, '/', progress.total, '-', progress.currentItem);
           setDownloadProgress(progress);
