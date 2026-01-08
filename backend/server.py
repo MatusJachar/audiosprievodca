@@ -558,6 +558,19 @@ async def mark_stop_complete(user_id: str, stop_id: str):
         return {"message": "Stop marked as complete"}
     except Exception as e:
         logger.error(f"Error marking stop complete: {e}")
+
+@api_router.post("/progress/{user_id}/reset")
+async def reset_user_progress(user_id: str):
+    """Reset user's progress - clear all completed stops"""
+    try:
+        await db.user_progress.update_one(
+            {"user_id": user_id},
+            {"$set": {"completed_stops": [], "updated_at": datetime.utcnow()}}
+        )
+        return {"message": "Progress reset successfully"}
+    except Exception as e:
+        logger.error(f"Error resetting user progress: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.post("/progress/{user_id}/reset")
