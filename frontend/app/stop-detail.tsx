@@ -307,16 +307,38 @@ export default function StopDetail() {
             
               {/* Controls */}
               <View style={styles.controlsRow}>
-                <TouchableOpacity onPress={changeSpeed} style={styles.speedButton}>
+                <TouchableOpacity 
+                  onPress={() => {
+                    console.log('Speed button pressed');
+                    changeSpeed();
+                  }} 
+                  style={styles.speedButton}
+                  accessibilityRole="button"
+                >
                   <Text style={styles.speedText}>{playbackSpeed}x</Text>
                 </TouchableOpacity>
               
-                <TouchableOpacity onPress={skipBackward} style={styles.controlButton}>
+                <TouchableOpacity 
+                  onPress={() => {
+                    console.log('-10s button pressed');
+                    skipBackward();
+                  }} 
+                  style={styles.controlButton}
+                  accessibilityRole="button"
+                >
                   <Ionicons name="play-back" size={28} color="#fff" />
                   <Text style={styles.skipLabel}>-10s</Text>
                 </TouchableOpacity>
               
-                <TouchableOpacity onPress={playAudio} style={styles.playButton} disabled={isLoading}>
+                <TouchableOpacity 
+                  onPress={() => {
+                    console.log('Play button pressed, audioUri:', audioUri ? 'exists' : 'null');
+                    playAudio();
+                  }} 
+                  style={styles.playButton} 
+                  disabled={isLoading}
+                  accessibilityRole="button"
+                >
                   {isLoading ? (
                     <ActivityIndicator size="small" color="#000" />
                   ) : (
@@ -324,12 +346,26 @@ export default function StopDetail() {
                   )}
                 </TouchableOpacity>
               
-                <TouchableOpacity onPress={skipForward} style={styles.controlButton}>
+                <TouchableOpacity 
+                  onPress={() => {
+                    console.log('+10s button pressed');
+                    skipForward();
+                  }} 
+                  style={styles.controlButton}
+                  accessibilityRole="button"
+                >
                   <Ionicons name="play-forward" size={28} color="#fff" />
                   <Text style={styles.skipLabel}>+10s</Text>
                 </TouchableOpacity>
               
-                <TouchableOpacity onPress={handleStop} style={styles.stopButton}>
+                <TouchableOpacity 
+                  onPress={() => {
+                    console.log('Stop button pressed');
+                    handleStop();
+                  }} 
+                  style={styles.stopButton}
+                  accessibilityRole="button"
+                >
                   <Ionicons name="stop" size={24} color="#FF5252" />
                 </TouchableOpacity>
               </View>
