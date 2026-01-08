@@ -22,124 +22,58 @@ export default function StopDetail() {
   const [playbackPosition, setPlaybackPosition] = useState(0);
   const [playbackDuration, setPlaybackDuration] = useState(0);
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
-  const [skipAmount, setSkipAmount] = useState(10000); // 10 seconds in milliseconds
-  const [stopWithAudio, setStopWithAudio] = useState<any>(null);
-  const [loadingAudio, setLoadingAudio] = useState(false);
+  const [audioUri, setAudioUri] = useState<string | null>(null);
+  const [loadingAudio, setLoadingAudio] = useState(true);
+  const [audioSource, setAudioSource] = useState<string>('');
 
   const stop = tourStops.find((s) => s.id === stopId);
   const content = stop?.content[selectedLanguage];
-  const audioBase64 = stopWithAudio?.audio?.[selectedLanguage] || stop?.audio?.[selectedLanguage];
   const isCompleted = userProgress?.completed_stops.includes(stopId as string) || false;
 
-  // Fetch audio - check cache first, then use streaming
+  // Load audio - check cache first
   useEffect(() => {
-    const fetchStopWithAudio = async () => {
-      if (!stopId || stopWithAudio) return;
+    const loadAudio = async () => {
+      if (!stopId) return;
       
       setLoadingAudio(true);
-      const startTime = Date.now();
       
-      try {
-        console.log('=== AUDIO FETCH START ===');
-        console.log('Stop ID:', stopId);
-        console.log('Language:', selectedLanguage);
-        
-        const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
-        
-        // STEP 1: Check if audio is cached (from offline download)
-        console.log('Checking cache...');
-        const cachedAudio = await OfflineCacheManager.getCachedAudioUri(stopId as string, selectedLanguage);
-        
-        console.log('Cache result:', cachedAudio ? `FOUND (${cachedAudio.substring(0, 50)}...)` : 'NOT FOUND');
-        
-        if (cachedAudio) {
-          console.log('✓ Using CACHED audio');
-          setStopWithAudio({
-            ...stop,
-            audio: { ...stop?.audio, [selectedLanguage]: cachedAudio },
-            _fromCache: true
-          } as any);
-          setLoadingAudio(false);
-          console.log(`Ready in ${Date.now() - startTime}ms (from cache)`);
-          return;
-        }
-        
-        // STEP 2: Use streaming URL for online mode
-        const streamUrl = `${API_URL}/api/audio/stream/${stopId}/${selectedLanguage}`;
-        console.log('Using STREAMING URL:', streamUrl);
-        
-        setStopWithAudio({
-          ...stop,
-          audio: { ...stop?.audio, [selectedLanguage]: streamUrl },
-          _isStreamUrl: true
-        } as any);
-        
+      // Step 1: Check cache
+      const cached = await OfflineCacheManager.getCachedAudioUri(stopId as string, selectedLanguage);
+      if (cached) {
+        setAudioUri(cached);
+        setAudioSource('cache');
         setLoadingAudio(false);
-        console.log(`Ready in ${Date.now() - startTime}ms (streaming)`);
-        
-      } catch (error) {
-        console.error('Audio fetch error:', error);
-        setLoadingAudio(false);
+        return;
       }
+      
+      // Step 2: Use streaming URL
+      const streamUrl = `${API_URL}/api/audio/stream/${stopId}/${selectedLanguage}`;
+      setAudioUri(streamUrl);
+      setAudioSource('stream');
+      setLoadingAudio(false);
     };
 
-    fetchStopWithAudio();
-  }, [stopId, selectedLanguage]);
-
-  // Debug logging
-  useEffect(() => {
-    if (stop) {
-      console.log('[StopDetail] Stop ID:', stopId);
-      console.log('[StopDetail] Selected Language:', selectedLanguage);
-      console.log('[StopDetail] Available audio languages:', Object.keys(stop.audio || {}));
-      console.log('[StopDetail] Has audio for selected language:', !!audioBase64);
-      console.log('[StopDetail] Audio base64 length:', audioBase64?.length || 0);
-    }
-  }, [stop, selectedLanguage, audioBase64]);
-
-  useEffect(() => {
+    loadAudio();
+    
     return () => {
       if (sound) {
         sound.unloadAsync();
       }
     };
-  }, [sound]);
+  }, [stopId, selectedLanguage]);
 
-  const handlePlayPause = async () => {
+  const playAudio = async () => {
+    if (!audioUri) return;
+    
     try {
-      // If audio is still loading, wait
-      if (loadingAudio) {
-        return; // Silently return while loading
-      }
+      setIsLoading(true);
       
-      if (!audioBase64) {
-        // Only show error after audio fetch has completed
-        if (!loadingAudio) {
-          alert('Audio not available for this language. Please contact admin.');
-        }
-        return;
-      }
-
       if (!sound) {
-        setIsLoading(true);
-        
-        // Check if audioBase64 is a streaming URL, file URI, or base64 data
-        let audioUri: string;
-        if (audioBase64.startsWith('http://') || audioBase64.startsWith('https://')) {
-          // It's a streaming URL - use directly
-          audioUri = audioBase64;
-          console.log('[StopDetail] STREAMING from URL');
-        } else if (audioBase64.startsWith('file://')) {
-          // It's a cached file path
-          audioUri = audioBase64;
-          console.log('[StopDetail] Playing from FILE');
-        } else {
-          // It's base64 data
-          audioUri = `data:audio/mp3;base64,${audioBase64}`;
-          console.log('[StopDetail] Playing from BASE64');
-        }
-        
-        console.log('[StopDetail] Loading audio from:', audioUri.substring(0, 60) + '...');
+        await Audio.setAudioModeAsync({
+          allowsRecordingIOS: false,
+          playsInSilentModeIOS: true,
+          staysActiveInBackground: true,
+        });
         
         const { sound: newSound } = await Audio.Sound.createAsync(
           { uri: audioUri },
@@ -161,22 +95,20 @@ export default function StopDetail() {
             setIsPlaying(true);
           }
         }
+        setIsLoading(false);
       }
     } catch (error) {
       console.error('Error playing audio:', error);
       setIsLoading(false);
-      alert('Error playing audio. Please try again.');
     }
   };
 
   const onPlaybackStatusUpdate = (status: any) => {
     if (status.isLoaded) {
       setPlaybackPosition(status.positionMillis || 0);
-      // Set duration once we have it (may not be immediately available)
       if (status.durationMillis && status.durationMillis > 0) {
         setPlaybackDuration(status.durationMillis);
       }
-      
       if (status.didJustFinish) {
         setIsPlaying(false);
         markStopComplete('default-user', stopId as string);
@@ -198,9 +130,7 @@ export default function StopDetail() {
     const speeds = [0.5, 1.0, 1.5, 2.0];
     const currentIndex = speeds.indexOf(playbackSpeed);
     const nextSpeed = speeds[(currentIndex + 1) % speeds.length];
-    
     setPlaybackSpeed(nextSpeed);
-    
     if (sound) {
       await sound.setRateAsync(nextSpeed, true);
     }
@@ -208,54 +138,23 @@ export default function StopDetail() {
 
   const skipBackward = async () => {
     if (sound) {
-      try {
-        const status = await sound.getStatusAsync();
-        if (status.isLoaded) {
-          const newPosition = Math.max(0, playbackPosition - skipAmount);
-          await sound.setPositionAsync(newPosition);
-          setPlaybackPosition(newPosition);
-        }
-      } catch (error) {
-        console.error('Error skipping backward:', error);
-      }
+      const newPosition = Math.max(0, playbackPosition - 10000);
+      await sound.setPositionAsync(newPosition);
     }
   };
 
   const skipForward = async () => {
-    if (sound) {
-      try {
-        const status = await sound.getStatusAsync();
-        if (status.isLoaded) {
-          const newPosition = Math.min(playbackDuration, playbackPosition + skipAmount);
-          await sound.setPositionAsync(newPosition);
-          setPlaybackPosition(newPosition);
-        }
-      } catch (error) {
-        console.error('Error skipping forward:', error);
-      }
-    }
-  };
-
-  const handleProgressBarPress = async (event: any) => {
     if (sound && playbackDuration > 0) {
-      try {
-        const { locationX } = event.nativeEvent;
-        const progressBarWidth = event.nativeEvent.target.offsetWidth || 300;
-        const percentage = locationX / progressBarWidth;
-        const newPosition = percentage * playbackDuration;
-        
-        await sound.setPositionAsync(newPosition);
-        setPlaybackPosition(newPosition);
-      } catch (error) {
-        console.error('Error seeking:', error);
-      }
+      const newPosition = Math.min(playbackDuration, playbackPosition + 10000);
+      await sound.setPositionAsync(newPosition);
     }
   };
 
   const formatTime = (millis: number) => {
-    const minutes = Math.floor(millis / 60000);
-    const seconds = Math.floor((millis % 60000) / 1000);
-    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    const totalSeconds = Math.floor(millis / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
   if (!stop) {
@@ -274,204 +173,127 @@ export default function StopDetail() {
       <View style={styles.container}>
         <StatusBar style="light" />
       
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        <View style={styles.stopNumberBadge}>
-          <Text style={styles.stopNumberBadgeText}>{stop.stop_number}</Text>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color="#fff" />
+          </TouchableOpacity>
+          <View style={styles.stopNumberBadge}>
+            <Text style={styles.stopNumberBadgeText}>{stop.stop_number}</Text>
+          </View>
         </View>
-      </View>
       
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {stop.image_base64 && (
-          <Image 
-            source={{ uri: `data:image/jpeg;base64,${stop.image_base64}` }}
-            style={styles.stopImage}
-            resizeMode="cover"
-          />
-        )}
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {isCompleted && (
+            <View style={styles.completedBadge}>
+              <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
+              <Text style={styles.completedBadgeText}>Completed</Text>
+            </View>
+          )}
         
-        <Text style={styles.title}>{content?.title}</Text>
+          <Text style={styles.title}>{content?.title || stop.stop_name}</Text>
+          
+          {/* Audio source indicator */}
+          {audioSource && (
+            <View style={[styles.sourceIndicator, audioSource === 'cache' ? styles.sourceCache : styles.sourceStream]}>
+              <Ionicons 
+                name={audioSource === 'cache' ? 'cloud-done' : 'wifi'} 
+                size={14} 
+                color={audioSource === 'cache' ? '#4CAF50' : '#2196F3'} 
+              />
+              <Text style={[styles.sourceText, audioSource === 'cache' ? styles.sourceCacheText : styles.sourceStreamText]}>
+                {audioSource === 'cache' ? 'Offline Ready' : 'Streaming'}
+              </Text>
+            </View>
+          )}
         
-        {isCompleted && (
-          <View style={styles.completedBadge}>
-            <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
-            <Text style={styles.completedText}>Completed</Text>
-          </View>
-        )}
-        
-        <Text style={styles.description}>{content?.description}</Text>
-        
-        {loadingAudio && (
-          <View style={styles.loadingAudioCard}>
-            <ActivityIndicator size="large" color="#FFD700" />
-            <Text style={styles.loadingAudioTitle}>
-              Preparing Audio...
-            </Text>
-            <Text style={styles.loadingAudioSubtitle}>
-              This may take a few moments
-            </Text>
-          </View>
-        )}
-        
-        {/* Show cached indicator when audio loaded from cache */}
-        {stopWithAudio?._fromCache && !loadingAudio && audioBase64 && (
-          <View style={styles.cachedIndicator}>
-            <Ionicons name="cloud-done" size={16} color="#4CAF50" />
-            <Text style={styles.cachedIndicatorText}>Audio loaded from offline cache</Text>
-          </View>
-        )}
-        
-        {!audioBase64 && !loadingAudio && (
-          <View style={styles.noAudioCard}>
-            <Ionicons name="information-circle" size={32} color="#FFD700" />
-            <Text style={styles.noAudioText}>
-              Audio not available for this language. Please contact admin to generate audio.
-            </Text>
-          </View>
-        )}
-      </ScrollView>
-      
-      {audioBase64 && (
-        <View style={styles.audioPlayer}>
-          {/* Progress Bar */}
-          <View style={styles.progressContainer}>
-            <Text style={styles.timeText}>{formatTime(playbackPosition)}</Text>
-            <TouchableOpacity 
-              style={styles.progressBarWrapper} 
-              activeOpacity={0.8}
-              onPress={handleProgressBarPress}
-            >
-              <View style={styles.progressBar}>
-                <View
-                  style={[
-                    styles.progressFill,
-                    { width: `${playbackDuration > 0 ? (playbackPosition / playbackDuration) * 100 : 0}%` },
-                  ]}
-                />
+          <Text style={styles.description}>{content?.description || 'No description available.'}</Text>
+
+          {/* Audio Player */}
+          {loadingAudio ? (
+            <View style={styles.audioPlayerCard}>
+              <ActivityIndicator size="large" color="#FFD700" />
+              <Text style={styles.loadingAudioText}>Loading audio...</Text>
+            </View>
+          ) : audioUri ? (
+            <View style={styles.audioPlayerCard}>
+              <View style={styles.progressContainer}>
+                <View style={styles.progressBar}>
+                  <View style={[styles.progressFill, { width: `${playbackDuration > 0 ? (playbackPosition / playbackDuration) * 100 : 0}%` }]} />
+                </View>
+                <View style={styles.timeContainer}>
+                  <Text style={styles.timeText}>{formatTime(playbackPosition)}</Text>
+                  <Text style={styles.timeText}>{formatTime(playbackDuration)}</Text>
+                </View>
               </View>
-            </TouchableOpacity>
-            <Text style={styles.timeText}>{formatTime(playbackDuration)}</Text>
-          </View>
-          
-          {/* Skip Amount Indicator */}
-          <View style={styles.skipIndicator}>
-            <Text style={styles.skipText}>Skip: {skipAmount / 1000}s</Text>
-          </View>
-          
-          {/* Main Controls */}
-          <View style={styles.controls}>
-            {/* Speed Control */}
-            <TouchableOpacity onPress={changeSpeed} style={styles.speedButton}>
-              <Text style={styles.speedText}>{playbackSpeed}x</Text>
-              <Text style={styles.speedLabel}>Speed</Text>
-            </TouchableOpacity>
             
-            {/* Skip Backward */}
-            <TouchableOpacity 
-              onPress={skipBackward} 
-              style={styles.skipButton}
-              disabled={!sound || playbackPosition === 0}
-            >
-              <Ionicons name="play-back" size={28} color="#FFD700" />
-              <Text style={styles.skipButtonText}>-{skipAmount / 1000}s</Text>
-            </TouchableOpacity>
-            
-            {/* Play/Pause Button */}
-            <TouchableOpacity
-              onPress={handlePlayPause}
-              style={styles.playButton}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <ActivityIndicator size="large" color="#000" />
-              ) : (
-                <Ionicons
-                  name={isPlaying ? 'pause' : 'play'}
-                  size={48}
-                  color="#000"
-                />
-              )}
-            </TouchableOpacity>
-            
-            {/* Skip Forward */}
-            <TouchableOpacity 
-              onPress={skipForward} 
-              style={styles.skipButton}
-              disabled={!sound || playbackPosition >= playbackDuration}
-            >
-              <Ionicons name="play-forward" size={28} color="#FFD700" />
-              <Text style={styles.skipButtonText}>+{skipAmount / 1000}s</Text>
-            </TouchableOpacity>
-            
-            {/* Stop Button */}
-            <TouchableOpacity onPress={handleStop} style={styles.stopButton}>
-              <Ionicons name="stop" size={24} color="#FF5252" />
-              <Text style={styles.stopLabel}>Stop</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
-    </View>
+              <View style={styles.controlsRow}>
+                <TouchableOpacity onPress={changeSpeed} style={styles.speedButton}>
+                  <Text style={styles.speedText}>{playbackSpeed}x</Text>
+                </TouchableOpacity>
+              
+                <TouchableOpacity onPress={skipBackward} style={styles.controlButton}>
+                  <Ionicons name="play-back" size={28} color="#fff" />
+                </TouchableOpacity>
+              
+                <TouchableOpacity onPress={playAudio} style={styles.playButton} disabled={isLoading}>
+                  {isLoading ? (
+                    <ActivityIndicator size="small" color="#000" />
+                  ) : (
+                    <Ionicons name={isPlaying ? 'pause' : 'play'} size={32} color="#000" />
+                  )}
+                </TouchableOpacity>
+              
+                <TouchableOpacity onPress={skipForward} style={styles.controlButton}>
+                  <Ionicons name="play-forward" size={28} color="#fff" />
+                </TouchableOpacity>
+              
+                <TouchableOpacity onPress={handleStop} style={styles.stopButton}>
+                  <Ionicons name="stop" size={24} color="#FF5252" />
+                </TouchableOpacity>
+              </View>
+            </View>
+          ) : (
+            <View style={styles.audioPlayerCard}>
+              <Text style={styles.noAudioText}>No audio available for this language</Text>
+            </View>
+          )}
+        </ScrollView>
+      </View>
     </BackgroundWrapper>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: 'transparent' },
+  container: { flex: 1 },
   centered: { justifyContent: 'center', alignItems: 'center' },
-  loadingText: { color: '#aaa', marginTop: 16, fontSize: 16 },
-  header: { flexDirection: 'row', alignItems: 'center', padding: 16, paddingTop: 50, gap: 12, backgroundColor: 'transparent' },
-  backButton: { padding: 8, backgroundColor: 'rgba(0, 0, 0, 0.5)', borderRadius: 20 },
-  stopNumberBadge: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#FFD700', justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 4 },
+  loadingText: { color: '#fff', marginTop: 16, fontSize: 16 },
+  header: { flexDirection: 'row', alignItems: 'center', padding: 16, paddingTop: 60, gap: 16 },
+  backButton: { padding: 8 },
+  stopNumberBadge: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#FFD700', justifyContent: 'center', alignItems: 'center' },
   stopNumberBadgeText: { fontSize: 20, fontWeight: 'bold', color: '#000' },
   content: { flex: 1, padding: 24 },
-  title: { fontSize: 28, fontWeight: 'bold', color: '#fff', marginBottom: 16 },
-  completedBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1a3d1a', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, alignSelf: 'flex-start', marginBottom: 16, gap: 6 },
-  completedText: { color: '#4CAF50', fontSize: 14, fontWeight: '600' },
-  stopImage: {
-    width: '100%',
-    height: 250,
-    borderRadius: 12,
-    marginBottom: 20,
-  },
-  description: { fontSize: 16, color: '#ccc', lineHeight: 24, marginBottom: 24 },
-  loadingAudioCard: { backgroundColor: '#2a2a1a', padding: 32, borderRadius: 16, alignItems: 'center', gap: 16, marginBottom: 16, borderWidth: 2, borderColor: '#FFD700' },
-  loadingAudioTitle: { color: '#FFD700', textAlign: 'center', fontSize: 18, fontWeight: 'bold', lineHeight: 24 },
-  loadingAudioSubtitle: { color: '#aaa', textAlign: 'center', fontSize: 14, lineHeight: 20 },
-  noAudioCard: { backgroundColor: '#2a2a1a', padding: 20, borderRadius: 12, alignItems: 'center', gap: 12, marginBottom: 16 },
-  noAudioText: { color: '#FFD700', textAlign: 'center', fontSize: 14, lineHeight: 20 },
-  audioPlayer: { backgroundColor: '#1a1a1a', padding: 24, paddingBottom: 40 },
-  progressContainer: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
-  progressBarWrapper: { flex: 1 },
-  progressBar: { height: 6, backgroundColor: '#2a2a2a', borderRadius: 3, overflow: 'hidden' },
+  completedBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(76, 175, 80, 0.2)', padding: 12, borderRadius: 8, marginBottom: 16, gap: 8 },
+  completedBadgeText: { color: '#4CAF50', fontWeight: '600' },
+  title: { fontSize: 28, fontWeight: 'bold', color: '#fff', marginBottom: 8 },
+  sourceIndicator: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, alignSelf: 'flex-start', marginBottom: 16, gap: 6 },
+  sourceCache: { backgroundColor: 'rgba(76, 175, 80, 0.15)' },
+  sourceStream: { backgroundColor: 'rgba(33, 150, 243, 0.15)' },
+  sourceText: { fontSize: 12, fontWeight: '600' },
+  sourceCacheText: { color: '#4CAF50' },
+  sourceStreamText: { color: '#2196F3' },
+  description: { fontSize: 16, color: '#ccc', lineHeight: 26, marginBottom: 24 },
+  audioPlayerCard: { backgroundColor: 'rgba(26, 26, 26, 0.95)', borderRadius: 16, padding: 20, marginBottom: 24 },
+  loadingAudioText: { color: '#aaa', marginTop: 12, textAlign: 'center' },
+  noAudioText: { color: '#aaa', textAlign: 'center' },
+  progressContainer: { marginBottom: 20 },
+  progressBar: { height: 6, backgroundColor: '#333', borderRadius: 3, overflow: 'hidden' },
   progressFill: { height: '100%', backgroundColor: '#FFD700', borderRadius: 3 },
-  timeText: { fontSize: 12, color: '#aaa', minWidth: 40, textAlign: 'center' },
-  skipIndicator: { alignItems: 'center', marginBottom: 12 },
-  skipText: { fontSize: 11, color: '#666', fontStyle: 'italic' },
-  controls: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 },
-  playButton: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#FFD700', justifyContent: 'center', alignItems: 'center', elevation: 4, shadowColor: '#FFD700', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8 },
-  speedButton: { alignItems: 'center', justifyContent: 'center', minWidth: 50 },
-  speedText: { color: '#FFD700', fontSize: 16, fontWeight: 'bold', marginBottom: 2 },
-  speedLabel: { fontSize: 10, color: '#666' },
-  skipButton: { alignItems: 'center', justifyContent: 'center', width: 64, height: 64, borderRadius: 32, backgroundColor: '#2a2a2a' },
-  skipButtonText: { fontSize: 10, color: '#FFD700', fontWeight: 'bold', marginTop: 2 },
-  stopButton: { alignItems: 'center', justifyContent: 'center', minWidth: 50 },
-  stopLabel: { fontSize: 10, color: '#FF5252', marginTop: 2 },
-  cachedIndicator: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    backgroundColor: 'rgba(76, 175, 80, 0.15)', 
-    paddingHorizontal: 12, 
-    paddingVertical: 8, 
-    borderRadius: 8, 
-    gap: 8, 
-    marginBottom: 16 
-  },
-  cachedIndicatorText: { 
-    color: '#4CAF50', 
-    fontSize: 12, 
-    fontWeight: '500' 
-  },
+  timeContainer: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 },
+  timeText: { color: '#aaa', fontSize: 12 },
+  controlsRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 16 },
+  speedButton: { backgroundColor: '#333', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8 },
+  speedText: { color: '#FFD700', fontWeight: 'bold' },
+  controlButton: { padding: 8 },
+  playButton: { width: 64, height: 64, borderRadius: 32, backgroundColor: '#FFD700', justifyContent: 'center', alignItems: 'center' },
+  stopButton: { padding: 8 },
 });
