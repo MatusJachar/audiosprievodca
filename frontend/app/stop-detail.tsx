@@ -31,7 +31,7 @@ export default function StopDetail() {
   const audioBase64 = stopWithAudio?.audio?.[selectedLanguage] || stop?.audio?.[selectedLanguage];
   const isCompleted = userProgress?.completed_stops.includes(stopId as string) || false;
 
-  // Fetch audio separately when stop detail opens - OPTIMIZED
+  // Fetch audio separately when stop detail opens - STREAMING MODE
   useEffect(() => {
     const fetchStopWithAudio = async () => {
       if (!stopId || stopWithAudio) return;
@@ -41,69 +41,30 @@ export default function StopDetail() {
       
       try {
         console.log('[StopDetail] Starting audio fetch for stop:', stopId);
-        
-        // STEP 1: Try to check if audio is cached locally
-        let cachedUri = null;
-        try {
-          cachedUri = await OfflineCacheManager.getCachedAudioUri(stopId as string, selectedLanguage);
-          console.log('[StopDetail] Cache check result:', cachedUri ? 'FOUND' : 'NOT FOUND');
-        } catch (cacheError) {
-          console.warn('[StopDetail] Cache check failed:', cacheError);
-        }
-        
-        if (cachedUri && !cachedUri.startsWith('stream://')) {
-          console.log('[StopDetail] Using cached audio');
-          setStopWithAudio({
-            ...stop,
-            audio: { ...stop?.audio, [selectedLanguage]: cachedUri },
-            _fromCache: true
-          } as any);
-          setLoadingAudio(false);
-          console.log(`[StopDetail] Loaded from cache in ${Date.now() - startTime}ms`);
-          return;
-        }
-        
-        // STEP 2: Fetch audio only (lighter endpoint)
-        console.log('[StopDetail] Fetching audio from API...');
         const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
         
-        // Try the audio-only endpoint first (faster)
-        try {
-          const audioResponse = await fetch(`${API_URL}/api/tour-stops/${stopId}/audio/${selectedLanguage}`);
-          if (audioResponse.ok) {
-            const audioData = await audioResponse.json();
-            console.log(`[StopDetail] Audio fetched: ${audioData.size_kb}KB in ${Date.now() - startTime}ms`);
-            setStopWithAudio({
-              ...stop,
-              audio: { ...stop?.audio, [selectedLanguage]: audioData.audio_base64 }
-            } as any);
-            setLoadingAudio(false);
-            return;
-          }
-        } catch (e) {
-          console.log('[StopDetail] Audio-only endpoint not available, using full endpoint');
-        }
+        // USE STREAMING URL - much faster, no base64 overhead
+        const streamUrl = `${API_URL}/api/audio/stream/${stopId}/${selectedLanguage}`;
+        console.log('[StopDetail] Using streaming URL:', streamUrl);
         
-        // Fallback to full stop data
-        const response = await fetch(`${API_URL}/api/tour-stops/${stopId}`);
-        if (!response.ok) {
-          console.error('[StopDetail] API fetch failed:', response.status);
-          setLoadingAudio(false);
-          return;
-        }
+        // Just set the streaming URL - expo-av will handle the rest
+        setStopWithAudio({
+          ...stop,
+          audio: { ...stop?.audio, [selectedLanguage]: streamUrl },
+          _isStreamUrl: true
+        } as any);
         
-        const stopData = await response.json();
-        console.log(`[StopDetail] Full data fetched in ${Date.now() - startTime}ms`);
-        setStopWithAudio(stopData);
         setLoadingAudio(false);
+        console.log(`[StopDetail] Ready in ${Date.now() - startTime}ms (streaming mode)`);
+        
       } catch (error) {
-        console.error('[StopDetail] Error in fetchStopWithAudio:', error);
+        console.error('[StopDetail] Error:', error);
         setLoadingAudio(false);
       }
     };
 
     fetchStopWithAudio();
-  }, [stopId]);
+  }, [stopId, selectedLanguage]);
 
   // Debug logging
   useEffect(() => {
