@@ -30,6 +30,25 @@ export default function StopDetail() {
   const content = stop?.content[selectedLanguage];
   const isCompleted = userProgress?.completed_stops.includes(stopId as string) || false;
 
+  // Global audio cleanup - stop ALL audio when component mounts
+  useEffect(() => {
+    // Stop any lingering audio from previous screens
+    Audio.setAudioModeAsync({
+      allowsRecordingIOS: false,
+      playsInSilentModeIOS: true,
+      staysActiveInBackground: false, // Don't play in background
+    });
+    
+    return () => {
+      // Ensure cleanup on unmount
+      if (soundRef.current) {
+        soundRef.current.stopAsync().catch(() => {});
+        soundRef.current.unloadAsync().catch(() => {});
+        soundRef.current = null;
+      }
+    };
+  }, []);
+
   // Cleanup audio when leaving screen
   useFocusEffect(
     useCallback(() => {
