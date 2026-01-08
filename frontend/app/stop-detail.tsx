@@ -40,27 +40,33 @@ export default function StopDetail() {
       const startTime = Date.now();
       
       try {
-        console.log('[StopDetail] Starting audio fetch for stop:', stopId);
+        console.log('=== AUDIO FETCH START ===');
+        console.log('Stop ID:', stopId);
+        console.log('Language:', selectedLanguage);
+        
         const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
         
         // STEP 1: Check if audio is cached (from offline download)
+        console.log('Checking cache...');
         const cachedAudio = await OfflineCacheManager.getCachedAudioUri(stopId as string, selectedLanguage);
         
+        console.log('Cache result:', cachedAudio ? `FOUND (${cachedAudio.substring(0, 50)}...)` : 'NOT FOUND');
+        
         if (cachedAudio) {
-          console.log('[StopDetail] ✓ Using CACHED audio');
+          console.log('✓ Using CACHED audio');
           setStopWithAudio({
             ...stop,
             audio: { ...stop?.audio, [selectedLanguage]: cachedAudio },
             _fromCache: true
           } as any);
           setLoadingAudio(false);
-          console.log(`[StopDetail] Ready in ${Date.now() - startTime}ms (from cache)`);
+          console.log(`Ready in ${Date.now() - startTime}ms (from cache)`);
           return;
         }
         
         // STEP 2: Use streaming URL for online mode
         const streamUrl = `${API_URL}/api/audio/stream/${stopId}/${selectedLanguage}`;
-        console.log('[StopDetail] Using STREAMING URL:', streamUrl);
+        console.log('Using STREAMING URL:', streamUrl);
         
         setStopWithAudio({
           ...stop,
@@ -69,10 +75,10 @@ export default function StopDetail() {
         } as any);
         
         setLoadingAudio(false);
-        console.log(`[StopDetail] Ready in ${Date.now() - startTime}ms (streaming)`);
+        console.log(`Ready in ${Date.now() - startTime}ms (streaming)`);
         
       } catch (error) {
-        console.error('[StopDetail] Error:', error);
+        console.error('Audio fetch error:', error);
         setLoadingAudio(false);
       }
     };
