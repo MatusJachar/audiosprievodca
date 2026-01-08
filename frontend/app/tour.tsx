@@ -252,6 +252,137 @@ export default function Tour() {
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
       />
+      
+      {/* Download for Offline Modal */}
+      <Modal
+        visible={showDownloadModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => !downloading && setShowDownloadModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            {/* Modal Header */}
+            <View style={styles.modalHeader}>
+              {downloadStatus === 'complete' ? (
+                <Ionicons name="checkmark-circle" size={64} color="#4CAF50" />
+              ) : downloadStatus === 'error' ? (
+                <Ionicons name="alert-circle" size={64} color="#FF5252" />
+              ) : (
+                <Ionicons name="cloud-download" size={64} color="#FFD700" />
+              )}
+              
+              <Text style={styles.modalTitle}>
+                {downloadStatus === 'complete' ? 'Download Complete!' :
+                 downloadStatus === 'error' ? 'Download Failed' :
+                 isOfflineCached ? 'Tour Already Downloaded' : 'Download for Offline'}
+              </Text>
+              
+              <Text style={styles.modalSubtitle}>
+                {downloadStatus === 'complete' ? 'Your tour is ready for offline use!' :
+                 downloadStatus === 'error' ? 'Something went wrong. Please try again.' :
+                 isOfflineCached ? `Tour is cached in ${getLanguageName(selectedLanguage)}` :
+                 `Download ${filteredTourStops.length} stops for offline access`}
+              </Text>
+            </View>
+
+            {/* Download Progress */}
+            {downloading && (
+              <View style={styles.downloadProgressSection}>
+                <ActivityIndicator size="large" color="#FFD700" />
+                <View style={styles.progressBarContainer}>
+                  <View style={styles.downloadProgressBar}>
+                    <View 
+                      style={[
+                        styles.downloadProgressFill, 
+                        { width: `${(downloadProgress.downloaded / Math.max(downloadProgress.total, 1)) * 100}%` }
+                      ]} 
+                    />
+                  </View>
+                  <Text style={styles.progressPercentage}>
+                    {downloadProgress.total > 0 
+                      ? Math.round((downloadProgress.downloaded / downloadProgress.total) * 100)
+                      : 0}%
+                  </Text>
+                </View>
+                <Text style={styles.progressText}>
+                  Downloading {downloadProgress.downloaded}/{downloadProgress.total} stops
+                </Text>
+                <Text style={styles.progressCurrentItem}>
+                  {downloadProgress.currentItem}
+                </Text>
+              </View>
+            )}
+
+            {/* Modal Actions */}
+            {!downloading && downloadStatus !== 'complete' && (
+              <View style={styles.modalActions}>
+                {!isOfflineCached && (
+                  <TouchableOpacity
+                    style={styles.downloadNowButton}
+                    onPress={handleDownloadForOffline}
+                  >
+                    <Ionicons name="download" size={20} color="#000" />
+                    <Text style={styles.downloadNowButtonText}>Download Now</Text>
+                  </TouchableOpacity>
+                )}
+                
+                {isOfflineCached && (
+                  <TouchableOpacity
+                    style={styles.redownloadButton}
+                    onPress={handleDownloadForOffline}
+                  >
+                    <Ionicons name="refresh" size={20} color="#FFD700" />
+                    <Text style={styles.redownloadButtonText}>Re-download Tour</Text>
+                  </TouchableOpacity>
+                )}
+                
+                <TouchableOpacity
+                  style={styles.closeModalButton}
+                  onPress={() => setShowDownloadModal(false)}
+                >
+                  <Text style={styles.closeModalButtonText}>
+                    {isOfflineCached ? 'Close' : 'Use Online Mode'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {/* Error Actions */}
+            {downloadStatus === 'error' && (
+              <View style={styles.modalActions}>
+                <TouchableOpacity
+                  style={styles.downloadNowButton}
+                  onPress={handleDownloadForOffline}
+                >
+                  <Ionicons name="refresh" size={20} color="#000" />
+                  <Text style={styles.downloadNowButtonText}>Try Again</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                  style={styles.closeModalButton}
+                  onPress={() => {
+                    setShowDownloadModal(false);
+                    setDownloadStatus('idle');
+                  }}
+                >
+                  <Text style={styles.closeModalButtonText}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {/* Platform Notice */}
+            {Platform.OS === 'web' && (
+              <View style={styles.platformNotice}>
+                <Ionicons name="information-circle" size={20} color="#FFD700" />
+                <Text style={styles.platformNoticeText}>
+                  Offline mode is only available in the mobile app (Expo Go)
+                </Text>
+              </View>
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
     </BackgroundWrapper>
   );
