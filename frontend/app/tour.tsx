@@ -1,17 +1,23 @@
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Modal, Alert } from 'react-native';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useTourStore } from '../store/tourStore';
 import { useLanguageStore } from '../store/languageStore';
 import { useTourTypeStore } from '../store/tourTypeStore';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import BackgroundWrapper from '../components/BackgroundWrapper';
+import { OfflineCacheManager } from '../utils/offlineCacheManager';
+
+const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 export default function Tour() {
   const { tourStops, userProgress, loading, fetchTourStops, fetchUserProgress } = useTourStore();
   const selectedLanguage = useLanguageStore((state) => state.selectedLanguage);
   const { getTourRoute } = useTourTypeStore();
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState({ total: 0, downloaded: 0, currentItem: '' });
 
   useEffect(() => {
     if (tourStops.length === 0) {
