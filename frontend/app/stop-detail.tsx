@@ -110,8 +110,8 @@ export default function StopDetail() {
       if (status.durationMillis && status.durationMillis > 0) {
         setPlaybackDuration(status.durationMillis);
       }
-      setIsPlaying(status.isPlaying);
-      
+      // Don't set isPlaying here - causes race conditions
+      // Only handle didJustFinish
       if (status.didJustFinish) {
         setIsPlaying(false);
         markStopComplete('default-user', stopId as string);
