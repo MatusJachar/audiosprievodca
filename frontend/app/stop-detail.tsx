@@ -174,8 +174,11 @@ export default function StopDetail() {
 
   const onPlaybackStatusUpdate = (status: any) => {
     if (status.isLoaded) {
-      setPlaybackPosition(status.positionMillis);
-      setPlaybackDuration(status.durationMillis || 0);
+      setPlaybackPosition(status.positionMillis || 0);
+      // Set duration once we have it (may not be immediately available)
+      if (status.durationMillis && status.durationMillis > 0) {
+        setPlaybackDuration(status.durationMillis);
+      }
       
       if (status.didJustFinish) {
         setIsPlaying(false);
