@@ -262,6 +262,30 @@ frontend:
           agent: "main"
           comment: "User reported stops being permanently marked as completed incorrectly. Fixed by removing manual 'Mark as Complete' button. Now stops are only marked complete automatically when audio playback finishes (status.didJustFinish). The onPlaybackStatusUpdate callback at line 118-128 handles automatic completion tracking. This ensures visitors must actually listen to the audio to mark a stop complete."
 
+  - task: "Offline mode - download tour for offline use"
+    implemented: true
+    working: "NA"
+    file: "frontend/app/tour.tsx, frontend/utils/offlineCacheManager.ts, frontend/app/stop-detail.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "OFFLINE MODE IMPLEMENTATION COMPLETE: Added 'Download for Offline' button in tour.tsx header. Created download modal with progress indicator. Updated offlineCacheManager.ts with proper platform detection (web vs mobile), null-safe cache directory handling, comprehensive error handling and logging. Stop-detail.tsx now checks for cached audio first before fetching from API. Added visual indicator when audio is loaded from cache. Fixed audio progress bar division by zero bug. Web platform shows notice that offline mode requires Expo Go mobile app. IMPORTANT: Must be tested on real mobile device via Expo Go - web preview cannot test FileSystem functionality."
+
+  - task: "Audio progress bar fix"
+    implemented: true
+    working: "NA"
+    file: "frontend/app/stop-detail.tsx"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Fixed audio progress bar to handle division by zero when durationMillis is 0 or undefined. Added conditional check: playbackDuration > 0 before calculating percentage. Also improved onPlaybackStatusUpdate to only set duration when valid value is available."
+
 metadata:
   created_by: "testing_agent"
   version: "1.0"
