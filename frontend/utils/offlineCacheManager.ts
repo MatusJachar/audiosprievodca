@@ -111,8 +111,11 @@ export class OfflineCacheManager {
   static async isAudioCached(stopId: string, language: string): Promise<boolean> {
     try {
       const key = `offline_audio_${stopId}_${language}`;
+      console.log('[Cache] Checking key:', key);
       const cached = await AsyncStorage.getItem(key);
-      return cached !== null && cached.length > 0;
+      const result = cached !== null && cached.length > 0;
+      console.log('[Cache] isAudioCached result:', result, cached ? `(${cached.length} chars)` : '(null)');
+      return result;
     } catch (error) {
       console.warn('[Cache] Error checking cache:', error);
       return false;
@@ -123,13 +126,15 @@ export class OfflineCacheManager {
   static async getCachedAudioUri(stopId: string, language: string): Promise<string | null> {
     try {
       const key = `offline_audio_${stopId}_${language}`;
+      console.log('[Cache] Getting audio for key:', key);
       const cached = await AsyncStorage.getItem(key);
       
       if (cached && cached.length > 0) {
-        console.log(`[Cache] Found cached audio for ${stopId}`);
+        console.log(`[Cache] FOUND cached audio: ${cached.length} chars`);
         return `data:audio/mp3;base64,${cached}`;
       }
       
+      console.log('[Cache] NOT FOUND in cache');
       return null;
     } catch (error) {
       console.warn('[Cache] Error getting cached audio:', error);
