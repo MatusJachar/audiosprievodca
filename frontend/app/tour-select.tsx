@@ -89,36 +89,6 @@ export default function TourSelect() {
       );
     }
   };
-      //   selectedLanguage,
-      //   API_URL || '',
-      //   (progress) => {
-      //     setDownloadProgress(progress);
-      //   }
-      // );
-
-      // Simulate download for now
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      setDownloading(false);
-      setShowDownloadModal(false);
-      
-      Alert.alert(
-        'Download Complete!',
-        'Tour is now available offline. Enjoy your visit!',
-        [{ text: 'Start Tour', onPress: () => router.push('/tour') }]
-      );
-    } catch (error) {
-      setDownloading(false);
-      Alert.alert(
-        'Download Failed',
-        'Unable to download tour. You can still use online mode.',
-        [
-          { text: 'Try Again', onPress: handleDownloadTour },
-          { text: 'Use Online', onPress: () => router.push('/tour') }
-        ]
-      );
-    }
-  };
 
   const handleSkipDownload = () => {
     setShowDownloadModal(false);
