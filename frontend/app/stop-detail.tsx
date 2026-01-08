@@ -342,7 +342,7 @@ export default function StopDetail() {
                 <View
                   style={[
                     styles.progressFill,
-                    { width: `${(playbackPosition / playbackDuration) * 100}%` },
+                    { width: `${playbackDuration > 0 ? (playbackPosition / playbackDuration) * 100 : 0}%` },
                   ]}
                 />
               </View>
