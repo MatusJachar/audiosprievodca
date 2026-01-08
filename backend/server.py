@@ -172,12 +172,21 @@ async def stream_audio(stop_id: str, language: str):
     from fastapi.responses import Response
     
     try:
+        # Audio is stored in tour_audio collection
         audio_doc = await db.tour_audio.find_one({'stop_id': stop_id, 'language': language})
-        if not audio_doc:
-            raise HTTPException(status_code=404, detail="Audio not found")
+        
+        if not audio_doc or not audio_doc.get('audio_base64'):
+            # Fallback: try to get from tour_stops collection
+            stop = await db.tour_stops.find_one({'id': stop_id})
+            if stop and stop.get('audio', {}).get(language):
+                audio_base64 = stop['audio'][language]
+            else:
+                raise HTTPException(status_code=404, detail=f"Audio not found for stop {stop_id} language {language}")
+        else:
+            audio_base64 = audio_doc['audio_base64']
         
         # Decode base64 to binary
-        audio_bytes = base64.b64decode(audio_doc['audio_base64'])
+        audio_bytes = base64.b64decode(audio_base64)
         
         # Return as streamable MP3
         return Response(
@@ -185,7 +194,7 @@ async def stream_audio(stop_id: str, language: str):
             media_type="audio/mpeg",
             headers={
                 "Content-Disposition": f"inline; filename={stop_id}_{language}.mp3",
-                "Cache-Control": "public, max-age=31536000",  # Cache for 1 year
+                "Cache-Control": "public, max-age=31536000",
                 "Accept-Ranges": "bytes"
             }
         )
