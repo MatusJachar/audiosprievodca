@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useTourStore } from '../store/tourStore';
 import { useLanguageStore, LANGUAGES } from '../store/languageStore';
+import { OfflineCacheManager } from '../utils/offlineCacheManager';
 
 export default function Settings() {
   const { userProgress, resetProgress, isOfflineMode, toggleOfflineMode, downloadAllContent } = useTourStore();
@@ -24,7 +25,39 @@ export default function Settings() {
     );
   };
 
+  const handleClearAllCache = async () => {
+    Alert.alert(
+      'Clear All Cache',
+      'This will clear all downloaded audio and fix the "disk full" error. Continue?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Clear Cache',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await OfflineCacheManager.clearCache();
+              Alert.alert('Success', 'Cache cleared successfully! The app should work normally now.');
+            } catch (error) {
+              Alert.alert('Error', 'Failed to clear cache. Try restarting the app.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const handleDownloadContent = async () => {
+    // Check if FileSystem is available
+    if (!OfflineCacheManager.isFileSystemAvailable()) {
+      Alert.alert(
+        'Expo Go Limitation',
+        'Offline downloads require a standalone app build. Expo Go has storage restrictions.\n\nUse online streaming mode instead - it works great!',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+    
     Alert.alert(
       'Download Tour',
       'Download all tour content for offline use?',
