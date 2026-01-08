@@ -191,7 +191,7 @@ export class OfflineCacheManager {
     }
   }
 
-  // Download entire tour for offline use
+  // Download entire tour for offline use - PARALLEL DOWNLOADS
   static async downloadTourForOffline(
     tourStops: any[],
     language: string,
@@ -219,29 +219,23 @@ export class OfflineCacheManager {
     let skipCount = 0;
     let errorCount = 0;
 
-    for (const stop of tourStops) {
+    // Process in parallel batches of 4 for faster download
+    const BATCH_SIZE = 4;
+    
+    const downloadStop = async (stop: any): Promise<{success: boolean, skipped: boolean}> => {
       const stopTitle = stop.content?.[language]?.title || 
                         stop.content?.['en']?.title || 
                         `Stop ${stop.stop_number || 'Legend'}`;
       
       try {
-        onProgress?.({
-          total,
-          downloaded,
-          currentItem: stopTitle,
-        });
-
         // Check if already cached
         const isCached = await this.isAudioCached(stop.id, language);
         if (isCached) {
           console.log(`[Cache] ✓ Already cached: ${stopTitle}`);
-          skipCount++;
-          downloaded++;
-          continue;
+          return { success: true, skipped: true };
         }
 
         // Fetch audio from API
-        console.log(`[Cache] Fetching: ${stopTitle}...`);
         const response = await fetch(`${apiUrl}/api/tour-stops/${stop.id}`, {
           method: 'GET',
           headers: { 'Accept': 'application/json' },
@@ -249,9 +243,7 @@ export class OfflineCacheManager {
         
         if (!response.ok) {
           console.warn(`[Cache] ✗ API error for ${stop.id}: ${response.status}`);
-          errorCount++;
-          downloaded++;
-          continue;
+          return { success: false, skipped: false };
         }
 
         const stopData = await response.json();
@@ -261,22 +253,37 @@ export class OfflineCacheManager {
           const savedUri = await this.downloadAudio(stop.id, language, audioBase64);
           if (savedUri) {
             console.log(`[Cache] ✓ Downloaded: ${stopTitle}`);
-            successCount++;
-          } else {
-            console.warn(`[Cache] ✗ Save failed: ${stopTitle}`);
-            errorCount++;
+            return { success: true, skipped: false };
           }
-        } else {
-          console.warn(`[Cache] ✗ No audio for ${stopTitle} in ${language}`);
-          errorCount++;
         }
-
-        downloaded++;
+        return { success: false, skipped: false };
       } catch (error) {
-        console.error(`[Cache] ✗ Error downloading ${stop.id}:`, error);
-        errorCount++;
-        downloaded++;
+        console.error(`[Cache] ✗ Error: ${stop.id}`, error);
+        return { success: false, skipped: false };
       }
+    };
+
+    // Process in batches
+    for (let i = 0; i < tourStops.length; i += BATCH_SIZE) {
+      const batch = tourStops.slice(i, i + BATCH_SIZE);
+      const batchNames = batch.map(s => s.content?.[language]?.title || `Stop ${s.stop_number}`).join(', ');
+      
+      onProgress?.({
+        total,
+        downloaded,
+        currentItem: `Downloading: ${batchNames.substring(0, 40)}...`,
+      });
+
+      // Download batch in parallel
+      const results = await Promise.all(batch.map(stop => downloadStop(stop)));
+      
+      // Update counts
+      results.forEach(r => {
+        downloaded++;
+        if (r.skipped) skipCount++;
+        else if (r.success) successCount++;
+        else errorCount++;
+      });
     }
 
     // Mark tour as cached
