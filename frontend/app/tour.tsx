@@ -246,7 +246,7 @@ export default function Tour() {
         </View>
       </View>
       
-      {/* PROMINENT OFFLINE DOWNLOAD BANNER */}
+      {/* Download Banner - Only show if NOT cached */}
       {!isOfflineCached && (
         <TouchableOpacity 
           style={styles.offlineBanner}
@@ -263,15 +263,6 @@ export default function Tour() {
           </View>
           <Ionicons name="chevron-forward" size={24} color="#000" />
         </TouchableOpacity>
-      )}
-      
-      {isOfflineCached && (
-        <View style={styles.offlineBannerCached}>
-          <Ionicons name="checkmark-circle" size={24} color="#4CAF50" />
-          <Text style={styles.offlineBannerCachedText}>
-            ✓ Tour downloaded - Ready for offline use
-          </Text>
-        </View>
       )}
       
       {/* Tour Stops List */}
