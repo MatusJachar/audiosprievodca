@@ -9,18 +9,17 @@ async def fix_audio_files():
     client = AsyncIOMotorClient("mongodb://localhost:27017")
     db = client.test_database
     
-    # Get all audio files
-    cursor = db.tour_audio.find({})
+    # Get all audio files that have stop_id
+    cursor = db.tour_audio.find({"stop_id": {"$exists": True}})
     fixed_count = 0
-    skipped_count = 0
     error_count = 0
     
     async for doc in cursor:
-        stop_id = doc['stop_id']
-        language = doc['language']
+        stop_id = doc.get('stop_id', 'unknown')
+        language = doc.get('language', 'unknown')
         audio_b64 = doc.get('audio_base64', '')
         
-        if not audio_b64:
+        if not audio_b64 or len(audio_b64) < 1000:
             continue
             
         try:
@@ -45,31 +44,32 @@ async def fix_audio_files():
                 with open(tmp_out_path, 'rb') as f:
                     fixed_bytes = f.read()
                 
-                fixed_b64 = base64.b64encode(fixed_bytes).decode('utf-8')
-                
-                # Update database
-                await db.tour_audio.update_one(
-                    {'_id': doc['_id']},
-                    {'$set': {'audio_base64': fixed_b64}}
-                )
-                fixed_count += 1
-                print(f"Fixed: {language} - stop {stop_id[:8]}...")
+                # Check if file is too large (>15MB limit)
+                if len(fixed_bytes) > 15000000:
+                    print(f"Skipped (too large): {language} - {stop_id[:8]}")
+                else:
+                    fixed_b64 = base64.b64encode(fixed_bytes).decode('utf-8')
+                    
+                    # Update database
+                    await db.tour_audio.update_one(
+                        {'_id': doc['_id']},
+                        {'$set': {'audio_base64': fixed_b64}}
+                    )
+                    fixed_count += 1
+                    print(f"Fixed: {language} - {stop_id[:8]}...")
             else:
-                error_msg = result.stderr.decode()[:100] if result.stderr else "Unknown error"
-                print(f"FFmpeg error for {language} {stop_id[:8]}: {error_msg}")
                 error_count += 1
                 
             # Cleanup
-            os.unlink(tmp_in_path)
+            if os.path.exists(tmp_in_path):
+                os.unlink(tmp_in_path)
             if os.path.exists(tmp_out_path):
                 os.unlink(tmp_out_path)
                 
         except Exception as e:
-            print(f"Error processing {language} {stop_id[:8]}: {e}")
             error_count += 1
     
     print(f"\n=== DONE ===")
-    print(f"Fixed: {fixed_count}")
-    print(f"Errors: {error_count}")
+    print(f"Fixed: {fixed_count}, Errors: {error_count}")
 
 asyncio.run(fix_audio_files())
