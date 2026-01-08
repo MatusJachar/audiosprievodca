@@ -53,4 +53,8 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
+  fallbackBackground: {
+    flex: 1,
+    backgroundColor: '#0c0c0c',
+  },
 });
