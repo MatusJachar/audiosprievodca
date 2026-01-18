@@ -4,7 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useTourStore } from '../store/tourStore';
 import { useLanguageStore } from '../store/languageStore';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Audio, AVPlaybackStatus } from 'expo-av';
 import BackgroundWrapper from '../components/BackgroundWrapper';
 import { OfflineCacheManager } from '../utils/offlineCacheManager';
@@ -23,10 +23,53 @@ export default function StopDetail() {
   const [duration, setDuration] = useState(0);
   const [speed, setSpeed] = useState(1.0);
   const [isOfflineMode, setIsOfflineMode] = useState(false);
+  const [preloadStatus, setPreloadStatus] = useState<string>('');
+  const preloadInProgress = useRef(false);
 
   const stop = tourStops.find((s) => s.id === stopId);
   const content = stop?.content?.[selectedLanguage];
   const isCompleted = userProgress?.completed_stops?.includes(stopId as string) || false;
+
+  // Smart preload: Download next stops in background when viewing a stop
+  useEffect(() => {
+    const runSmartPreload = async () => {
+      if (!stop || !API_URL || preloadInProgress.current) return;
+      
+      const currentStopNumber = stop.stop_number;
+      if (!currentStopNumber) return; // Skip for legends
+      
+      preloadInProgress.current = true;
+      
+      try {
+        // Show preload status for stops 9-13 (poor coverage area)
+        if (currentStopNumber >= 9) {
+          setPreloadStatus('Preloading next stops...');
+        }
+        
+        await OfflineCacheManager.smartPreload(
+          currentStopNumber,
+          tourStops,
+          selectedLanguage,
+          API_URL
+        );
+        
+        if (currentStopNumber >= 9) {
+          setPreloadStatus('Next stops ready');
+          // Clear status after 3 seconds
+          setTimeout(() => setPreloadStatus(''), 3000);
+        }
+      } catch (error) {
+        console.error('[StopDetail] Preload error:', error);
+        setPreloadStatus('');
+      } finally {
+        preloadInProgress.current = false;
+      }
+    };
+
+    // Start preload after a short delay to not block initial render
+    const timer = setTimeout(runSmartPreload, 1000);
+    return () => clearTimeout(timer);
+  }, [stopId, selectedLanguage, stop?.stop_number]);
 
   // Cleanup on unmount
   useEffect(() => {
