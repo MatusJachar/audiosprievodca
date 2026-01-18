@@ -46,23 +46,27 @@ export default function Tour() {
 
   // Initial preload: When user enters tour, preload first 3 stops
   // This happens after language and tour type selection
+  // NOW TOUR-ROUTE AWARE
   useEffect(() => {
     const runInitialPreload = async () => {
       if (!API_URL || tourStops.length === 0 || initialPreloadDone.current) return;
       
       initialPreloadDone.current = true;
       
-      console.log('[Tour] Starting initial preload of first 3 stops...');
+      const tourRoute = getTourRoute();
+      console.log(`[Tour] Starting initial preload for ${tourRoute.name}`);
+      console.log(`[Tour] Tour route: ${tourRoute.stopNumbers.join(' → ')}`);
       setInitialPreloadStatus('Preparing tour...');
       
       try {
-        // Preload stops 1, 2, 3 in the selected language
+        // Preload first 3 stops of the SELECTED TOUR ROUTE
         await OfflineCacheManager.preloadNextStops(
-          0, // Start from "stop 0" so it preloads 1, 2, 3
+          0, // Start from beginning
           tourStops,
           selectedLanguage,
           API_URL,
-          3 // Preload first 3 stops
+          3, // Preload first 3 stops
+          tourRoute.stopNumbers // Pass the actual tour route!
         );
         
         setInitialPreloadStatus('');
