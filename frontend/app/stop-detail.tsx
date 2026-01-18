@@ -86,7 +86,12 @@ export default function StopDetail() {
         // Fallback to streaming URL if no cached audio
         if (!audioUri) {
           audioUri = `${API_URL}/api/audio/stream/${stopId}/${selectedLanguage}`;
-          console.log('[StopDetail] Using STREAMING audio:', audioUri);
+          console.log('[StopDetail] =============================');
+          console.log('[StopDetail] STREAMING AUDIO REQUEST:');
+          console.log('[StopDetail] Stop ID:', stopId);
+          console.log('[StopDetail] Language:', selectedLanguage);
+          console.log('[StopDetail] Full URL:', audioUri);
+          console.log('[StopDetail] =============================');
           setIsOfflineMode(false);
         }
         
