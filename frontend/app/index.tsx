@@ -73,38 +73,32 @@ export default function Index() {
           <Ionicons name="arrow-forward" size={24} color="#000" />
         </TouchableOpacity>
         
-        {/* Quick Access Buttons */}
+        {/* Quick Access Buttons - 3 in a row */}
         <View style={styles.quickButtons}>
           <TouchableOpacity
             style={styles.quickButton}
             onPress={() => router.push('/travel-info')}
           >
-            <Ionicons name="bus" size={22} color="#FFD700" />
-            <Text style={styles.quickButtonText}>How to Get Back</Text>
+            <Ionicons name="bus" size={20} color="#FFD700" />
+            <Text style={styles.quickButtonText}>Get Back</Text>
           </TouchableOpacity>
           
           <TouchableOpacity
             style={styles.quickButton}
             onPress={() => router.push('/shop')}
           >
-            <Ionicons name="cart" size={22} color="#FFD700" />
-            <Text style={styles.quickButtonText}>Shop & Tickets</Text>
+            <Ionicons name="cart" size={20} color="#FFD700" />
+            <Text style={styles.quickButtonText}>Shop</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={[styles.quickButton, styles.quickButtonHighlight]}
+            onPress={() => router.push('/discover-region')}
+          >
+            <Ionicons name="compass" size={20} color="#FFD700" />
+            <Text style={styles.quickButtonText}>Explore</Text>
           </TouchableOpacity>
         </View>
-        
-        {/* Discover More - Regional App Promotion */}
-        <TouchableOpacity
-          style={styles.discoverMoreButton}
-          onPress={() => router.push('/discover-region')}
-        >
-          <View style={styles.discoverMoreContent}>
-            <Ionicons name="compass" size={24} color="#fff" />
-            <View style={styles.discoverMoreText}>
-              <Text style={styles.discoverMoreTitle}>Discover Spiš Region</Text>
-              <Text style={styles.discoverMoreSubtitle}>More adventures nearby →</Text>
-            </View>
-          </View>
-        </TouchableOpacity>
         
         {/* Features Section */}
         <View style={styles.features}>
