@@ -290,4 +290,30 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '500',
   },
+  discoverMoreButton: {
+    marginTop: 16,
+    backgroundColor: 'rgba(139,69,19,0.6)',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderRadius: 25,
+    borderWidth: 1,
+    borderColor: 'rgba(255,215,0,0.4)',
+  },
+  discoverMoreContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  discoverMoreText: {
+    flex: 1,
+  },
+  discoverMoreTitle: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: '#FFD700',
+  },
+  discoverMoreSubtitle: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.8)',
+  },
 });
