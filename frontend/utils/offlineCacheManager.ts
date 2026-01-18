@@ -227,4 +227,146 @@ export class OfflineCacheManager {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   }
+
+  // Check if a specific stop is cached
+  static async isStopCached(stopId: string, language: string): Promise<boolean> {
+    // Check FileSystem
+    if (this.isFileSystemAvailable() && CACHE_DIR) {
+      try {
+        const filePath = `${CACHE_DIR}${stopId}_${language}.mp3`;
+        const fileInfo = await FileSystem.getInfoAsync(filePath);
+        if (fileInfo.exists) return true;
+      } catch {}
+    }
+    
+    // Check AsyncStorage
+    try {
+      const key = `offline_audio_${stopId}_${language}`;
+      const cached = await AsyncStorage.getItem(key);
+      if (cached && cached.length > 100) return true;
+    } catch {}
+    
+    return false;
+  }
+
+  // Preload next stops in background (for poor coverage areas like stops 10-13)
+  static async preloadNextStops(
+    currentStopNumber: number | null,
+    tourStops: any[],
+    language: string,
+    apiUrl: string,
+    preloadCount: number = 3
+  ): Promise<{ preloaded: number; skipped: number; failed: number }> {
+    const result = { preloaded: 0, skipped: 0, failed: 0 };
+    
+    if (!currentStopNumber) {
+      console.log('[Preload] No stop number, skipping preload');
+      return result;
+    }
+
+    console.log(`[Preload] ========================================`);
+    console.log(`[Preload] Starting preload from stop ${currentStopNumber}`);
+    console.log(`[Preload] Will preload next ${preloadCount} stops`);
+    console.log(`[Preload] Language: ${language}`);
+    console.log(`[Preload] FileSystem available: ${this.isFileSystemAvailable()}`);
+    
+    // Find stops to preload (next N stops after current)
+    const sortedStops = tourStops
+      .filter(s => s.stop_number !== null && s.stop_number !== undefined)
+      .sort((a, b) => a.stop_number - b.stop_number);
+    
+    const currentIndex = sortedStops.findIndex(s => s.stop_number === currentStopNumber);
+    if (currentIndex === -1) {
+      console.log('[Preload] Current stop not found in tour');
+      return result;
+    }
+
+    // Get next N stops
+    const stopsToPreload = sortedStops.slice(currentIndex + 1, currentIndex + 1 + preloadCount);
+    
+    if (stopsToPreload.length === 0) {
+      console.log('[Preload] No more stops to preload');
+      return result;
+    }
+
+    console.log(`[Preload] Stops to preload: ${stopsToPreload.map(s => s.stop_number).join(', ')}`);
+
+    // Preload each stop in background
+    for (const stop of stopsToPreload) {
+      try {
+        // Check if already cached
+        const isCached = await this.isStopCached(stop.id, language);
+        if (isCached) {
+          console.log(`[Preload] Stop ${stop.stop_number} already cached, skipping`);
+          result.skipped++;
+          continue;
+        }
+
+        console.log(`[Preload] Downloading stop ${stop.stop_number}...`);
+        
+        // Fetch audio
+        const response = await fetch(`${apiUrl}/api/tour-stops/${stop.id}`);
+        if (response.ok) {
+          const data = await response.json();
+          const audio = data.audio?.[language];
+          
+          if (audio && audio.length > 0) {
+            const saved = await this.saveAudio(stop.id, language, audio);
+            if (saved) {
+              console.log(`[Preload] ✓ Stop ${stop.stop_number} preloaded successfully`);
+              result.preloaded++;
+            } else {
+              console.warn(`[Preload] ✗ Stop ${stop.stop_number} save failed`);
+              result.failed++;
+            }
+          } else {
+            console.warn(`[Preload] Stop ${stop.stop_number} has no audio for ${language}`);
+            result.failed++;
+          }
+        } else {
+          console.warn(`[Preload] Failed to fetch stop ${stop.stop_number}`);
+          result.failed++;
+        }
+      } catch (error) {
+        console.error(`[Preload] Error preloading stop ${stop.stop_number}:`, error);
+        result.failed++;
+      }
+    }
+
+    console.log(`[Preload] Complete: ${result.preloaded} preloaded, ${result.skipped} skipped, ${result.failed} failed`);
+    console.log(`[Preload] ========================================`);
+    
+    return result;
+  }
+
+  // Smart preload for poor coverage areas (stops 10-13)
+  // Preloads more aggressively when in these areas
+  static async smartPreload(
+    currentStopNumber: number | null,
+    tourStops: any[],
+    language: string,
+    apiUrl: string
+  ): Promise<void> {
+    if (!currentStopNumber) return;
+
+    // Define poor coverage zones and their preload settings
+    const POOR_COVERAGE_ZONES = [
+      { start: 9, end: 13, preloadCount: 4, name: 'Upper Castle (poor coverage)' },
+      { start: 1, end: 3, preloadCount: 2, name: 'Entrance area' },
+    ];
+
+    // Check if we're in a poor coverage zone
+    const zone = POOR_COVERAGE_ZONES.find(
+      z => currentStopNumber >= z.start && currentStopNumber <= z.end
+    );
+
+    if (zone) {
+      console.log(`[SmartPreload] In ${zone.name}, preloading ${zone.preloadCount} stops`);
+      await this.preloadNextStops(currentStopNumber, tourStops, language, apiUrl, zone.preloadCount);
+    } else {
+      // Default: preload next 2 stops
+      console.log(`[SmartPreload] Standard area, preloading 2 stops`);
+      await this.preloadNextStops(currentStopNumber, tourStops, language, apiUrl, 2);
+    }
+  }
 }
