@@ -244,6 +244,23 @@ export default function StopDetail() {
             </View>
           )}
 
+          {/* Preload Status Indicator - Shows for stops 9-13 */}
+          {preloadStatus !== '' && (
+            <View style={styles.preloadBanner}>
+              <Ionicons 
+                name={preloadStatus === 'Next stops ready' ? 'checkmark-circle' : 'cloud-download'} 
+                size={16} 
+                color={preloadStatus === 'Next stops ready' ? '#4CAF50' : '#FFD700'} 
+              />
+              <Text style={[
+                styles.preloadText,
+                preloadStatus === 'Next stops ready' && styles.preloadTextReady
+              ]}>
+                {preloadStatus}
+              </Text>
+            </View>
+          )}
+
           <Text style={styles.title}>{content?.title || stop.stop_name}</Text>
           <Text style={styles.desc}>{content?.description || 'No description available.'}</Text>
 
