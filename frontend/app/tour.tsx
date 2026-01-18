@@ -281,6 +281,14 @@ export default function Tour() {
           </Text>
         </View>
       </View>
+
+      {/* Initial Preload Status */}
+      {initialPreloadStatus !== '' && (
+        <View style={styles.preloadStatusBar}>
+          <ActivityIndicator size="small" color="#FFD700" />
+          <Text style={styles.preloadStatusText}>{initialPreloadStatus}</Text>
+        </View>
+      )}
       
       {/* Download Banner - Only show if NOT cached */}
       {!isOfflineCached && (
