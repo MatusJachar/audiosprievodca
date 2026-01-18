@@ -650,6 +650,131 @@ async def init_tour_data():
 # Include the router in the main app
 app.include_router(api_router)
 
+# ============================================
+# APP CONTENT MANAGEMENT (Editable from Admin)
+# ============================================
+
+# Models for editable content
+class TaxiService(BaseModel):
+    name: str
+    phone: str
+
+class TravelInfoContent(BaseModel):
+    location_name: str = "Spišské Podhradie"
+    location_detail: str = "053 04, Slovakia"
+    by_car: str = "• From Košice: ~60 km (45 min) via E50\n• From Poprad: ~45 km (35 min) via Route 18\n• From Prešov: ~50 km (40 min) via E50\n• Free parking available at castle base"
+    by_bus: str = "Regular bus service from:\n• Spišská Nová Ves (20 min)\n• Levoča (15 min)\n• Košice (1.5 hours)"
+    bus_schedule_url: str = "https://cp.hnonline.sk/"
+    by_train: str = "Nearest train station:\n• Spišské Podhradie (2 km walk to castle)\n• Spišská Nová Ves (then bus)"
+    train_schedule_url: str = "https://www.zssk.sk/en/"
+    taxi_services: List[TaxiService] = []
+    opening_hours_summer: str = "9:00 - 19:00"
+    opening_hours_spring: str = "9:00 - 17:00"
+    opening_hours_winter: str = "10:00 - 16:00"
+
+class ShopContent(BaseModel):
+    ticket_adult: str = "€8.00"
+    ticket_student: str = "€5.00"
+    ticket_child: str = "€3.00"
+    ticket_family: str = "€18.00"
+    tickets_url: str = "https://www.spisskyhrad.sk/en/tickets/"
+    shop_url: str = "https://www.spisskyhrad.sk/en/shop/"
+    contact_email: str = "info@spisskyhrad.sk"
+    contact_phone: str = "+421 53 454 1336"
+    contact_website: str = "https://www.spisskyhrad.sk"
+
+class DiscoverContent(BaseModel):
+    app_price_old: str = "€9.99"
+    app_price_new: str = "€4.99"
+    app_discount_text: str = "🔥 50% OFF - Limited time!"
+    app_store_ios: str = "https://apps.apple.com/app/spis-region-guide"
+    app_store_android: str = "https://play.google.com/store/apps/details?id=com.spisregion.guide"
+    guide_price: str = "From €80 / half day"
+    guide_phone: str = "+421 901 234 567"
+    testimonial_text: str = "We used both - the app for driving around and a personal guide for Levoča. Perfect combination!"
+    testimonial_author: str = "Thomas & Family, Austria ⭐⭐⭐⭐⭐"
+
+# Get travel info content
+@api_router.get("/content/travel-info")
+async def get_travel_info():
+    try:
+        content = await db.app_content.find_one({"type": "travel_info"})
+        if content:
+            del content["_id"]
+            return content.get("data", TravelInfoContent().dict())
+        return TravelInfoContent().dict()
+    except Exception as e:
+        logger.error(f"Error getting travel info: {e}")
+        return TravelInfoContent().dict()
+
+# Update travel info content
+@api_router.put("/content/travel-info")
+async def update_travel_info(content: TravelInfoContent):
+    try:
+        await db.app_content.update_one(
+            {"type": "travel_info"},
+            {"$set": {"type": "travel_info", "data": content.dict(), "updated_at": datetime.utcnow()}},
+            upsert=True
+        )
+        return {"message": "Travel info updated successfully"}
+    except Exception as e:
+        logger.error(f"Error updating travel info: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Get shop content
+@api_router.get("/content/shop")
+async def get_shop_content():
+    try:
+        content = await db.app_content.find_one({"type": "shop"})
+        if content:
+            del content["_id"]
+            return content.get("data", ShopContent().dict())
+        return ShopContent().dict()
+    except Exception as e:
+        logger.error(f"Error getting shop content: {e}")
+        return ShopContent().dict()
+
+# Update shop content
+@api_router.put("/content/shop")
+async def update_shop_content(content: ShopContent):
+    try:
+        await db.app_content.update_one(
+            {"type": "shop"},
+            {"$set": {"type": "shop", "data": content.dict(), "updated_at": datetime.utcnow()}},
+            upsert=True
+        )
+        return {"message": "Shop content updated successfully"}
+    except Exception as e:
+        logger.error(f"Error updating shop content: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Get discover region content
+@api_router.get("/content/discover")
+async def get_discover_content():
+    try:
+        content = await db.app_content.find_one({"type": "discover"})
+        if content:
+            del content["_id"]
+            return content.get("data", DiscoverContent().dict())
+        return DiscoverContent().dict()
+    except Exception as e:
+        logger.error(f"Error getting discover content: {e}")
+        return DiscoverContent().dict()
+
+# Update discover region content
+@api_router.put("/content/discover")
+async def update_discover_content(content: DiscoverContent):
+    try:
+        await db.app_content.update_one(
+            {"type": "discover"},
+            {"$set": {"type": "discover", "data": content.dict(), "updated_at": datetime.utcnow()}},
+            upsert=True
+        )
+        return {"message": "Discover content updated successfully"}
+    except Exception as e:
+        logger.error(f"Error updating discover content: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
