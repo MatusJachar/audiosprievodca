@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal, ActivityIndicator, Alert, Dimensions } from 'react-native';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,6 +10,8 @@ import { OfflineCacheManager } from '../utils/offlineCacheManager';
 import { useState } from 'react';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const CARD_WIDTH = (SCREEN_WIDTH - 48 - 16) / 3; // 3 cards with padding and gaps
 
 export default function TourSelect() {
   const { selectedTourType, setTourType } = useTourTypeStore();
@@ -24,7 +26,6 @@ export default function TourSelect() {
   };
 
   const handleContinue = async () => {
-    // Go directly to tour - let user browse first
     router.push('/tour');
   };
 
@@ -32,21 +33,15 @@ export default function TourSelect() {
     try {
       setDownloading(true);
       
-      // Fetch tour stops if not already loaded
       if (tourStops.length === 0) {
-        console.log('[TourSelect] Fetching tour stops...');
         await fetchTourStops();
       }
-
-      console.log('[TourSelect] Starting download of', tourStops.length, 'stops');
       
-      // Download tour data for offline use
       await OfflineCacheManager.downloadTourForOffline(
         tourStops,
         selectedLanguage,
         API_URL || '',
         (progress) => {
-          console.log('[TourSelect] Progress:', progress.downloaded, '/', progress.total);
           setDownloadProgress(progress);
         }
       );
@@ -84,54 +79,71 @@ export default function TourSelect() {
   const renderTourCard = (tourType: TourType) => {
     const route = TOUR_ROUTES[tourType];
     const isSelected = selectedTourType === tourType;
-    const totalStops = route.stopNumbers.length; // Only count numbered stops, not legends
+    const totalStops = route.stopNumbers.length;
+
+    // Card colors based on tour type
+    const cardColors = {
+      express: { bg: '#1a1a2e', accent: '#00d9ff', icon: 'flash' },
+      family: { bg: '#1a2e1a', accent: '#4CAF50', icon: 'people' },
+      complete: { bg: '#2e1a1a', accent: '#FFD700', icon: 'trophy' },
+    };
+    const colors = cardColors[tourType];
 
     return (
       <TouchableOpacity
         key={route.id}
         style={[
           styles.tourCard,
-          isSelected && styles.tourCardSelected,
+          { backgroundColor: colors.bg },
+          isSelected && [styles.tourCardSelected, { borderColor: colors.accent }],
         ]}
         onPress={() => handleTourSelect(tourType)}
+        activeOpacity={0.8}
       >
-        <View style={styles.tourCardHeader}>
-          <View style={[styles.iconContainer, isSelected && styles.iconContainerSelected]}>
-            <Ionicons name={route.icon as any} size={32} color={isSelected ? '#000' : '#FFD700'} />
+        {/* Selection indicator */}
+        {isSelected && (
+          <View style={[styles.selectedIndicator, { backgroundColor: colors.accent }]}>
+            <Ionicons name="checkmark" size={14} color="#000" />
           </View>
-          {isSelected && (
-            <View style={styles.selectedBadge}>
-              <Ionicons name="checkmark-circle" size={24} color="#4CAF50" />
-            </View>
-          )}
+        )}
+
+        {/* Icon */}
+        <View style={[styles.iconContainer, { backgroundColor: isSelected ? colors.accent : 'rgba(255,255,255,0.1)' }]}>
+          <Ionicons 
+            name={colors.icon as any} 
+            size={28} 
+            color={isSelected ? '#000' : colors.accent} 
+          />
         </View>
 
-        <Text style={[styles.tourName, isSelected && styles.tourNameSelected]}>
-          {route.name}
+        {/* Tour Name */}
+        <Text style={[styles.tourName, isSelected && { color: colors.accent }]} numberOfLines={1}>
+          {route.name.replace(' Tour', '')}
         </Text>
-        
-        <Text style={styles.tourDescription}>{route.description}</Text>
 
-        <View style={styles.tourDetails}>
-          <View style={styles.detailItem}>
-            <Ionicons name="location" size={16} color="#FFD700" />
-            <Text style={styles.detailText}>{totalStops} stops</Text>
+        {/* Duration Badge */}
+        <View style={styles.durationBadge}>
+          <Ionicons name="time-outline" size={12} color="#fff" />
+          <Text style={styles.durationText}>{route.duration}</Text>
+        </View>
+
+        {/* Stats */}
+        <View style={styles.statsRow}>
+          <View style={styles.stat}>
+            <Text style={[styles.statNumber, { color: colors.accent }]}>{totalStops}</Text>
+            <Text style={styles.statLabel}>stops</Text>
           </View>
-          <View style={styles.detailItem}>
-            <Ionicons name="time" size={16} color="#FFD700" />
-            <Text style={styles.detailText}>{route.duration}</Text>
+          <View style={styles.statDivider} />
+          <View style={styles.stat}>
+            <Text style={[styles.statNumber, { color: colors.accent }]}>{route.totalLegends}</Text>
+            <Text style={styles.statLabel}>legends</Text>
           </View>
         </View>
 
-        <View style={styles.includesSection}>
-          <Text style={styles.includesTitle}>Includes:</Text>
-          <Text style={styles.includesText}>
-            • {route.stopNumbers.length} tour stops
-          </Text>
-          <Text style={styles.includesText}>
-            • {route.totalLegends} legend {route.totalLegends > 1 ? 'stories' : 'story'}
-          </Text>
-        </View>
+        {/* Description */}
+        <Text style={styles.tourDescription} numberOfLines={3}>
+          {route.description}
+        </Text>
       </TouchableOpacity>
     );
   };
@@ -141,33 +153,40 @@ export default function TourSelect() {
       <View style={styles.container}>
         <StatusBar style="light" />
         
+        {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color="#fff" />
           </TouchableOpacity>
           <View style={styles.headerContent}>
-            <Ionicons name="map" size={48} color="#FFD700" />
-            <Text style={styles.title}>Choose Your Tour</Text>
-            <Text style={styles.subtitle}>Select the experience that fits your time</Text>
+            <Ionicons name="compass" size={40} color="#FFD700" />
+            <Text style={styles.title}>Choose Your Adventure</Text>
+            <Text style={styles.subtitle}>Select the tour that fits your time</Text>
           </View>
         </View>
         
-        <ScrollView 
-          style={styles.tourList} 
-          contentContainerStyle={styles.tourListContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {renderTourCard('express')}
-          {renderTourCard('family')}
-          {renderTourCard('complete')}
-        </ScrollView>
+        {/* Tour Cards Grid - 3 side by side */}
+        <View style={styles.cardsContainer}>
+          <View style={styles.cardsRow}>
+            {renderTourCard('express')}
+            {renderTourCard('family')}
+            {renderTourCard('complete')}
+          </View>
+        </View>
+
+        {/* Selected Tour Info */}
+        <View style={styles.selectedInfo}>
+          <Text style={styles.selectedLabel}>Selected:</Text>
+          <Text style={styles.selectedName}>{TOUR_ROUTES[selectedTourType].name}</Text>
+        </View>
         
+        {/* Footer */}
         <View style={styles.footer}>
           <TouchableOpacity
             style={styles.continueButton}
             onPress={handleContinue}
           >
-            <Text style={styles.continueButtonText}>Continue</Text>
+            <Text style={styles.continueButtonText}>Start Tour</Text>
             <Ionicons name="arrow-forward" size={20} color="#000" />
           </TouchableOpacity>
         </View>
@@ -230,122 +249,144 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   header: {
-    paddingTop: 60,
-    paddingBottom: 24,
+    paddingTop: 50,
+    paddingBottom: 16,
   },
   backButton: {
-    padding: 16,
-    paddingLeft: 24,
+    padding: 12,
+    paddingLeft: 20,
   },
   headerContent: {
     alignItems: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginTop: 16,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#aaa',
-    marginTop: 8,
-    textAlign: 'center',
-  },
-  tourList: {
-    flex: 1,
-  },
-  tourListContent: {
-    paddingHorizontal: 24,
-    paddingBottom: 24,
-  },
-  tourCard: {
-    backgroundColor: '#1a1a1a',
-    borderRadius: 16,
-    padding: 24,
-    marginBottom: 16,
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  tourCardSelected: {
-    borderColor: '#FFD700',
-    backgroundColor: '#2a2a2a',
-  },
-  tourCardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 16,
-  },
-  iconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#2a2a2a',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  iconContainerSelected: {
-    backgroundColor: '#FFD700',
-  },
-  selectedBadge: {
-    position: 'absolute',
-    top: -4,
-    right: -4,
-  },
-  tourName: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#fff',
-    marginBottom: 8,
+    marginTop: 12,
+    textAlign: 'center',
   },
-  tourNameSelected: {
-    color: '#FFD700',
-  },
-  tourDescription: {
+  subtitle: {
     fontSize: 14,
     color: '#aaa',
-    lineHeight: 20,
-    marginBottom: 16,
+    marginTop: 6,
+    textAlign: 'center',
   },
-  tourDetails: {
+  cardsContainer: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+  },
+  cardsRow: {
     flexDirection: 'row',
-    gap: 16,
-    marginBottom: 16,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#333',
+    justifyContent: 'space-between',
+    gap: 8,
   },
-  detailItem: {
+  tourCard: {
+    flex: 1,
+    borderRadius: 16,
+    padding: 12,
+    paddingTop: 16,
+    borderWidth: 2,
+    borderColor: 'transparent',
+    alignItems: 'center',
+    minHeight: 280,
+  },
+  tourCardSelected: {
+    borderWidth: 2,
+  },
+  selectedIndicator: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  iconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  tourName: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#fff',
+    textAlign: 'center',
+    marginBottom: 6,
+  },
+  durationBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-  },
-  detailText: {
-    fontSize: 14,
-    color: '#ccc',
-    fontWeight: '600',
-  },
-  includesSection: {
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
     gap: 4,
+    marginBottom: 12,
   },
-  includesTitle: {
-    fontSize: 12,
-    color: '#FFD700',
+  durationText: {
+    fontSize: 11,
+    color: '#fff',
+    fontWeight: '500',
+  },
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+    width: '100%',
+    justifyContent: 'center',
+  },
+  stat: {
+    alignItems: 'center',
+    paddingHorizontal: 8,
+  },
+  statNumber: {
+    fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 10,
+    color: '#888',
     textTransform: 'uppercase',
   },
-  includesText: {
-    fontSize: 13,
+  statDivider: {
+    width: 1,
+    height: 24,
+    backgroundColor: '#333',
+  },
+  tourDescription: {
+    fontSize: 11,
     color: '#999',
-    lineHeight: 18,
+    textAlign: 'center',
+    lineHeight: 15,
+    paddingHorizontal: 4,
+  },
+  selectedInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    gap: 8,
+  },
+  selectedLabel: {
+    fontSize: 14,
+    color: '#888',
+  },
+  selectedName: {
+    fontSize: 16,
+    color: '#FFD700',
+    fontWeight: 'bold',
   },
   footer: {
-    padding: 24,
-    paddingBottom: 40,
+    padding: 20,
+    paddingBottom: 36,
   },
   continueButton: {
     flexDirection: 'row',
