@@ -250,46 +250,80 @@ export class OfflineCacheManager {
   }
 
   // Preload next stops in background (for poor coverage areas like stops 10-13)
+  // This version is TOUR-ROUTE AWARE - follows the actual tour order
   static async preloadNextStops(
     currentStopNumber: number | null,
     tourStops: any[],
     language: string,
     apiUrl: string,
-    preloadCount: number = 3
+    preloadCount: number = 3,
+    tourRoute?: number[] // Optional: specific tour route order
   ): Promise<{ preloaded: number; skipped: number; failed: number }> {
     const result = { preloaded: 0, skipped: 0, failed: 0 };
     
-    if (!currentStopNumber) {
-      console.log('[Preload] No stop number, skipping preload');
-      return result;
-    }
-
     console.log(`[Preload] ========================================`);
     console.log(`[Preload] Starting preload from stop ${currentStopNumber}`);
     console.log(`[Preload] Will preload next ${preloadCount} stops`);
     console.log(`[Preload] Language: ${language}`);
+    console.log(`[Preload] Tour route provided: ${tourRoute ? 'YES' : 'NO'}`);
     console.log(`[Preload] FileSystem available: ${this.isFileSystemAvailable()}`);
-    
-    // Find stops to preload (next N stops after current)
-    const sortedStops = tourStops
-      .filter(s => s.stop_number !== null && s.stop_number !== undefined)
-      .sort((a, b) => a.stop_number - b.stop_number);
-    
-    const currentIndex = sortedStops.findIndex(s => s.stop_number === currentStopNumber);
-    if (currentIndex === -1) {
-      console.log('[Preload] Current stop not found in tour');
-      return result;
+
+    let stopsToPreload: any[] = [];
+
+    if (tourRoute && tourRoute.length > 0) {
+      // TOUR-ROUTE AWARE: Follow the actual tour order
+      console.log(`[Preload] Using tour route: ${tourRoute.join(' → ')}`);
+      
+      // Find current position in tour route
+      const currentIndex = currentStopNumber !== null 
+        ? tourRoute.indexOf(currentStopNumber)
+        : -1;
+      
+      if (currentIndex === -1) {
+        // If currentStopNumber is null or 0, start from beginning (initial preload)
+        const nextStopNumbers = tourRoute.slice(0, preloadCount);
+        console.log(`[Preload] Initial preload - stops: ${nextStopNumbers.join(', ')}`);
+        
+        stopsToPreload = nextStopNumbers
+          .map(num => tourStops.find(s => s.stop_number === num))
+          .filter(s => s !== undefined);
+      } else {
+        // Get next N stops in the tour route order
+        const nextStopNumbers = tourRoute.slice(currentIndex + 1, currentIndex + 1 + preloadCount);
+        console.log(`[Preload] Next stops in tour: ${nextStopNumbers.join(', ')}`);
+        
+        stopsToPreload = nextStopNumbers
+          .map(num => tourStops.find(s => s.stop_number === num))
+          .filter(s => s !== undefined);
+      }
+    } else {
+      // Fallback: Sequential order (for Complete tour or when no route provided)
+      if (currentStopNumber === null || currentStopNumber === 0) {
+        // Initial preload: get first N stops
+        const sortedStops = tourStops
+          .filter(s => s.stop_number !== null && s.stop_number !== undefined)
+          .sort((a, b) => a.stop_number - b.stop_number);
+        stopsToPreload = sortedStops.slice(0, preloadCount);
+      } else {
+        const sortedStops = tourStops
+          .filter(s => s.stop_number !== null && s.stop_number !== undefined)
+          .sort((a, b) => a.stop_number - b.stop_number);
+        
+        const currentIndex = sortedStops.findIndex(s => s.stop_number === currentStopNumber);
+        if (currentIndex === -1) {
+          console.log('[Preload] Current stop not found in tour');
+          return result;
+        }
+        stopsToPreload = sortedStops.slice(currentIndex + 1, currentIndex + 1 + preloadCount);
+      }
     }
 
-    // Get next N stops
-    const stopsToPreload = sortedStops.slice(currentIndex + 1, currentIndex + 1 + preloadCount);
-    
     if (stopsToPreload.length === 0) {
       console.log('[Preload] No more stops to preload');
       return result;
     }
 
-    console.log(`[Preload] Stops to preload: ${stopsToPreload.map(s => s.stop_number).join(', ')}`);
+    console.log(`[Preload] Stops to preload: ${stopsToPreload.map(s => s.stop_number || s.stop_name).join(', ')}`);
 
     // Preload each stop in background
     for (const stop of stopsToPreload) {
@@ -297,12 +331,12 @@ export class OfflineCacheManager {
         // Check if already cached
         const isCached = await this.isStopCached(stop.id, language);
         if (isCached) {
-          console.log(`[Preload] Stop ${stop.stop_number} already cached, skipping`);
+          console.log(`[Preload] Stop ${stop.stop_number || stop.stop_name} already cached, skipping`);
           result.skipped++;
           continue;
         }
 
-        console.log(`[Preload] Downloading stop ${stop.stop_number}...`);
+        console.log(`[Preload] Downloading stop ${stop.stop_number || stop.stop_name}...`);
         
         // Fetch audio
         const response = await fetch(`${apiUrl}/api/tour-stops/${stop.id}`);
@@ -313,22 +347,22 @@ export class OfflineCacheManager {
           if (audio && audio.length > 0) {
             const saved = await this.saveAudio(stop.id, language, audio);
             if (saved) {
-              console.log(`[Preload] ✓ Stop ${stop.stop_number} preloaded successfully`);
+              console.log(`[Preload] ✓ Stop ${stop.stop_number || stop.stop_name} preloaded successfully`);
               result.preloaded++;
             } else {
-              console.warn(`[Preload] ✗ Stop ${stop.stop_number} save failed`);
+              console.warn(`[Preload] ✗ Stop ${stop.stop_number || stop.stop_name} save failed`);
               result.failed++;
             }
           } else {
-            console.warn(`[Preload] Stop ${stop.stop_number} has no audio for ${language}`);
+            console.warn(`[Preload] Stop ${stop.stop_number || stop.stop_name} has no audio for ${language}`);
             result.failed++;
           }
         } else {
-          console.warn(`[Preload] Failed to fetch stop ${stop.stop_number}`);
+          console.warn(`[Preload] Failed to fetch stop ${stop.stop_number || stop.stop_name}`);
           result.failed++;
         }
       } catch (error) {
-        console.error(`[Preload] Error preloading stop ${stop.stop_number}:`, error);
+        console.error(`[Preload] Error preloading stop ${stop.stop_number || stop.stop_name}:`, error);
         result.failed++;
       }
     }
