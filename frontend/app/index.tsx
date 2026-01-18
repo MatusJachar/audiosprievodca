@@ -266,48 +266,26 @@ const styles = StyleSheet.create({
   quickButtons: {
     flexDirection: 'row',
     marginTop: 20,
-    gap: 12,
+    gap: 10,
   },
   quickButton: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.1)',
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     paddingVertical: 12,
     borderRadius: 25,
-    gap: 8,
+    gap: 6,
     borderWidth: 1,
     borderColor: 'rgba(255,215,0,0.3)',
   },
+  quickButtonHighlight: {
+    backgroundColor: 'rgba(139,69,19,0.5)',
+    borderColor: 'rgba(255,215,0,0.6)',
+  },
   quickButtonText: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#fff',
     fontWeight: '500',
-  },
-  discoverMoreButton: {
-    marginTop: 16,
-    backgroundColor: 'rgba(139,69,19,0.6)',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderRadius: 25,
-    borderWidth: 1,
-    borderColor: 'rgba(255,215,0,0.4)',
-  },
-  discoverMoreContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  discoverMoreText: {
-    flex: 1,
-  },
-  discoverMoreTitle: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    color: '#FFD700',
-  },
-  discoverMoreSubtitle: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.8)',
   },
 });
