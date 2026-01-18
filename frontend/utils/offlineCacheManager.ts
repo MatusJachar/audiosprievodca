@@ -336,16 +336,35 @@ export class OfflineCacheManager {
           continue;
         }
 
-        console.log(`[Preload] Downloading stop ${stop.stop_number || stop.stop_name}...`);
+        console.log(`[Preload] Downloading stop ${stop.stop_number || stop.stop_name} in ${language}...`);
         
-        // Fetch audio
-        const response = await fetch(`${apiUrl}/api/tour-stops/${stop.id}`);
+        // Fetch audio from the streaming endpoint directly (more reliable)
+        const audioUrl = `${apiUrl}/api/audio/stream/${stop.id}/${language}`;
+        console.log(`[Preload] Fetching from: ${audioUrl}`);
+        
+        const response = await fetch(audioUrl);
         if (response.ok) {
-          const data = await response.json();
-          const audio = data.audio?.[language];
+          // Get the audio as blob and convert to base64
+          const blob = await response.blob();
           
-          if (audio && audio.length > 0) {
-            const saved = await this.saveAudio(stop.id, language, audio);
+          if (blob.size > 0) {
+            // Convert blob to base64
+            const reader = new FileReader();
+            const base64Promise = new Promise<string>((resolve, reject) => {
+              reader.onloadend = () => {
+                const base64data = reader.result as string;
+                // Remove the data URL prefix to get just the base64
+                const base64 = base64data.split(',')[1];
+                resolve(base64);
+              };
+              reader.onerror = reject;
+            });
+            reader.readAsDataURL(blob);
+            
+            const audioBase64 = await base64Promise;
+            console.log(`[Preload] Downloaded ${blob.size} bytes, base64 length: ${audioBase64.length}`);
+            
+            const saved = await this.saveAudio(stop.id, language, audioBase64);
             if (saved) {
               console.log(`[Preload] ✓ Stop ${stop.stop_number || stop.stop_name} preloaded successfully`);
               result.preloaded++;
@@ -354,11 +373,11 @@ export class OfflineCacheManager {
               result.failed++;
             }
           } else {
-            console.warn(`[Preload] Stop ${stop.stop_number || stop.stop_name} has no audio for ${language}`);
+            console.warn(`[Preload] Stop ${stop.stop_number || stop.stop_name} returned empty blob`);
             result.failed++;
           }
         } else {
-          console.warn(`[Preload] Failed to fetch stop ${stop.stop_number || stop.stop_name}`);
+          console.warn(`[Preload] Failed to fetch stop ${stop.stop_number || stop.stop_name} - Status: ${response.status}`);
           result.failed++;
         }
       } catch (error) {
