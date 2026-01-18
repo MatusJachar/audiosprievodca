@@ -33,7 +33,7 @@ export default function TravelInfo() {
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color="#fff" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>How to Get Here</Text>
+          <Text style={styles.headerTitle}>How to Get Back</Text>
           <View style={{ width: 24 }} />
         </View>
         
