@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useTourStore } from '../store/tourStore';
 import { useLanguageStore } from '../store/languageStore';
+import { useTourTypeStore } from '../store/tourTypeStore';
 import { useEffect, useState, useRef } from 'react';
 import { Audio, AVPlaybackStatus } from 'expo-av';
 import BackgroundWrapper from '../components/BackgroundWrapper';
@@ -15,6 +16,7 @@ export default function StopDetail() {
   const { stopId } = useLocalSearchParams();
   const { tourStops, userProgress, markStopComplete } = useTourStore();
   const selectedLanguage = useLanguageStore((state) => state.selectedLanguage);
+  const { getTourRoute } = useTourTypeStore();
   
   const [sound, setSound] = useState<Audio.Sound | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -29,9 +31,13 @@ export default function StopDetail() {
   const stop = tourStops.find((s) => s.id === stopId);
   const content = stop?.content?.[selectedLanguage];
   const isCompleted = userProgress?.completed_stops?.includes(stopId as string) || false;
+  
+  // Get the current tour route for tour-aware preloading
+  const currentTourRoute = getTourRoute();
 
   // Smart preload: Download next stops in background when viewing a stop
   // Preloads ONLY the user's selected language (not multiple languages)
+  // NOW TOUR-ROUTE AWARE - follows actual tour order
   useEffect(() => {
     const runSmartPreload = async () => {
       if (!stop || !API_URL || preloadInProgress.current) return;
@@ -47,12 +53,13 @@ export default function StopDetail() {
           setPreloadStatus('Preloading next stops...');
         }
         
-        // Preload ONLY the selected language - user chose it, that's what they need
+        // Preload using the ACTUAL TOUR ROUTE order
         await OfflineCacheManager.smartPreload(
           currentStopNumber,
           tourStops,
-          selectedLanguage, // Only the language user selected
-          API_URL
+          selectedLanguage,
+          API_URL,
+          currentTourRoute.stopNumbers // Pass the tour route!
         );
         
         if (currentStopNumber >= 9) {
@@ -71,7 +78,7 @@ export default function StopDetail() {
     // Start preload after a short delay to not block initial render
     const timer = setTimeout(runSmartPreload, 1000);
     return () => clearTimeout(timer);
-  }, [stopId, selectedLanguage, stop?.stop_number]);
+  }, [stopId, selectedLanguage, stop?.stop_number, currentTourRoute.stopNumbers]);
 
   // Cleanup on unmount
   useEffect(() => {
