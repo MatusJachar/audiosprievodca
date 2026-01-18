@@ -255,4 +255,25 @@ const styles = StyleSheet.create({
     height: 50,
     backgroundColor: 'rgba(255,255,255,0.2)',
   },
+  quickButtons: {
+    flexDirection: 'row',
+    marginTop: 20,
+    gap: 12,
+  },
+  quickButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 25,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,215,0,0.3)',
+  },
+  quickButtonText: {
+    fontSize: 14,
+    color: '#fff',
+    fontWeight: '500',
+  },
 });
