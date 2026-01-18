@@ -73,6 +73,25 @@ export default function Index() {
           <Ionicons name="arrow-forward" size={24} color="#000" />
         </TouchableOpacity>
         
+        {/* Quick Access Buttons */}
+        <View style={styles.quickButtons}>
+          <TouchableOpacity
+            style={styles.quickButton}
+            onPress={() => router.push('/travel-info')}
+          >
+            <Ionicons name="bus" size={22} color="#FFD700" />
+            <Text style={styles.quickButtonText}>How to Get Here</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={styles.quickButton}
+            onPress={() => router.push('/shop')}
+          >
+            <Ionicons name="cart" size={22} color="#FFD700" />
+            <Text style={styles.quickButtonText}>Shop & Tickets</Text>
+          </TouchableOpacity>
+        </View>
+        
         {/* Features Section */}
         <View style={styles.features}>
           <View style={styles.feature}>
