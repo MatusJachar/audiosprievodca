@@ -80,7 +80,7 @@ export default function Index() {
             onPress={() => router.push('/travel-info')}
           >
             <Ionicons name="bus" size={22} color="#FFD700" />
-            <Text style={styles.quickButtonText}>How to Get Here</Text>
+            <Text style={styles.quickButtonText}>How to Get Back</Text>
           </TouchableOpacity>
           
           <TouchableOpacity
@@ -91,6 +91,20 @@ export default function Index() {
             <Text style={styles.quickButtonText}>Shop & Tickets</Text>
           </TouchableOpacity>
         </View>
+        
+        {/* Discover More - Regional App Promotion */}
+        <TouchableOpacity
+          style={styles.discoverMoreButton}
+          onPress={() => router.push('/discover-region')}
+        >
+          <View style={styles.discoverMoreContent}>
+            <Ionicons name="compass" size={24} color="#fff" />
+            <View style={styles.discoverMoreText}>
+              <Text style={styles.discoverMoreTitle}>Discover Spiš Region</Text>
+              <Text style={styles.discoverMoreSubtitle}>More adventures nearby →</Text>
+            </View>
+          </View>
+        </TouchableOpacity>
         
         {/* Features Section */}
         <View style={styles.features}>
