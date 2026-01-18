@@ -92,11 +92,11 @@ export default function Index() {
           </TouchableOpacity>
           
           <TouchableOpacity
-            style={[styles.quickButton, styles.quickButtonHighlight]}
+            style={styles.quickButton}
             onPress={() => router.push('/discover-region')}
           >
             <Ionicons name="compass" size={20} color="#FFD700" />
-            <Text style={styles.quickButtonText}>Explore</Text>
+            <Text style={styles.quickButtonText}>Nearby</Text>
           </TouchableOpacity>
         </View>
         
