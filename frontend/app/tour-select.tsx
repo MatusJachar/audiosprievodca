@@ -81,11 +81,11 @@ export default function TourSelect() {
     const isSelected = selectedTourType === tourType;
     const totalStops = route.stopNumbers.length;
 
-    // Card colors based on tour type
+    // Card colors - all yellowish/gold theme
     const cardColors = {
-      express: { bg: '#1a1a2e', accent: '#00d9ff', icon: 'flash' },
-      family: { bg: '#1a2e1a', accent: '#4CAF50', icon: 'people' },
-      complete: { bg: '#2e1a1a', accent: '#FFD700', icon: 'trophy' },
+      express: { bg: '#1a1a1a', accent: '#FFD700', icon: 'flash' },
+      family: { bg: '#1a1a1a', accent: '#FFD700', icon: 'people' },
+      complete: { bg: '#1a1a1a', accent: '#FFD700', icon: 'trophy' },
     };
     const colors = cardColors[tourType];
 
