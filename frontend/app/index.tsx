@@ -35,39 +35,67 @@ export default function Index() {
       <View style={styles.overlay} />
       
       <View style={styles.content}>
-        <Ionicons name="business" size={80} color="#FFD700" />
+        {/* Castle Icon */}
+        <View style={styles.iconContainer}>
+          <Ionicons name="business" size={90} color="#FFD700" />
+        </View>
         
+        {/* Title Section */}
         <Text style={styles.title}>Spiš Castle</Text>
         <Text style={styles.subtitle}>Audio Tour Guide</Text>
         
+        {/* Divider */}
+        <View style={styles.divider} />
+        
+        {/* Description Section */}
         <View style={styles.descriptionContainer}>
           <Text style={styles.descriptionBold}>
-            Explore, Discover and Immerse yourself in the largest U.N.E.S.C.O castle complexes in Europe.
+            Explore, Discover & Immerse yourself
           </Text>
-          <Text style={styles.description}>
-            Our audio guide will take you through centuries of history, architecture and legends.
+          <Text style={styles.descriptionHighlight}>
+            in the largest UNESCO World Heritage
+          </Text>
+          <Text style={styles.descriptionHighlight}>
+            castle complex in Europe
           </Text>
         </View>
         
+        <Text style={styles.descriptionSecondary}>
+          Our audio guide will take you through centuries{'\n'}of history, architecture and legends
+        </Text>
+        
+        {/* Start Button */}
         <TouchableOpacity
           style={styles.startButton}
           onPress={() => router.push('/language-select')}
         >
           <Text style={styles.startButtonText}>Start Tour</Text>
-          <Ionicons name="arrow-forward" size={24} color="#fff" />
+          <Ionicons name="arrow-forward" size={24} color="#000" />
         </TouchableOpacity>
         
+        {/* Features Section */}
         <View style={styles.features}>
           <View style={styles.feature}>
-            <Ionicons name="language" size={24} color="#FFD700" />
-            <Text style={styles.featureText}>8 Languages</Text>
+            <View style={styles.featureIcon}>
+              <Ionicons name="language" size={32} color="#FFD700" />
+            </View>
+            <Text style={styles.featureNumber}>9</Text>
+            <Text style={styles.featureText}>Languages</Text>
           </View>
+          <View style={styles.featureDivider} />
           <View style={styles.feature}>
-            <Ionicons name="location" size={24} color="#FFD700" />
-            <Text style={styles.featureText}>13 Stops</Text>
+            <View style={styles.featureIcon}>
+              <Ionicons name="location" size={32} color="#FFD700" />
+            </View>
+            <Text style={styles.featureNumber}>13</Text>
+            <Text style={styles.featureText}>Tour Stops</Text>
           </View>
+          <View style={styles.featureDivider} />
           <View style={styles.feature}>
-            <Ionicons name="cloud-offline" size={24} color="#FFD700" />
+            <View style={styles.featureIcon}>
+              <Ionicons name="cloud-offline" size={32} color="#FFD700" />
+            </View>
+            <Text style={styles.featureNumber}>✓</Text>
             <Text style={styles.featureText}>Offline Mode</Text>
           </View>
         </View>
@@ -92,7 +120,7 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.55)',
   },
   container: {
     flex: 1,
@@ -104,63 +132,108 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 24,
   },
+  iconContainer: {
+    marginBottom: 8,
+  },
   title: {
-    fontSize: 36,
+    fontSize: 42,
     fontWeight: 'bold',
     color: '#fff',
-    marginTop: 24,
+    marginTop: 12,
     textAlign: 'center',
+    letterSpacing: 1,
   },
   subtitle: {
-    fontSize: 20,
+    fontSize: 22,
     color: '#FFD700',
-    marginTop: 8,
+    marginTop: 4,
     textAlign: 'center',
+    fontWeight: '500',
+    letterSpacing: 2,
+  },
+  divider: {
+    width: 60,
+    height: 3,
+    backgroundColor: '#FFD700',
+    marginVertical: 20,
+    borderRadius: 2,
   },
   descriptionContainer: {
-    marginTop: 24,
-    paddingHorizontal: 16,
+    alignItems: 'center',
   },
   descriptionBold: {
-    fontSize: 20,
-    fontWeight: '600',
+    fontSize: 18,
+    fontWeight: '700',
     color: '#fff',
     textAlign: 'center',
-    lineHeight: 28,
-    marginBottom: 12,
+    marginBottom: 4,
   },
-  description: {
+  descriptionHighlight: {
     fontSize: 18,
+    fontWeight: '600',
     color: '#FFD700',
     textAlign: 'center',
     lineHeight: 26,
+  },
+  descriptionSecondary: {
+    fontSize: 15,
+    color: 'rgba(255,255,255,0.8)',
+    textAlign: 'center',
+    lineHeight: 22,
+    marginTop: 16,
+    fontStyle: 'italic',
   },
   startButton: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFD700',
-    paddingHorizontal: 32,
-    paddingVertical: 16,
+    paddingHorizontal: 40,
+    paddingVertical: 18,
     borderRadius: 30,
-    marginTop: 40,
-    gap: 8,
+    marginTop: 32,
+    gap: 10,
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
   startButtonText: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#000',
   },
   features: {
     flexDirection: 'row',
     marginTop: 48,
-    gap: 24,
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    paddingVertical: 20,
+    paddingHorizontal: 24,
+    borderRadius: 16,
+    gap: 16,
   },
   feature: {
     alignItems: 'center',
-    gap: 8,
+    paddingHorizontal: 12,
+  },
+  featureIcon: {
+    marginBottom: 8,
+  },
+  featureNumber: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFD700',
+    marginBottom: 2,
   },
   featureText: {
-    fontSize: 12,
-    color: '#aaa',
+    fontSize: 13,
+    color: '#ccc',
+    fontWeight: '500',
+  },
+  featureDivider: {
+    width: 1,
+    height: 50,
+    backgroundColor: 'rgba(255,255,255,0.2)',
   },
 });
