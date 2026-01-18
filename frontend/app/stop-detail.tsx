@@ -31,7 +31,7 @@ export default function StopDetail() {
   const isCompleted = userProgress?.completed_stops?.includes(stopId as string) || false;
 
   // Smart preload: Download next stops in background when viewing a stop
-  // Now preloads MULTIPLE languages for international visitors
+  // Preloads ONLY the user's selected language (not multiple languages)
   useEffect(() => {
     const runSmartPreload = async () => {
       if (!stop || !API_URL || preloadInProgress.current) return;
@@ -44,21 +44,19 @@ export default function StopDetail() {
       try {
         // Show preload status for stops 9-13 (poor coverage area)
         if (currentStopNumber >= 9) {
-          setPreloadStatus('Preloading next stops (EN, SK, HU, PL)...');
+          setPreloadStatus('Preloading next stops...');
         }
         
-        // Use multi-language preload for key visitor languages
-        // This downloads next stops in English, Slovak, Hungarian, and Polish
-        await OfflineCacheManager.multiLanguagePreload(
+        // Preload ONLY the selected language - user chose it, that's what they need
+        await OfflineCacheManager.smartPreload(
           currentStopNumber,
           tourStops,
-          selectedLanguage,
-          API_URL,
-          ['en', 'sk', 'hu', 'pl'] // Key languages for castle visitors
+          selectedLanguage, // Only the language user selected
+          API_URL
         );
         
         if (currentStopNumber >= 9) {
-          setPreloadStatus('Next stops ready (all languages)');
+          setPreloadStatus('Next stops ready');
           // Clear status after 3 seconds
           setTimeout(() => setPreloadStatus(''), 3000);
         }
