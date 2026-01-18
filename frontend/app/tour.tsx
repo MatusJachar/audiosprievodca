@@ -512,6 +512,23 @@ const styles = StyleSheet.create({
   listContent: {
     padding: 16,
   },
+  preloadStatusBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,215,0,0.15)',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    marginHorizontal: 16,
+    marginBottom: 8,
+    borderRadius: 8,
+    gap: 8,
+  },
+  preloadStatusText: {
+    color: '#FFD700',
+    fontSize: 13,
+    fontWeight: '500',
+  },
   stopCard: {
     flexDirection: 'row',
     backgroundColor: 'rgba(26, 26, 26, 0.9)',
