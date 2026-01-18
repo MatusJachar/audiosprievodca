@@ -375,11 +375,13 @@ export class OfflineCacheManager {
 
   // Smart preload for poor coverage areas (stops 10-13)
   // Preloads more aggressively when in these areas
+  // NOW TOUR-ROUTE AWARE
   static async smartPreload(
     currentStopNumber: number | null,
     tourStops: any[],
     language: string,
-    apiUrl: string
+    apiUrl: string,
+    tourRoute?: number[] // Optional: specific tour route order
   ): Promise<void> {
     if (!currentStopNumber) return;
 
@@ -396,11 +398,11 @@ export class OfflineCacheManager {
 
     if (zone) {
       console.log(`[SmartPreload] In ${zone.name}, preloading ${zone.preloadCount} stops`);
-      await this.preloadNextStops(currentStopNumber, tourStops, language, apiUrl, zone.preloadCount);
+      await this.preloadNextStops(currentStopNumber, tourStops, language, apiUrl, zone.preloadCount, tourRoute);
     } else {
       // Default: preload next 2 stops
       console.log(`[SmartPreload] Standard area, preloading 2 stops`);
-      await this.preloadNextStops(currentStopNumber, tourStops, language, apiUrl, 2);
+      await this.preloadNextStops(currentStopNumber, tourStops, language, apiUrl, 2, tourRoute);
     }
   }
 
