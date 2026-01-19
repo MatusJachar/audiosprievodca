@@ -1,8 +1,11 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Linking, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Linking, Alert, Dimensions } from 'react-native';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import BackgroundWrapper from '../components/BackgroundWrapper';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const CARD_WIDTH = (SCREEN_WIDTH - 48) / 2;
 
 export default function DiscoverRegion() {
   const handleOpenStore = (platform: 'ios' | 'android') => {
@@ -16,7 +19,6 @@ export default function DiscoverRegion() {
   };
 
   const handleBookGuide = () => {
-    // Replace with actual booking link or phone number
     Linking.openURL('tel:+421901234567').catch(() => {
       Alert.alert('Book a Guide', 'Call us at +421 901 234 567 to book your personal guide!');
     });
@@ -41,161 +43,100 @@ export default function DiscoverRegion() {
             <Text style={styles.heroEmoji}>🏰 ⛰️ 🏛️</Text>
             <Text style={styles.heroTitle}>Discover Spiš Region</Text>
             <Text style={styles.heroSubtitle}>
-              Don't leave yet! There's so much more to explore around you
+              There's so much more to explore!
             </Text>
           </View>
 
-          {/* Choose Your Adventure */}
-          <Text style={styles.chooseTitle}>Choose Your Adventure</Text>
-
-          {/* Option 1: Digital Guide App */}
-          <TouchableOpacity style={styles.optionCard} activeOpacity={0.9}>
-            <View style={styles.optionHeader}>
-              <View style={styles.optionIconBg}>
-                <Ionicons name="phone-portrait" size={32} color="#FFD700" />
-              </View>
-              <View style={styles.optionBadge}>
+          {/* Two Cards Side by Side */}
+          <View style={styles.cardsRow}>
+            {/* Card 1: Digital Guide App */}
+            <View style={styles.card}>
+              <View style={styles.cardBadge}>
                 <Text style={styles.badgeText}>BEST VALUE</Text>
               </View>
-            </View>
-            
-            <Text style={styles.optionTitle}>📱 Digital Guide App</Text>
-            <Text style={styles.optionTagline}>Explore at your own pace</Text>
-            
-            <View style={styles.optionFeatures}>
-              <View style={styles.featureRow}>
-                <Ionicons name="checkmark-circle" size={18} color="#4CAF50" />
-                <Text style={styles.featureText}>50+ attractions with audio</Text>
+              
+              <View style={styles.cardIcon}>
+                <Ionicons name="phone-portrait" size={36} color="#FFD700" />
               </View>
-              <View style={styles.featureRow}>
-                <Ionicons name="checkmark-circle" size={18} color="#4CAF50" />
-                <Text style={styles.featureText}>Works offline - no internet needed</Text>
+              
+              <Text style={styles.cardTitle}>📱 App Guide</Text>
+              <Text style={styles.cardSubtitle}>Explore at your pace</Text>
+              
+              <View style={styles.featureList}>
+                <Text style={styles.featureItem}>✓ 50+ attractions</Text>
+                <Text style={styles.featureItem}>✓ Works offline</Text>
+                <Text style={styles.featureItem}>✓ 9 languages</Text>
+                <Text style={styles.featureItem}>✓ Keep forever</Text>
               </View>
-              <View style={styles.featureRow}>
-                <Ionicons name="checkmark-circle" size={18} color="#4CAF50" />
-                <Text style={styles.featureText}>Multi-day itineraries included</Text>
-              </View>
-              <View style={styles.featureRow}>
-                <Ionicons name="checkmark-circle" size={18} color="#4CAF50" />
-                <Text style={styles.featureText}>9 languages supported</Text>
-              </View>
-              <View style={styles.featureRow}>
-                <Ionicons name="checkmark-circle" size={18} color="#4CAF50" />
-                <Text style={styles.featureText}>Keep forever - use anytime</Text>
-              </View>
-            </View>
-            
-            <View style={styles.priceSection}>
-              <View style={styles.priceRow}>
+              
+              <View style={styles.priceBox}>
                 <Text style={styles.priceOld}>€9.99</Text>
-                <Text style={styles.priceNew}>€4.99</Text>
+                <Text style={styles.priceNew}>€3.99</Text>
               </View>
-              <Text style={styles.priceNote}>🔥 50% OFF - Limited time!</Text>
-            </View>
-            
-            <View style={styles.storeButtons}>
+              
               <TouchableOpacity 
-                style={styles.storeButton}
-                onPress={() => handleOpenStore('ios')}
-              >
-                <Ionicons name="logo-apple" size={20} color="#fff" />
-                <Text style={styles.storeText}>App Store</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.storeButton}
+                style={styles.cardButton}
                 onPress={() => handleOpenStore('android')}
               >
-                <Ionicons name="logo-google-playstore" size={20} color="#fff" />
-                <Text style={styles.storeText}>Google Play</Text>
+                <Ionicons name="download" size={16} color="#000" />
+                <Text style={styles.cardButtonText}>Get App</Text>
               </TouchableOpacity>
             </View>
-          </TouchableOpacity>
 
-          {/* Divider */}
-          <View style={styles.divider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>OR</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          {/* Option 2: Personal Guide */}
-          <TouchableOpacity style={styles.optionCard2} activeOpacity={0.9}>
-            <View style={styles.optionHeader}>
-              <View style={[styles.optionIconBg, { backgroundColor: 'rgba(76,175,80,0.2)' }]}>
-                <Ionicons name="person" size={32} color="#4CAF50" />
-              </View>
-              <View style={[styles.optionBadge, { backgroundColor: '#4CAF50' }]}>
+            {/* Card 2: Personal Tour Guide */}
+            <View style={[styles.card, styles.cardGreen]}>
+              <View style={[styles.cardBadge, styles.badgeGreen]}>
                 <Text style={styles.badgeText}>PREMIUM</Text>
               </View>
+              
+              <View style={[styles.cardIcon, styles.iconGreen]}>
+                <Ionicons name="person" size={36} color="#4CAF50" />
+              </View>
+              
+              <Text style={styles.cardTitle}>👨‍🏫 Personal</Text>
+              <Text style={styles.cardSubtitle}>VIP with local expert</Text>
+              
+              <View style={styles.featureList}>
+                <Text style={styles.featureItem}>✓ Licensed guide</Text>
+                <Text style={styles.featureItem}>✓ Custom tour</Text>
+                <Text style={styles.featureItem}>✓ Hidden gems</Text>
+                <Text style={styles.featureItem}>✓ Up to 8 people</Text>
+              </View>
+              
+              <View style={styles.priceBox}>
+                <Text style={styles.priceLabel}>Full Day</Text>
+                <Text style={styles.priceGuide}>€70</Text>
+              </View>
+              
+              <TouchableOpacity 
+                style={[styles.cardButton, styles.buttonGreen]}
+                onPress={handleBookGuide}
+              >
+                <Ionicons name="call" size={16} color="#fff" />
+                <Text style={[styles.cardButtonText, { color: '#fff' }]}>Book Now</Text>
+              </TouchableOpacity>
             </View>
-            
-            <Text style={styles.optionTitle}>👨‍🏫 Personal Tour Guide</Text>
-            <Text style={styles.optionTagline}>VIP experience with local expert</Text>
-            
-            <View style={styles.optionFeatures}>
-              <View style={styles.featureRow}>
-                <Ionicons name="checkmark-circle" size={18} color="#4CAF50" />
-                <Text style={styles.featureText}>Licensed local expert guide</Text>
-              </View>
-              <View style={styles.featureRow}>
-                <Ionicons name="checkmark-circle" size={18} color="#4CAF50" />
-                <Text style={styles.featureText}>Customized tour to your interests</Text>
-              </View>
-              <View style={styles.featureRow}>
-                <Ionicons name="checkmark-circle" size={18} color="#4CAF50" />
-                <Text style={styles.featureText}>Hidden gems & local secrets</Text>
-              </View>
-              <View style={styles.featureRow}>
-                <Ionicons name="checkmark-circle" size={18} color="#4CAF50" />
-                <Text style={styles.featureText}>Transport included (optional)</Text>
-              </View>
-              <View style={styles.featureRow}>
-                <Ionicons name="checkmark-circle" size={18} color="#4CAF50" />
-                <Text style={styles.featureText}>Groups up to 8 people</Text>
-              </View>
-            </View>
-            
-            <View style={styles.priceSection}>
-              <Text style={styles.priceGuide}>From €80 / half day</Text>
-              <Text style={styles.priceNoteGuide}>Full day tours available</Text>
-            </View>
-            
-            <TouchableOpacity 
-              style={styles.bookButton}
-              onPress={handleBookGuide}
-            >
-              <Ionicons name="call" size={20} color="#fff" />
-              <Text style={styles.bookButtonText}>Book Your Guide</Text>
-            </TouchableOpacity>
-            
-            <Text style={styles.availabilityNote}>
-              📅 Book 24h in advance • Available daily
-            </Text>
-          </TouchableOpacity>
+          </View>
 
-          {/* Nearby Highlights */}
+          {/* What You'll Discover */}
           <View style={styles.highlightsSection}>
             <Text style={styles.highlightsTitle}>🗺️ What You'll Discover</Text>
             <View style={styles.highlightsGrid}>
               <View style={styles.highlightItem}>
                 <Text style={styles.highlightEmoji}>🏛️</Text>
                 <Text style={styles.highlightName}>Levoča</Text>
-                <Text style={styles.highlightDesc}>UNESCO town</Text>
               </View>
               <View style={styles.highlightItem}>
                 <Text style={styles.highlightEmoji}>⛰️</Text>
                 <Text style={styles.highlightName}>Slovak Paradise</Text>
-                <Text style={styles.highlightDesc}>Gorges & waterfalls</Text>
               </View>
               <View style={styles.highlightItem}>
                 <Text style={styles.highlightEmoji}>⛪</Text>
                 <Text style={styles.highlightName}>Wooden Churches</Text>
-                <Text style={styles.highlightDesc}>UNESCO heritage</Text>
               </View>
               <View style={styles.highlightItem}>
                 <Text style={styles.highlightEmoji}>🏔️</Text>
                 <Text style={styles.highlightName}>High Tatras</Text>
-                <Text style={styles.highlightDesc}>Alpine peaks</Text>
               </View>
             </View>
           </View>
@@ -203,9 +144,9 @@ export default function DiscoverRegion() {
           {/* Testimonial */}
           <View style={styles.testimonial}>
             <Text style={styles.testimonialQuote}>
-              "We used both - the app for driving around and a personal guide for Levoča. Perfect combination!"
+              "Perfect combination - app for driving, guide for Levoča!"
             </Text>
-            <Text style={styles.testimonialAuthor}>— Thomas & Family, Austria ⭐⭐⭐⭐⭐</Text>
+            <Text style={styles.testimonialAuthor}>— Thomas, Austria ⭐⭐⭐⭐⭐</Text>
           </View>
 
           <View style={{ height: 40 }} />
@@ -240,248 +181,182 @@ const styles = StyleSheet.create({
   },
   heroSection: {
     alignItems: 'center',
-    paddingVertical: 24,
-    marginBottom: 20,
+    paddingVertical: 16,
+    marginBottom: 16,
   },
   heroEmoji: {
-    fontSize: 40,
-    marginBottom: 12,
+    fontSize: 32,
+    marginBottom: 8,
   },
   heroTitle: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#FFD700',
     textAlign: 'center',
   },
   heroSubtitle: {
-    fontSize: 16,
-    color: '#ccc',
+    fontSize: 14,
+    color: '#aaa',
     textAlign: 'center',
-    marginTop: 8,
-    lineHeight: 22,
+    marginTop: 4,
   },
-  chooseTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
-    textAlign: 'center',
+  cardsRow: {
+    flexDirection: 'row',
+    gap: 12,
     marginBottom: 20,
   },
-  optionCard: {
+  card: {
+    flex: 1,
     backgroundColor: 'rgba(30,30,30,0.95)',
-    borderRadius: 20,
-    padding: 20,
+    borderRadius: 16,
+    padding: 16,
     borderWidth: 2,
     borderColor: '#FFD700',
-    marginBottom: 16,
+    alignItems: 'center',
   },
-  optionCard2: {
-    backgroundColor: 'rgba(30,30,30,0.95)',
-    borderRadius: 20,
-    padding: 20,
-    borderWidth: 2,
+  cardGreen: {
     borderColor: '#4CAF50',
-    marginBottom: 20,
   },
-  optionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 16,
+  cardBadge: {
+    backgroundColor: '#FFD700',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
+    marginBottom: 12,
   },
-  optionIconBg: {
+  badgeGreen: {
+    backgroundColor: '#4CAF50',
+  },
+  badgeText: {
+    fontSize: 9,
+    fontWeight: 'bold',
+    color: '#000',
+  },
+  cardIcon: {
     width: 60,
     height: 60,
     borderRadius: 30,
     backgroundColor: 'rgba(255,215,0,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 12,
   },
-  optionBadge: {
-    backgroundColor: '#FFD700',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
+  iconGreen: {
+    backgroundColor: 'rgba(76,175,80,0.2)',
   },
-  badgeText: {
-    fontSize: 11,
-    fontWeight: 'bold',
-    color: '#000',
-  },
-  optionTitle: {
-    fontSize: 22,
+  cardTitle: {
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#fff',
-    marginBottom: 4,
+    textAlign: 'center',
   },
-  optionTagline: {
-    fontSize: 15,
-    color: '#aaa',
-    marginBottom: 16,
-    fontStyle: 'italic',
+  cardSubtitle: {
+    fontSize: 11,
+    color: '#888',
+    textAlign: 'center',
+    marginBottom: 12,
   },
-  optionFeatures: {
-    marginBottom: 20,
+  featureList: {
+    alignSelf: 'stretch',
+    marginBottom: 12,
   },
-  featureRow: {
-    flexDirection: 'row',
+  featureItem: {
+    fontSize: 11,
+    color: '#ccc',
+    paddingVertical: 3,
+  },
+  priceBox: {
     alignItems: 'center',
-    gap: 10,
+    marginBottom: 12,
     paddingVertical: 8,
-  },
-  featureText: {
-    fontSize: 14,
-    color: '#ddd',
-    flex: 1,
-  },
-  priceSection: {
-    alignItems: 'center',
-    paddingVertical: 16,
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.1)',
-    marginBottom: 16,
-  },
-  priceRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
+    width: '100%',
   },
   priceOld: {
-    fontSize: 20,
+    fontSize: 14,
     color: '#888',
     textDecorationLine: 'line-through',
   },
   priceNew: {
-    fontSize: 42,
+    fontSize: 28,
     fontWeight: 'bold',
     color: '#FFD700',
   },
-  priceNote: {
-    fontSize: 14,
-    color: '#FF6B6B',
-    marginTop: 8,
-    fontWeight: '600',
+  priceLabel: {
+    fontSize: 11,
+    color: '#888',
   },
   priceGuide: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#4CAF50',
   },
-  priceNoteGuide: {
-    fontSize: 14,
-    color: '#aaa',
-    marginTop: 4,
-  },
-  storeButtons: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  storeButton: {
-    flex: 1,
+  cardButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#333',
-    paddingVertical: 14,
-    borderRadius: 12,
-    gap: 8,
+    backgroundColor: '#FFD700',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    gap: 6,
+    width: '100%',
   },
-  storeText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#fff',
-  },
-  bookButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+  buttonGreen: {
     backgroundColor: '#4CAF50',
-    paddingVertical: 16,
-    borderRadius: 12,
-    gap: 10,
   },
-  bookButtonText: {
+  cardButtonText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#000',
+  },
+  highlightsSection: {
+    marginBottom: 16,
+  },
+  highlightsTitle: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#fff',
-  },
-  availabilityNote: {
-    fontSize: 12,
-    color: '#888',
-    textAlign: 'center',
-    marginTop: 12,
-  },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 8,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-  },
-  dividerText: {
-    paddingHorizontal: 16,
-    fontSize: 14,
-    color: '#888',
-    fontWeight: '600',
-  },
-  highlightsSection: {
-    marginTop: 8,
-    marginBottom: 20,
-  },
-  highlightsTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 16,
+    marginBottom: 12,
     textAlign: 'center',
   },
   highlightsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: 8,
   },
   highlightItem: {
-    width: '48%',
+    width: '23%',
     backgroundColor: 'rgba(30,30,30,0.9)',
-    padding: 16,
-    borderRadius: 12,
+    padding: 12,
+    borderRadius: 10,
     alignItems: 'center',
   },
   highlightEmoji: {
-    fontSize: 32,
-    marginBottom: 8,
+    fontSize: 24,
+    marginBottom: 4,
   },
   highlightName: {
-    fontSize: 14,
-    fontWeight: 'bold',
+    fontSize: 9,
     color: '#fff',
-    textAlign: 'center',
-  },
-  highlightDesc: {
-    fontSize: 12,
-    color: '#888',
     textAlign: 'center',
   },
   testimonial: {
     backgroundColor: 'rgba(255,215,0,0.1)',
-    borderRadius: 16,
-    padding: 20,
-    borderLeftWidth: 4,
+    borderRadius: 12,
+    padding: 16,
+    borderLeftWidth: 3,
     borderLeftColor: '#FFD700',
   },
   testimonialQuote: {
-    fontSize: 15,
+    fontSize: 13,
     color: '#ddd',
     fontStyle: 'italic',
-    lineHeight: 22,
   },
   testimonialAuthor: {
-    fontSize: 13,
+    fontSize: 11,
     color: '#FFD700',
-    marginTop: 12,
-    fontWeight: '600',
+    marginTop: 8,
   },
 });
