@@ -6,10 +6,23 @@ import { useTourStore } from '../store/tourStore';
 import { useLanguageStore } from '../store/languageStore';
 import { TOUR_STOPS, LEGEND_INDEX } from '../store/tourTypeStore';
 import { useEffect, useMemo, useState, useRef } from 'react';
-import BackgroundWrapper from '../components/BackgroundWrapper';
 import { OfflineCacheManager } from '../utils/offlineCacheManager';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+
+// Color scheme
+const COLORS = {
+  primary: '#4A90D9',
+  secondary: '#7B68EE',
+  accent: '#E8B923',
+  dark: '#1a1a2e',
+  darker: '#0f0f1a',
+  card: '#252542',
+  text: '#ffffff',
+  textSecondary: '#b8c5d6',
+  success: '#4CAF50',
+};
 
 export default function Tour() {
   const { tourStops, userProgress, loading, fetchTourStops, fetchUserProgress } = useTourStore();
