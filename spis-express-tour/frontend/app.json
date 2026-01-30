@@ -1,23 +1,23 @@
 {
   "expo": {
-    "name": "Spiš Castle Audio Tour",
-    "slug": "spis-castle-tour",
+    "name": "Spiš Castle Free Tour",
+    "slug": "spis-castle-free-tour",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "spiscastle",
+    "scheme": "spiscastlefree",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.spiscastle.audiotour"
+      "bundleIdentifier": "com.spiscastle.freetour"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#1a1a1a"
       },
-      "package": "com.spiscastle.audiotour",
+      "package": "com.spiscastle.freetour",
       "edgeToEdgeEnabled": true,
       "permissions": [
         "android.permission.INTERNET",
