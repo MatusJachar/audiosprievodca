@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Linking, Alert, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Linking, Alert } from 'react-native';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -25,32 +25,62 @@ export default function Shop() {
         </View>
         
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-          {/* Tickets Section */}
+          {/* Reconstruction Warning */}
+          <View style={styles.warningSection}>
+            <View style={styles.warningHeader}>
+              <Ionicons name="warning" size={24} color="#FF6B6B" />
+              <Text style={styles.warningTitle}>⚠️ Ongoing Reconstruction</Text>
+            </View>
+            <Text style={styles.warningText}>
+              Please note that reconstruction works are permanently ongoing at the castle!
+            </Text>
+            <Text style={styles.warningDescription}>
+              Currently: Sanitation, rescue and restoration of the Romanesque Palace in the northern part of the upper castle complex. The castle interior is closed and some areas are inaccessible.
+            </Text>
+            <View style={styles.closedAreas}>
+              <Text style={styles.closedTitle}>Closed Areas:</Text>
+              <View style={styles.closedItem}>
+                <Ionicons name="close-circle" size={16} color="#FF6B6B" />
+                <Text style={styles.closedText}>Museum (until April 2030)</Text>
+              </View>
+              <View style={styles.closedItem}>
+                <Ionicons name="close-circle" size={16} color="#FF6B6B" />
+                <Text style={styles.closedText}>Romanesque Palace (until April 2028)</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Entrance Tickets Section */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Ionicons name="ticket" size={28} color="#FFD700" />
-              <Text style={styles.sectionTitle}>Entrance Tickets</Text>
+              <Text style={styles.sectionTitle}>Entrance Fees</Text>
             </View>
-            <Text style={styles.sectionDescription}>
-              Purchase your castle entrance tickets online and skip the queue!
-            </Text>
             
             <View style={styles.priceList}>
               <View style={styles.priceItem}>
-                <Text style={styles.priceLabel}>Adult</Text>
-                <Text style={styles.priceValue}>€8.00</Text>
+                <Text style={styles.priceLabel}>Adults</Text>
+                <Text style={styles.priceValue}>€10.00</Text>
               </View>
               <View style={styles.priceItem}>
-                <Text style={styles.priceLabel}>Student / Senior</Text>
+                <Text style={styles.priceLabel}>Children (6-15 years)</Text>
                 <Text style={styles.priceValue}>€5.00</Text>
               </View>
               <View style={styles.priceItem}>
-                <Text style={styles.priceLabel}>Child (6-15)</Text>
+                <Text style={styles.priceLabel}>Students / Seniors</Text>
+                <Text style={styles.priceValue}>€7.00</Text>
+              </View>
+              <View style={styles.priceItem}>
+                <Text style={styles.priceLabel}>Family Ticket (2+2)</Text>
+                <Text style={styles.priceValue}>€22.00</Text>
+              </View>
+              <View style={styles.priceItem}>
+                <Text style={styles.priceLabel}>Disabled Child (under 18)</Text>
                 <Text style={styles.priceValue}>€3.00</Text>
               </View>
               <View style={styles.priceItem}>
-                <Text style={styles.priceLabel}>Family (2+2)</Text>
-                <Text style={styles.priceValue}>€18.00</Text>
+                <Text style={styles.priceLabel}>Disabled Adults</Text>
+                <Text style={styles.priceValue}>€5.00</Text>
               </View>
             </View>
             
@@ -61,6 +91,28 @@ export default function Shop() {
               <Ionicons name="cart" size={22} color="#000" />
               <Text style={styles.buyButtonText}>Buy Tickets Online</Text>
             </TouchableOpacity>
+          </View>
+
+          {/* Night Tours */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Ionicons name="moon" size={28} color="#FFD700" />
+              <Text style={styles.sectionTitle}>Night Tours 🌙</Text>
+            </View>
+            <Text style={styles.nightTourInfo}>
+              Every second Friday in July and August{'\n'}
+              20:30 - 22:30
+            </Text>
+            <View style={styles.priceList}>
+              <View style={styles.priceItem}>
+                <Text style={styles.priceLabel}>Night Tour - Adults</Text>
+                <Text style={styles.priceValue}>€13.00</Text>
+              </View>
+              <View style={styles.priceItem}>
+                <Text style={styles.priceLabel}>Night Tour - Family</Text>
+                <Text style={styles.priceValue}>€30.00</Text>
+              </View>
+            </View>
           </View>
 
           {/* Castle Shop */}
@@ -101,7 +153,7 @@ export default function Shop() {
             </TouchableOpacity>
           </View>
 
-          {/* Audio Guide */}
+          {/* Audio Guide Info */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Ionicons name="headset" size={28} color="#FFD700" />
@@ -189,6 +241,58 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
+  warningSection: {
+    backgroundColor: 'rgba(255,107,107,0.15)',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,107,107,0.4)',
+  },
+  warningHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 10,
+  },
+  warningTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FF6B6B',
+  },
+  warningText: {
+    fontSize: 14,
+    color: '#FF6B6B',
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  warningDescription: {
+    fontSize: 13,
+    color: '#ccc',
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+  closedAreas: {
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    padding: 12,
+    borderRadius: 8,
+  },
+  closedTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 8,
+  },
+  closedItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 4,
+  },
+  closedText: {
+    fontSize: 13,
+    color: '#ccc',
+  },
   section: {
     backgroundColor: 'rgba(30,30,30,0.9)',
     borderRadius: 16,
@@ -212,6 +316,14 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     lineHeight: 22,
   },
+  nightTourInfo: {
+    fontSize: 15,
+    color: '#FFD700',
+    textAlign: 'center',
+    marginBottom: 16,
+    fontWeight: '500',
+    lineHeight: 22,
+  },
   priceList: {
     marginBottom: 20,
   },
@@ -223,8 +335,9 @@ const styles = StyleSheet.create({
     borderBottomColor: 'rgba(255,255,255,0.1)',
   },
   priceLabel: {
-    fontSize: 16,
+    fontSize: 15,
     color: '#ccc',
+    flex: 1,
   },
   priceValue: {
     fontSize: 16,
