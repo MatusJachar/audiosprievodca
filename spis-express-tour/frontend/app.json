@@ -1,23 +1,23 @@
 {
   "expo": {
-    "name": "Spiš Castle Free Tour",
-    "slug": "spis-castle-free-tour",
+    "name": "Spišský hrad",
+    "slug": "spissky-hrad-tour",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "spiscastlefree",
+    "icon": "./assets/images/logo.png",
+    "scheme": "spisskygrad",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.spiscastle.freetour"
+      "bundleIdentifier": "com.spisskygrad.freetour"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#1a1a1a"
+        "foregroundImage": "./assets/images/logo.png",
+        "backgroundColor": "#1a1a2e"
       },
-      "package": "com.spiscastle.freetour",
+      "package": "com.spisskygrad.freetour",
       "edgeToEdgeEnabled": true,
       "permissions": [
         "android.permission.INTERNET",
