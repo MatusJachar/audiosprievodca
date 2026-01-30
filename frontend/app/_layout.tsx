@@ -37,6 +37,8 @@ export default function RootLayout() {
       <Stack.Screen name="stop-detail" options={{ title: 'Tour Stop' }} />
       <Stack.Screen name="settings" options={{ title: 'Settings' }} />
       <Stack.Screen name="admin" options={{ headerShown: false }} />
+      <Stack.Screen name="admin-content" options={{ headerShown: false }} />
+      <Stack.Screen name="admin-login" options={{ headerShown: false }} />
     </Stack>
   );
 }
