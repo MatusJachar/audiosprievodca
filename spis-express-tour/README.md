@@ -1,22 +1,24 @@
-# Spiš Castle Express Tour - New Simplified App
+# Spiš Castle Free Tour (Express+)
 
 ## Overview
-This is a simplified FREE version of the Spiš Castle Audio Tour app.
+This is a **FREE** simplified version of the Spiš Castle Audio Tour app.
+Single tour with 10 stops: the Express tour enhanced with stops 4 and 6.
 
-## Tour Stops Included
-Based on Express Tour + stops 4 and 6:
-- Stop 1: Welcome
-- Stop 2: In Front of the Castle Photography  
-- Stop 3: Romanesque Palace / Model / Kitchen
-- Stop 4: (Additional stop)
-- Stop 6: (Additional stop)
-- Stop 7: Chapel
-- Stop 8: Upper Courtyard / Cistern / Bergfried Tower
-- Stop 11: Lion's Courtyard (Levie nádvorie)
-- Stop 12: Gallery of Ancestors
-- Legend L3: (Included legend)
+## Tour Stops Included (10 total)
+| Stop # | Name |
+|--------|------|
+| 1 | Welcome |
+| 2 | In Front of the Castle Photography |
+| 3 | At the Castle Model |
+| 4 | In the Kitchen |
+| 6 | On the Romanesque Forecourt |
+| 7 | On the Upper Terrace |
+| 8 | Lower Courtyard |
+| 11 | Tower |
+| 12 | Romanesque Palace |
+| L3 | The Ghost of Spiš Castle (Legend) |
 
-## Languages (Same as main app)
+## Languages (9 total)
 - English (en)
 - Slovak (sk)
 - German (de)
@@ -27,43 +29,60 @@ Based on Express Tour + stops 4 and 6:
 - Chinese (zh)
 - French (fr)
 
-## Features
-- All content editable from Admin panel
-- Background photo editable
-- Tour stop descriptions editable
-- Audio files manageable
-- Offline support
+## Key Differences from Main App
+1. **Single tour only** - No tour type selection (Express/Family/Complete)
+2. **Free** - Intended for free distribution
+3. **10 stops** instead of 13
+4. **Same admin panel** - All content editable
 
-## How to Create This App
+## App Store Info
+- **App Name**: Spiš Castle Free Tour
+- **iOS Bundle ID**: `com.spiscastle.freetour`
+- **Android Package**: `com.spiscastle.freetour`
 
-### Option 1: Fork Current Project
-1. Copy the entire `/app/frontend` folder
-2. Modify the tour stops data to include only: 1,2,3,4,6,7,8,11,12 + L3
-3. Update app.json with new package name
-4. Build with EAS
+## Project Structure
+```
+spis-express-tour/
+├── frontend/           # Expo React Native app
+│   ├── app/           # Screens
+│   │   ├── index.tsx          # Home (modified title)
+│   │   ├── language-select.tsx # Language selection
+│   │   ├── tour.tsx           # Tour list (filtered to 10 stops)
+│   │   ├── stop-detail.tsx    # Audio player
+│   │   ├── admin.tsx          # Admin panel
+│   │   └── admin-content.tsx  # Content editor
+│   ├── store/
+│   │   └── tourTypeStore.ts   # Simplified (single tour)
+│   ├── app.json       # New bundle IDs
+│   └── eas.json       # Build config
+├── backend/           # FastAPI backend (same as main)
+│   └── server.py
+└── README.md
+```
 
-### Option 2: Export Data and Create Fresh
-1. Export tour stops 1,2,3,4,6,7,8,11,12 + L3 from MongoDB
-2. Create new Expo project
-3. Import only the needed stops
-4. Build and deploy
+## Build Commands
+```bash
+cd frontend
 
-## Data to Export from Current App
+# Android APK (direct install)
+npx eas build --platform android --profile preview
 
-### MongoDB Collections to Copy:
-- `tour_stops` - Filter for stop_numbers: [1,2,3,4,6,7,8,11,12] and stop_name: "L3"
-- `tour_audio` - Filter for same stops
-- `app_settings` - Copy background image
+# Android AAB (Google Play)
+npx eas build --platform android --profile production
 
-### API Endpoints Needed:
-- GET /api/tour-stops (filtered)
-- GET /api/audio/stream/{stop_id}/{language}
-- GET/POST /api/images/background
-- GET/PUT /api/content/* (for editable content)
+# iOS (App Store)
+npx eas build --platform ios --profile production
+```
 
-## Package Names (Must be different from main app)
-- iOS: `com.spiscastle.expresstour`
-- Android: `com.spiscastle.expresstour`
+## Backend Deployment
+The backend is identical to the main app. You can:
+1. Share the same backend server (same database)
+2. Deploy separate backend with copied data for stops 1,2,3,4,6,7,8,11,12 + L3
 
-## App Name
-"Spiš Castle Express Tour" or "Spiš Castle Free Tour"
+## Files Changed from Main App
+1. `frontend/app.json` - New app name, bundle ID, package name
+2. `frontend/store/tourTypeStore.ts` - Simplified to single tour
+3. `frontend/app/index.tsx` - Changed subtitle, tour stop count
+4. `frontend/app/tour.tsx` - Simplified filtering logic
+5. `frontend/app/language-select.tsx` - Goes directly to tour (no tour-select)
+6. Deleted `frontend/app/tour-select.tsx` - Not needed
