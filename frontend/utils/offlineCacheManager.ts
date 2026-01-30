@@ -407,63 +407,31 @@ export class OfflineCacheManager {
     await this.preloadNextStops(currentStopNumber, tourStops, language, apiUrl, preloadCount, tourRoute);
   }
 
-  // Multi-language preload - downloads next stops in multiple languages
-  // Perfect for international visitors at the castle
+  // Multi-language preload - SIMPLIFIED: Only preloads the selected language
+  // The previous version was trying to preload multiple languages at once which caused issues
   static async multiLanguagePreload(
     currentStopNumber: number | null,
     tourStops: any[],
     primaryLanguage: string,
     apiUrl: string,
-    additionalLanguages: string[] = ['en', 'sk', 'hu', 'pl']
+    additionalLanguages: string[] = [] // Not used anymore - kept for backwards compatibility
   ): Promise<{ languages: Record<string, { preloaded: number; skipped: number; failed: number }> }> {
     const result: { languages: Record<string, { preloaded: number; skipped: number; failed: number }> } = {
       languages: {}
     };
 
-    if (!currentStopNumber) {
-      console.log('[MultiPreload] No stop number, skipping');
-      return result;
-    }
-
-    // Build unique list of languages to preload (primary first, then additional)
-    const languagesToPreload = [primaryLanguage];
-    for (const lang of additionalLanguages) {
-      if (!languagesToPreload.includes(lang)) {
-        languagesToPreload.push(lang);
-      }
-    }
-
-    console.log(`[MultiPreload] ========================================`);
-    console.log(`[MultiPreload] Starting multi-language preload`);
-    console.log(`[MultiPreload] Current stop: ${currentStopNumber}`);
-    console.log(`[MultiPreload] Languages: ${languagesToPreload.join(', ')}`);
-
-    // Determine preload count based on zone
-    let preloadCount = 2;
-    if (currentStopNumber >= 9 && currentStopNumber <= 13) {
-      preloadCount = 4; // Poor coverage zone - preload more
-      console.log(`[MultiPreload] Poor coverage zone - preloading ${preloadCount} stops per language`);
-    }
-
-    // Preload each language
-    for (const lang of languagesToPreload) {
-      console.log(`[MultiPreload] --- Preloading ${lang.toUpperCase()} ---`);
-      const langResult = await this.preloadNextStops(
-        currentStopNumber,
-        tourStops,
-        lang,
-        apiUrl,
-        preloadCount
-      );
-      result.languages[lang] = langResult;
-    }
-
-    // Summary
-    const totalPreloaded = Object.values(result.languages).reduce((sum, r) => sum + r.preloaded, 0);
-    const totalSkipped = Object.values(result.languages).reduce((sum, r) => sum + r.skipped, 0);
-    console.log(`[MultiPreload] ========================================`);
-    console.log(`[MultiPreload] Complete: ${totalPreloaded} files preloaded, ${totalSkipped} skipped`);
-    console.log(`[MultiPreload] ========================================`);
+    // Only preload the primary language
+    console.log(`[MultiPreload] Preloading only selected language: ${primaryLanguage}`);
+    
+    const langResult = await this.preloadNextStops(
+      currentStopNumber,
+      tourStops,
+      primaryLanguage,
+      apiUrl,
+      3 // Preload 3 stops
+    );
+    
+    result.languages[primaryLanguage] = langResult;
 
     return result;
   }
