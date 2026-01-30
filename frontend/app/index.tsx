@@ -34,6 +34,14 @@ export default function Index() {
       <StatusBar style="light" />
       <View style={styles.overlay} />
       
+      {/* Admin Button - Top Right Corner */}
+      <TouchableOpacity
+        style={styles.adminButton}
+        onPress={() => router.push('/admin-login')}
+      >
+        <Ionicons name="settings-outline" size={22} color="#FFD700" />
+      </TouchableOpacity>
+      
       <View style={styles.content}>
         {/* Castle Icon */}
         <View style={styles.iconContainer}>
