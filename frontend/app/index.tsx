@@ -9,10 +9,6 @@ const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 export default function Index() {
   const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchBackgroundImage();
-  }, []);
-
   const fetchBackgroundImage = async () => {
     try {
       console.log('Fetching background from:', `${API_URL}/api/images/background`);
@@ -28,6 +24,10 @@ export default function Index() {
       console.error('Error fetching background:', error);
     }
   };
+
+  useEffect(() => {
+    fetchBackgroundImage();
+  }, []);
 
   const content = (
     <View style={styles.container}>
