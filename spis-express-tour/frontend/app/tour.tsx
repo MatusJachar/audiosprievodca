@@ -4,7 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useTourStore } from '../store/tourStore';
 import { useLanguageStore } from '../store/languageStore';
-import { useTourTypeStore } from '../store/tourTypeStore';
+import { TOUR_STOPS, LEGEND_INDEX } from '../store/tourTypeStore';
 import { useEffect, useMemo, useState, useRef } from 'react';
 import BackgroundWrapper from '../components/BackgroundWrapper';
 import { OfflineCacheManager } from '../utils/offlineCacheManager';
@@ -14,7 +14,6 @@ const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 export default function Tour() {
   const { tourStops, userProgress, loading, fetchTourStops, fetchUserProgress } = useTourStore();
   const selectedLanguage = useLanguageStore((state) => state.selectedLanguage);
-  const { getTourRoute } = useTourTypeStore();
   const [showDownloadModal, setShowDownloadModal] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState({ total: 0, downloaded: 0, currentItem: '' });
@@ -45,28 +44,25 @@ export default function Tour() {
   }, [selectedLanguage]);
 
   // Initial preload: When user enters tour, preload first 3 stops
-  // This happens after language and tour type selection
-  // NOW TOUR-ROUTE AWARE
   useEffect(() => {
     const runInitialPreload = async () => {
       if (!API_URL || tourStops.length === 0 || initialPreloadDone.current) return;
       
       initialPreloadDone.current = true;
       
-      const tourRoute = getTourRoute();
-      console.log(`[Tour] Starting initial preload for ${tourRoute.name}`);
-      console.log(`[Tour] Tour route: ${tourRoute.stopNumbers.join(' → ')}`);
+      console.log(`[Tour] Starting initial preload for Express+ Tour`);
+      console.log(`[Tour] Tour route: ${TOUR_STOPS.join(' → ')}`);
       setInitialPreloadStatus('Preparing tour...');
       
       try {
-        // Preload first 3 stops of the SELECTED TOUR ROUTE
+        // Preload first 3 stops
         await OfflineCacheManager.preloadNextStops(
-          0, // Start from beginning
+          0,
           tourStops,
           selectedLanguage,
           API_URL,
-          3, // Preload first 3 stops
-          tourRoute.stopNumbers // Pass the actual tour route!
+          3,
+          TOUR_STOPS
         );
         
         setInitialPreloadStatus('');
@@ -77,7 +73,6 @@ export default function Tour() {
       }
     };
 
-    // Run after a short delay to not block initial render
     const timer = setTimeout(runInitialPreload, 2000);
     return () => clearTimeout(timer);
   }, [tourStops.length, selectedLanguage]);
