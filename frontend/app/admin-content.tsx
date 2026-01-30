@@ -788,6 +788,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
   },
+  tabsScroll: {
+    backgroundColor: '#1a1a1a',
+    maxHeight: 60,
+  },
   tabs: {
     flexDirection: 'row',
     backgroundColor: '#1a1a1a',
@@ -796,14 +800,15 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   tab: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 12,
+    paddingHorizontal: 16,
     borderRadius: 10,
     backgroundColor: 'rgba(255,215,0,0.1)',
     gap: 6,
+    minWidth: 80,
   },
   tabActive: {
     backgroundColor: '#FFD700',
