@@ -369,15 +369,16 @@ export default function Admin() {
         </TouchableOpacity>
       </View>
 
-      {/* Background Image Section */}
-      <View style={styles.backgroundSection}>
-        <Text style={styles.sectionTitle}>Background Image</Text>
-        <TouchableOpacity
-          style={styles.backgroundButton}
-          onPress={pickBackgroundImage}
-          disabled={uploadingImage}
-        >
-          {backgroundImage ? (
+      <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+        {/* Background Image Section */}
+        <View style={styles.backgroundSection}>
+          <Text style={styles.sectionTitle}>Background Image</Text>
+          <TouchableOpacity
+            style={styles.backgroundButton}
+            onPress={pickBackgroundImage}
+            disabled={uploadingImage}
+          >
+            {backgroundImage ? (
             <Image 
               source={{ uri: `data:image/png;base64,${backgroundImage}` }} 
               style={styles.backgroundPreview}
