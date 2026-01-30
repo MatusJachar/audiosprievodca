@@ -276,8 +276,8 @@ export default function Tour() {
         </View>
         
         <View style={styles.headerTitleContainer}>
-          <Text style={styles.headerTitle}>{getTourRoute().name}</Text>
-          <Text style={styles.headerSubtitle}>{getTourRoute().duration}</Text>
+          <Text style={styles.headerTitle}>Express+ Tour</Text>
+          <Text style={styles.headerSubtitle}>45-60 minutes</Text>
         </View>
         
         {/* Progress Bar */}
