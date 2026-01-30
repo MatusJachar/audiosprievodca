@@ -4,7 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useTourStore } from '../store/tourStore';
 import { useLanguageStore } from '../store/languageStore';
-import { TOUR_STOPS, LEGEND_INDEX, useTourTypeStore } from '../store/tourTypeStore';
+import { TOUR_STOPS, LEGEND_INDEX } from '../store/tourTypeStore';
 import { useEffect, useMemo, useState, useRef } from 'react';
 import BackgroundWrapper from '../components/BackgroundWrapper';
 import { OfflineCacheManager } from '../utils/offlineCacheManager';
