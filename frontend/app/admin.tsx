@@ -412,12 +412,12 @@ export default function Admin() {
         <Ionicons name="chevron-forward" size={24} color="#aaa" />
       </TouchableOpacity>
       
-      <FlatList
-        data={tourStops}
-        renderItem={renderStopItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
-      />
+      {/* Tour Stops List */}
+      <View style={styles.listContent}>
+        {tourStops.map((item) => renderStopItem({ item }))}
+      </View>
+      
+      </ScrollView>
       
       {/* Image Upload Modal */}
       <Modal
