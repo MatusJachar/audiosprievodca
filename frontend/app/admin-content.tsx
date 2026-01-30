@@ -51,9 +51,13 @@ interface DiscoverContent {
 export default function AdminContent() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [checking, setChecking] = useState(true);
-  const [activeSection, setActiveSection] = useState<ContentSection>('shop');
+  const [activeSection, setActiveSection] = useState<ContentSection>('background');
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  
+  // Background image state
+  const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
   
   // Content states
   const [shopContent, setShopContent] = useState<ShopContent>({
@@ -103,6 +107,13 @@ export default function AdminContent() {
     }
   }, [isAuthenticated, activeSection]);
 
+  // Fetch background image on load
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchBackgroundImage();
+    }
+  }, [isAuthenticated]);
+
   const checkAuth = async () => {
     const auth = await AsyncStorage.getItem('admin_authenticated');
     if (auth === 'true') {
@@ -113,7 +124,58 @@ export default function AdminContent() {
     setChecking(false);
   };
 
+  const fetchBackgroundImage = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/images/background`);
+      const data = await response.json();
+      if (data.background_image_base64) {
+        setBackgroundImage(data.background_image_base64);
+      }
+    } catch (error) {
+      console.error('Error fetching background:', error);
+    }
+  };
+
+  const pickBackgroundImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [16, 9],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0].uri) {
+      setUploadingImage(true);
+      try {
+        const base64 = await FileSystem.readAsStringAsync(result.assets[0].uri, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+
+        const response = await fetch(`${API_URL}/api/images/background`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image_base64: base64 }),
+        });
+
+        if (response.ok) {
+          Alert.alert('Success', 'Background image updated successfully!');
+          setBackgroundImage(base64);
+        } else {
+          Alert.alert('Error', 'Failed to upload background image');
+        }
+      } catch (error) {
+        Alert.alert('Error', 'Network error occurred');
+      } finally {
+        setUploadingImage(false);
+      }
+    }
+  };
+
   const fetchContent = async () => {
+    if (activeSection === 'background') {
+      return; // Background is handled separately
+    }
+    
     setLoading(true);
     try {
       let endpoint = '';
