@@ -175,7 +175,7 @@ eas submit --platform android
 
 ## Backend Deployment Note
 
-The app currently connects to: `https://castleaudio.preview.emergentagent.com`
+The app currently connects to: `https://spiscastletour.preview.emergentagent.com`
 
 For production, you'll need to:
 1. Deploy the backend to a production server
