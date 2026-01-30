@@ -376,35 +376,35 @@ export class OfflineCacheManager {
 
   // Smart preload for poor coverage areas (stops 10-13)
   // Preloads more aggressively when in these areas
-  // NOW TOUR-ROUTE AWARE
   static async smartPreload(
     currentStopNumber: number | null,
     tourStops: any[],
     language: string,
     apiUrl: string,
-    tourRoute?: number[] // Optional: specific tour route order
+    tourRoute?: number[]
   ): Promise<void> {
-    if (!currentStopNumber) return;
-
-    // Define poor coverage zones and their preload settings
-    const POOR_COVERAGE_ZONES = [
-      { start: 9, end: 13, preloadCount: 4, name: 'Upper Castle (poor coverage)' },
-      { start: 1, end: 3, preloadCount: 2, name: 'Entrance area' },
-    ];
-
-    // Check if we're in a poor coverage zone
-    const zone = POOR_COVERAGE_ZONES.find(
-      z => currentStopNumber >= z.start && currentStopNumber <= z.end
-    );
-
-    if (zone) {
-      console.log(`[SmartPreload] In ${zone.name}, preloading ${zone.preloadCount} stops`);
-      await this.preloadNextStops(currentStopNumber, tourStops, language, apiUrl, zone.preloadCount, tourRoute);
-    } else {
-      // Default: preload next 2 stops
-      console.log(`[SmartPreload] Standard area, preloading 2 stops`);
-      await this.preloadNextStops(currentStopNumber, tourStops, language, apiUrl, 2, tourRoute);
+    // Validate inputs
+    if (!language || !apiUrl) {
+      console.log('[SmartPreload] Missing language or apiUrl');
+      return;
     }
+
+    // Default preload count
+    let preloadCount = 2;
+    
+    // In poor coverage zones (upper castle), preload more
+    if (currentStopNumber && currentStopNumber >= 9 && currentStopNumber <= 13) {
+      preloadCount = 4;
+      console.log(`[SmartPreload] Poor coverage zone (stop #${currentStopNumber}), preloading ${preloadCount} stops`);
+    } else if (currentStopNumber) {
+      console.log(`[SmartPreload] Standard zone (stop #${currentStopNumber}), preloading ${preloadCount} stops`);
+    } else {
+      // Initial preload (no current stop)
+      preloadCount = 3;
+      console.log(`[SmartPreload] Initial preload, downloading first ${preloadCount} stops`);
+    }
+
+    await this.preloadNextStops(currentStopNumber, tourStops, language, apiUrl, preloadCount, tourRoute);
   }
 
   // Multi-language preload - downloads next stops in multiple languages
