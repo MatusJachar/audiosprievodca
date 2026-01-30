@@ -3,22 +3,30 @@ import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useEffect } from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+
+// New color scheme - Deep royal blue/purple theme
+const COLORS = {
+  primary: '#4A90D9',      // Royal blue
+  secondary: '#7B68EE',    // Medium slate blue
+  accent: '#E8B923',       // Golden accent
+  dark: '#1a1a2e',         // Dark background
+  darker: '#0f0f1a',       // Darker shade
+  text: '#ffffff',
+  textSecondary: '#b8c5d6',
+};
 
 export default function Index() {
   const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
 
   const fetchBackgroundImage = async () => {
     try {
-      console.log('Fetching background from:', `${API_URL}/api/images/background`);
       const response = await fetch(`${API_URL}/api/images/background`);
       const data = await response.json();
-      console.log('Background response:', { hasImage: !!data.background_image_base64, length: data.background_image_base64?.length });
       if (data.background_image_base64) {
-        const imageUri = `data:image/png;base64,${data.background_image_base64}`;
-        console.log('Setting background image, length:', imageUri.length);
-        setBackgroundImage(imageUri);
+        setBackgroundImage(`data:image/png;base64,${data.background_image_base64}`);
       }
     } catch (error) {
       console.error('Error fetching background:', error);
@@ -32,121 +40,114 @@ export default function Index() {
   const content = (
     <View style={styles.container}>
       <StatusBar style="light" />
-      <View style={styles.overlay} />
+      
+      {/* Gradient Overlay */}
+      <LinearGradient
+        colors={['rgba(26,26,46,0.3)', 'rgba(26,26,46,0.7)', 'rgba(15,15,26,0.95)']}
+        style={styles.overlay}
+      />
       
       {/* Admin Button - Top Right Corner */}
       <TouchableOpacity
         style={styles.adminButton}
         onPress={() => router.push('/admin-login')}
       >
-        <Ionicons name="settings-outline" size={22} color="#FFD700" />
+        <Ionicons name="settings-outline" size={22} color={COLORS.accent} />
       </TouchableOpacity>
       
       <View style={styles.content}>
-        {/* Castle Icon */}
-        <View style={styles.iconContainer}>
-          <Ionicons name="business" size={90} color="#FFD700" />
+        {/* Logo */}
+        <View style={styles.logoContainer}>
+          <Image 
+            source={require('../assets/images/logo.png')} 
+            style={styles.logo}
+            resizeMode="contain"
+          />
         </View>
         
         {/* Title Section */}
-        <Text style={styles.title}>Spiš Castle</Text>
-        <Text style={styles.subtitle}>Free Audio Tour</Text>
+        <Text style={styles.title}>Spišský hrad</Text>
+        <Text style={styles.subtitle}>Audiosprievodca</Text>
         
-        {/* Divider */}
-        <View style={styles.divider} />
-        
-        {/* Description Section */}
-        <View style={styles.descriptionContainer}>
-          <Text style={styles.descriptionBold}>
-            Explore, Discover & Immerse yourself
-          </Text>
-          <Text style={styles.descriptionHighlight}>
-            in the largest UNESCO World Heritage
-          </Text>
-          <Text style={styles.descriptionHighlight}>
-            castle complex in Europe
-          </Text>
+        {/* Decorative Line */}
+        <View style={styles.dividerContainer}>
+          <View style={styles.dividerLine} />
+          <Ionicons name="shield" size={20} color={COLORS.accent} />
+          <View style={styles.dividerLine} />
         </View>
         
-        <Text style={styles.descriptionSecondary}>
-          Our audio guide will take you through centuries{'\n'}of history, architecture and legends
-        </Text>
+        {/* Slovak Description */}
+        <View style={styles.descriptionContainer}>
+          <Text style={styles.description}>
+            Ponorte sa do histórie jedného z najväčších hradných komplexov v Európe.
+          </Text>
+          <Text style={styles.descriptionHighlight}>
+            Naša interaktívna audioprehliadka vás prevedie storočiami histórie, architektúry a legiend.
+          </Text>
+        </View>
         
         {/* Start Button */}
         <TouchableOpacity
           style={styles.startButton}
           onPress={() => router.push('/language-select')}
         >
-          <Text style={styles.startButtonText}>Start Tour</Text>
-          <Ionicons name="arrow-forward" size={24} color="#000" />
+          <LinearGradient
+            colors={[COLORS.primary, COLORS.secondary]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.startButtonGradient}
+          >
+            <Text style={styles.startButtonText}>Začať prehliadku</Text>
+            <Ionicons name="arrow-forward" size={24} color="#fff" />
+          </LinearGradient>
         </TouchableOpacity>
-        
-        {/* Quick Access Buttons - 3 in a row */}
-        <View style={styles.quickButtons}>
-          <TouchableOpacity
-            style={styles.quickButton}
-            onPress={() => router.push('/travel-info')}
-          >
-            <Ionicons name="bus" size={20} color="#FFD700" />
-            <Text style={styles.quickButtonText}>Get Back</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            style={styles.quickButton}
-            onPress={() => router.push('/shop')}
-          >
-            <Ionicons name="cart" size={20} color="#FFD700" />
-            <Text style={styles.quickButtonText}>Shop</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            style={styles.quickButton}
-            onPress={() => router.push('/discover-region')}
-          >
-            <Ionicons name="compass" size={20} color="#FFD700" />
-            <Text style={styles.quickButtonText}>Nearby</Text>
-          </TouchableOpacity>
-        </View>
         
         {/* Features Section */}
         <View style={styles.features}>
           <View style={styles.feature}>
             <View style={styles.featureIcon}>
-              <Ionicons name="language" size={32} color="#FFD700" />
+              <Ionicons name="language" size={28} color={COLORS.primary} />
             </View>
             <Text style={styles.featureNumber}>9</Text>
-            <Text style={styles.featureText}>Languages</Text>
+            <Text style={styles.featureText}>Jazykov</Text>
           </View>
           <View style={styles.featureDivider} />
           <View style={styles.feature}>
             <View style={styles.featureIcon}>
-              <Ionicons name="location" size={32} color="#FFD700" />
+              <Ionicons name="location" size={28} color={COLORS.primary} />
             </View>
             <Text style={styles.featureNumber}>10</Text>
-            <Text style={styles.featureText}>Tour Stops</Text>
+            <Text style={styles.featureText}>Zastávok</Text>
           </View>
           <View style={styles.featureDivider} />
           <View style={styles.feature}>
             <View style={styles.featureIcon}>
-              <Ionicons name="cloud-offline" size={32} color="#FFD700" />
+              <Ionicons name="cloud-offline" size={28} color={COLORS.primary} />
             </View>
             <Text style={styles.featureNumber}>✓</Text>
-            <Text style={styles.featureText}>Offline Mode</Text>
+            <Text style={styles.featureText}>Offline</Text>
           </View>
+        </View>
+        
+        {/* UNESCO Badge */}
+        <View style={styles.unescoBadge}>
+          <Ionicons name="ribbon" size={16} color={COLORS.accent} />
+          <Text style={styles.unescoText}>UNESCO Svetové dedičstvo</Text>
         </View>
       </View>
     </View>
   );
 
-  if (backgroundImage) {
-    return (
-      <ImageBackground source={{ uri: backgroundImage }} style={styles.backgroundImage} blurRadius={2}>
-        {content}
-      </ImageBackground>
-    );
-  }
+  // Use local background image if API background not loaded
+  const backgroundSource = backgroundImage 
+    ? { uri: backgroundImage }
+    : require('../assets/images/background.png');
 
-  return content;
+  return (
+    <ImageBackground source={backgroundSource} style={styles.backgroundImage}>
+      {content}
+    </ImageBackground>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -155,7 +156,6 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.55)',
   },
   container: {
     flex: 1,
@@ -166,102 +166,115 @@ const styles = StyleSheet.create({
     top: 50,
     right: 16,
     zIndex: 10,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(26,26,46,0.7)',
     padding: 10,
     borderRadius: 25,
     borderWidth: 1,
-    borderColor: 'rgba(255,215,0,0.3)',
+    borderColor: 'rgba(74,144,217,0.3)',
   },
   content: {
     flex: 1,
-    alignItems: 'center',
     justifyContent: 'center',
-    padding: 24,
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingTop: 60,
   },
-  iconContainer: {
-    marginBottom: 8,
+  logoContainer: {
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  logo: {
+    width: 80,
+    height: 80,
+    tintColor: COLORS.accent,
   },
   title: {
     fontSize: 42,
     fontWeight: 'bold',
-    color: '#fff',
-    marginTop: 12,
+    color: COLORS.text,
     textAlign: 'center',
-    letterSpacing: 1,
+    letterSpacing: 2,
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   subtitle: {
-    fontSize: 22,
-    color: '#FFD700',
+    fontSize: 18,
+    color: COLORS.primary,
     marginTop: 4,
-    textAlign: 'center',
     fontWeight: '500',
-    letterSpacing: 2,
+    letterSpacing: 4,
+    textTransform: 'uppercase',
   },
-  divider: {
-    width: 60,
-    height: 3,
-    backgroundColor: '#FFD700',
-    marginVertical: 20,
-    borderRadius: 2,
-  },
-  descriptionContainer: {
-    alignItems: 'center',
-  },
-  descriptionBold: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#fff',
-    textAlign: 'center',
-    marginBottom: 4,
-  },
-  descriptionHighlight: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#FFD700',
-    textAlign: 'center',
-    lineHeight: 26,
-  },
-  descriptionSecondary: {
-    fontSize: 15,
-    color: 'rgba(255,255,255,0.8)',
-    textAlign: 'center',
-    lineHeight: 22,
-    marginTop: 16,
-    fontStyle: 'italic',
-  },
-  startButton: {
+  dividerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFD700',
-    paddingHorizontal: 40,
-    paddingVertical: 18,
-    borderRadius: 30,
-    marginTop: 32,
-    gap: 10,
-    shadowColor: '#FFD700',
+    marginVertical: 20,
+    gap: 12,
+  },
+  dividerLine: {
+    width: 50,
+    height: 1,
+    backgroundColor: COLORS.accent,
+    opacity: 0.5,
+  },
+  descriptionContainer: {
+    marginBottom: 24,
+    paddingHorizontal: 8,
+  },
+  description: {
+    fontSize: 16,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 8,
+  },
+  descriptionHighlight: {
+    fontSize: 15,
+    color: COLORS.text,
+    textAlign: 'center',
+    lineHeight: 22,
+    fontStyle: 'italic',
+    opacity: 0.9,
+  },
+  startButton: {
+    width: '100%',
+    marginBottom: 32,
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: COLORS.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
   },
+  startButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 18,
+    gap: 12,
+  },
   startButtonText: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
-    color: '#000',
+    color: COLORS.text,
   },
   features: {
     flexDirection: 'row',
-    marginTop: 48,
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    paddingVertical: 20,
-    paddingHorizontal: 24,
+    justifyContent: 'center',
+    backgroundColor: 'rgba(26,26,46,0.6)',
     borderRadius: 16,
-    gap: 16,
+    paddingVertical: 20,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(74,144,217,0.2)',
+    marginBottom: 20,
   },
   feature: {
+    flex: 1,
     alignItems: 'center',
-    paddingHorizontal: 12,
   },
   featureIcon: {
     marginBottom: 8,
@@ -269,42 +282,32 @@ const styles = StyleSheet.create({
   featureNumber: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#FFD700',
-    marginBottom: 2,
+    color: COLORS.text,
   },
   featureText: {
-    fontSize: 13,
-    color: '#ccc',
-    fontWeight: '500',
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    marginTop: 2,
   },
   featureDivider: {
     width: 1,
     height: 50,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: 'rgba(74,144,217,0.3)',
   },
-  quickButtons: {
-    flexDirection: 'row',
-    marginTop: 20,
-    gap: 10,
-  },
-  quickButton: {
+  unescoBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderRadius: 25,
-    gap: 6,
+    backgroundColor: 'rgba(232,185,35,0.15)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    gap: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255,215,0,0.3)',
+    borderColor: 'rgba(232,185,35,0.3)',
   },
-  quickButtonHighlight: {
-    backgroundColor: 'rgba(139,69,19,0.5)',
-    borderColor: 'rgba(255,215,0,0.6)',
-  },
-  quickButtonText: {
-    fontSize: 13,
-    color: '#fff',
-    fontWeight: '500',
+  unescoText: {
+    fontSize: 12,
+    color: COLORS.accent,
+    fontWeight: '600',
   },
 });
