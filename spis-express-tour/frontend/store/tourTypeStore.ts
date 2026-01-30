@@ -1,72 +1,17 @@
 import { create } from 'zustand';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export type TourType = 'family' | 'complete' | 'express';
+// This app has only one tour - the Express+ tour
+// Stops: 1, 2, 3, 4, 6, 7, 8, 11, 12 + Legend L3 (The Ghost of Spiš Castle)
 
-interface TourRoute {
-  id: TourType;
-  name: string;
-  description: string;
-  icon: string;
-  duration: string;
-  stopNumbers: number[];
-  legendIndexes: number[]; // 0-based indexes for legends array
-  totalLegends: number; // Total legends including those embedded in tour stop descriptions
-}
-
-export const TOUR_ROUTES: Record<TourType, TourRoute> = {
-  family: {
-    id: 'family',
-    name: 'Family Tour',
-    description: 'Kid-friendly stops with entertaining legends',
-    icon: 'people',
-    duration: '~1 hour',
-    stopNumbers: [1, 2, 4, 8, 9, 11, 12],
-    legendIndexes: [0, 3], // 1st and 4th legends
-    totalLegends: 5, // 2 dedicated legends + 3 embedded in descriptions
-  },
-  complete: {
-    id: 'complete',
-    name: 'Complete Tour',
-    description: 'Experience the full castle with all stops and legends',
-    icon: 'trophy',
-    duration: '~2.5 hours',
-    stopNumbers: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
-    legendIndexes: [0, 1, 2, 3], // All 4 legends
-    totalLegends: 6, // 4 dedicated legends + 2 embedded in descriptions
-  },
-  express: {
-    id: 'express',
-    name: 'Express Tour',
-    description: 'Highlights and must-see stops for visitors on the go',
-    icon: 'flash',
-    duration: '~45 minutes',
-    stopNumbers: [1, 2, 3, 7, 8, 11, 12],
-    legendIndexes: [2], // 3rd legend
-    totalLegends: 3, // 1 dedicated legend + 2 embedded in descriptions
-  },
-};
+export const TOUR_STOPS = [1, 2, 3, 4, 6, 7, 8, 11, 12];
+export const LEGEND_INDEX = 2; // L3 - The Ghost of Spiš Castle (0-indexed as 3rd legend)
 
 interface TourTypeState {
-  selectedTourType: TourType;
-  setTourType: (tourType: TourType) => Promise<void>;
-  getTourRoute: () => TourRoute;
+  getTourStops: () => number[];
+  getLegendIndex: () => number;
 }
 
-export const useTourTypeStore = create<TourTypeState>((set, get) => ({
-  selectedTourType: 'complete',
-
-  setTourType: async (tourType: TourType) => {
-    set({ selectedTourType: tourType });
-    try {
-      await AsyncStorage.setItem('selectedTourType', tourType);
-    } catch (error) {
-      console.error('Error saving tour type:', error);
-    }
-  },
-
-  getTourRoute: () => {
-    const { selectedTourType } = get();
-    return TOUR_ROUTES[selectedTourType];
-  },
+export const useTourTypeStore = create<TourTypeState>(() => ({
+  getTourStops: () => TOUR_STOPS,
+  getLegendIndex: () => LEGEND_INDEX,
 }));
