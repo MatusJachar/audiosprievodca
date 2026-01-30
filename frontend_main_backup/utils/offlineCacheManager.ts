@@ -1,0 +1,438 @@
+import * as FileSystem from 'expo-file-system';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
+
+const CACHE_DIR = FileSystem.documentDirectory ? `${FileSystem.documentDirectory}audio_cache/` : null;
+const TOUR_CACHED_PREFIX = 'tour_cached_';
+
+export class OfflineCacheManager {
+  
+  // Check if FileSystem is available (standalone app, not Expo Go on some devices)
+  static isFileSystemAvailable(): boolean {
+    return Platform.OS !== 'web' && !!FileSystem.documentDirectory;
+  }
+
+  // Ensure cache directory exists
+  static async ensureCacheDir(): Promise<boolean> {
+    if (!CACHE_DIR) return false;
+    
+    try {
+      const dirInfo = await FileSystem.getInfoAsync(CACHE_DIR);
+      if (!dirInfo.exists) {
+        await FileSystem.makeDirectoryAsync(CACHE_DIR, { intermediates: true });
+      }
+      return true;
+    } catch (error) {
+      console.error('Failed to create cache directory:', error);
+      return false;
+    }
+  }
+
+  // Save audio to FileSystem (for standalone builds)
+  static async saveAudio(stopId: string, language: string, audioBase64: string): Promise<boolean> {
+    if (!audioBase64 || audioBase64.length === 0) return false;
+    
+    // Try FileSystem first (works in standalone builds)
+    if (this.isFileSystemAvailable() && CACHE_DIR) {
+      try {
+        await this.ensureCacheDir();
+        const filePath = `${CACHE_DIR}${stopId}_${language}.mp3`;
+        await FileSystem.writeAsStringAsync(filePath, audioBase64, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        console.log(`Saved to FileSystem: ${stopId}_${language}.mp3`);
+        return true;
+      } catch (error) {
+        console.warn('FileSystem save failed, trying AsyncStorage:', error);
+      }
+    }
+    
+    // Fallback to AsyncStorage (limited size)
+    try {
+      const key = `offline_audio_${stopId}_${language}`;
+      await AsyncStorage.setItem(key, audioBase64);
+      console.log(`Saved to AsyncStorage: ${stopId}_${language}`);
+      return true;
+    } catch (error) {
+      console.error('Failed to save audio:', error);
+      return false;
+    }
+  }
+
+  // Get cached audio URI
+  static async getCachedAudioUri(stopId: string, language: string): Promise<string | null> {
+    // Try FileSystem first
+    if (this.isFileSystemAvailable() && CACHE_DIR) {
+      try {
+        const filePath = `${CACHE_DIR}${stopId}_${language}.mp3`;
+        const fileInfo = await FileSystem.getInfoAsync(filePath);
+        if (fileInfo.exists) {
+          console.log(`Found in FileSystem: ${filePath}`);
+          return filePath; // Return file:// URI directly
+        }
+      } catch (error) {
+        console.warn('FileSystem read failed:', error);
+      }
+    }
+    
+    // Try AsyncStorage
+    try {
+      const key = `offline_audio_${stopId}_${language}`;
+      const cached = await AsyncStorage.getItem(key);
+      if (cached && cached.length > 0) {
+        console.log(`Found in AsyncStorage: ${stopId}_${language}`);
+        return `data:audio/mp3;base64,${cached}`;
+      }
+    } catch (error) {
+      console.warn('AsyncStorage read failed:', error);
+    }
+    
+    return null;
+  }
+
+  // Check if tour is cached
+  static async isTourCached(language: string): Promise<boolean> {
+    try {
+      const cached = await AsyncStorage.getItem(`${TOUR_CACHED_PREFIX}${language}`);
+      return cached === 'true';
+    } catch {
+      return false;
+    }
+  }
+
+  // Download tour for offline
+  static async downloadTourForOffline(
+    tourStops: any[],
+    language: string,
+    apiUrl: string,
+    onProgress?: (progress: { total: number; downloaded: number; currentItem: string }) => void
+  ): Promise<void> {
+    console.log('=== Starting Offline Download ===');
+    console.log(`FileSystem available: ${this.isFileSystemAvailable()}`);
+    console.log(`Cache directory: ${CACHE_DIR}`);
+    console.log(`Tour stops: ${tourStops.length}`);
+    console.log(`Language: ${language}`);
+    
+    const total = tourStops.length;
+    let downloaded = 0;
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const stop of tourStops) {
+      const title = stop.content?.[language]?.title || stop.content?.['en']?.title || `Stop ${stop.stop_number}`;
+      
+      onProgress?.({ total, downloaded, currentItem: `Downloading: ${title}` });
+
+      try {
+        // Fetch full stop data with audio
+        const response = await fetch(`${apiUrl}/api/tour-stops/${stop.id}`);
+        if (response.ok) {
+          const data = await response.json();
+          const audio = data.audio?.[language];
+          if (audio && audio.length > 0) {
+            const saved = await this.saveAudio(stop.id, language, audio);
+            if (saved) {
+              successCount++;
+              console.log(`✓ Downloaded: ${title}`);
+            } else {
+              errorCount++;
+              console.warn(`✗ Failed to save: ${title}`);
+            }
+          } else {
+            console.warn(`No audio for: ${title}`);
+          }
+        }
+      } catch (e) {
+        errorCount++;
+        console.error(`Error downloading ${title}:`, e);
+      }
+      
+      downloaded++;
+      onProgress?.({ total, downloaded, currentItem: title });
+    }
+
+    // Mark tour as cached
+    await AsyncStorage.setItem(`${TOUR_CACHED_PREFIX}${language}`, 'true');
+    
+    console.log('=== Download Complete ===');
+    console.log(`Success: ${successCount}, Errors: ${errorCount}`);
+    
+    onProgress?.({ total, downloaded: total, currentItem: 'Complete!' });
+  }
+
+  // Get cache size
+  static async getCacheSize(): Promise<number> {
+    let totalSize = 0;
+    
+    // Check FileSystem cache
+    if (this.isFileSystemAvailable() && CACHE_DIR) {
+      try {
+        const dirInfo = await FileSystem.getInfoAsync(CACHE_DIR);
+        if (dirInfo.exists) {
+          const files = await FileSystem.readDirectoryAsync(CACHE_DIR);
+          for (const file of files) {
+            const fileInfo = await FileSystem.getInfoAsync(`${CACHE_DIR}${file}`);
+            if (fileInfo.exists && 'size' in fileInfo) {
+              totalSize += fileInfo.size || 0;
+            }
+          }
+        }
+      } catch (error) {
+        console.warn('Error getting cache size:', error);
+      }
+    }
+    
+    return totalSize;
+  }
+
+  // Clear cache
+  static async clearCache(): Promise<void> {
+    console.log('Clearing offline cache...');
+    
+    // Clear FileSystem cache
+    if (this.isFileSystemAvailable() && CACHE_DIR) {
+      try {
+        const dirInfo = await FileSystem.getInfoAsync(CACHE_DIR);
+        if (dirInfo.exists) {
+          await FileSystem.deleteAsync(CACHE_DIR, { idempotent: true });
+          console.log('FileSystem cache cleared');
+        }
+      } catch (error) {
+        console.warn('Error clearing FileSystem cache:', error);
+      }
+    }
+    
+    // Clear AsyncStorage cache
+    try {
+      const keys = await AsyncStorage.getAllKeys();
+      const cacheKeys = keys.filter(k => 
+        k.startsWith('offline_audio_') || k.startsWith(TOUR_CACHED_PREFIX)
+      );
+      if (cacheKeys.length > 0) {
+        await AsyncStorage.multiRemove(cacheKeys);
+        console.log(`Cleared ${cacheKeys.length} AsyncStorage entries`);
+      }
+    } catch (error) {
+      console.warn('Error clearing AsyncStorage cache:', error);
+    }
+    
+    console.log('Cache cleared');
+  }
+
+  // Format bytes to human readable
+  static formatBytes(bytes: number): string {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  }
+
+  // Check if a specific stop is cached
+  static async isStopCached(stopId: string, language: string): Promise<boolean> {
+    // Check FileSystem
+    if (this.isFileSystemAvailable() && CACHE_DIR) {
+      try {
+        const filePath = `${CACHE_DIR}${stopId}_${language}.mp3`;
+        const fileInfo = await FileSystem.getInfoAsync(filePath);
+        if (fileInfo.exists) return true;
+      } catch {}
+    }
+    
+    // Check AsyncStorage
+    try {
+      const key = `offline_audio_${stopId}_${language}`;
+      const cached = await AsyncStorage.getItem(key);
+      if (cached && cached.length > 100) return true;
+    } catch {}
+    
+    return false;
+  }
+
+  // Preload next stops in background (for poor coverage areas like stops 10-13)
+  // SIMPLIFIED VERSION - Direct ArrayBuffer approach (works in React Native)
+  static async preloadNextStops(
+    currentStopNumber: number | null,
+    tourStops: any[],
+    language: string,
+    apiUrl: string,
+    preloadCount: number = 3,
+    tourRoute?: number[] // Optional: specific tour route order
+  ): Promise<{ preloaded: number; skipped: number; failed: number }> {
+    const result = { preloaded: 0, skipped: 0, failed: 0 };
+    
+    // Validate inputs
+    if (!language || !apiUrl || !tourStops || tourStops.length === 0) {
+      console.log('[Preload] Invalid inputs, skipping preload');
+      return result;
+    }
+    
+    console.log(`[Preload] ========================================`);
+    console.log(`[Preload] Language: ${language}, Current stop: ${currentStopNumber}`);
+    console.log(`[Preload] FileSystem available: ${this.isFileSystemAvailable()}`);
+
+    // Determine which stops to preload
+    let stopsToPreload: any[] = [];
+    
+    // Get numbered stops only (exclude legends for now)
+    const numberedStops = tourStops
+      .filter(s => s.stop_number !== null && s.stop_number !== undefined)
+      .sort((a, b) => a.stop_number - b.stop_number);
+
+    if (tourRoute && tourRoute.length > 0) {
+      // Use tour route order
+      const currentIndex = currentStopNumber !== null 
+        ? tourRoute.indexOf(currentStopNumber)
+        : -1;
+      
+      const startIndex = currentIndex === -1 ? 0 : currentIndex + 1;
+      const nextStopNumbers = tourRoute.slice(startIndex, startIndex + preloadCount);
+      
+      stopsToPreload = nextStopNumbers
+        .map(num => numberedStops.find(s => s.stop_number === num))
+        .filter(s => s !== undefined);
+        
+      console.log(`[Preload] Tour route: ${tourRoute.slice(0, 5).join('→')}...`);
+    } else {
+      // Sequential order fallback
+      const currentIndex = currentStopNumber 
+        ? numberedStops.findIndex(s => s.stop_number === currentStopNumber)
+        : -1;
+      
+      const startIndex = currentIndex === -1 ? 0 : currentIndex + 1;
+      stopsToPreload = numberedStops.slice(startIndex, startIndex + preloadCount);
+    }
+
+    if (stopsToPreload.length === 0) {
+      console.log('[Preload] No stops to preload');
+      return result;
+    }
+
+    console.log(`[Preload] Will preload: ${stopsToPreload.map(s => `#${s.stop_number}`).join(', ')}`);
+
+    // Preload each stop
+    for (const stop of stopsToPreload) {
+      try {
+        // Check if already cached
+        const isCached = await this.isStopCached(stop.id, language);
+        if (isCached) {
+          console.log(`[Preload] #${stop.stop_number} already cached`);
+          result.skipped++;
+          continue;
+        }
+
+        // Fetch audio using ArrayBuffer (works in React Native)
+        const audioUrl = `${apiUrl}/api/audio/stream/${stop.id}/${language}`;
+        console.log(`[Preload] Fetching #${stop.stop_number}...`);
+        
+        const response = await fetch(audioUrl);
+        
+        if (!response.ok) {
+          console.warn(`[Preload] #${stop.stop_number} fetch failed: ${response.status}`);
+          result.failed++;
+          continue;
+        }
+        
+        // Get ArrayBuffer and convert to base64
+        const arrayBuffer = await response.arrayBuffer();
+        
+        if (arrayBuffer.byteLength === 0) {
+          console.warn(`[Preload] #${stop.stop_number} empty response`);
+          result.failed++;
+          continue;
+        }
+        
+        // Convert ArrayBuffer to base64 (React Native compatible)
+        const uint8Array = new Uint8Array(arrayBuffer);
+        let binary = '';
+        for (let i = 0; i < uint8Array.byteLength; i++) {
+          binary += String.fromCharCode(uint8Array[i]);
+        }
+        const audioBase64 = btoa(binary);
+        
+        console.log(`[Preload] #${stop.stop_number} downloaded: ${(arrayBuffer.byteLength / 1024).toFixed(1)}KB`);
+        
+        // Save to cache
+        const saved = await this.saveAudio(stop.id, language, audioBase64);
+        if (saved) {
+          console.log(`[Preload] ✓ #${stop.stop_number} saved`);
+          result.preloaded++;
+        } else {
+          console.warn(`[Preload] ✗ #${stop.stop_number} save failed`);
+          result.failed++;
+        }
+        
+      } catch (error) {
+        console.error(`[Preload] #${stop.stop_number} error:`, error);
+        result.failed++;
+      }
+    }
+
+    console.log(`[Preload] Done: ${result.preloaded} saved, ${result.skipped} cached, ${result.failed} failed`);
+    console.log(`[Preload] ========================================`);
+    
+    return result;
+  }
+
+  // Smart preload for poor coverage areas (stops 10-13)
+  // Preloads more aggressively when in these areas
+  static async smartPreload(
+    currentStopNumber: number | null,
+    tourStops: any[],
+    language: string,
+    apiUrl: string,
+    tourRoute?: number[]
+  ): Promise<void> {
+    // Validate inputs
+    if (!language || !apiUrl) {
+      console.log('[SmartPreload] Missing language or apiUrl');
+      return;
+    }
+
+    // Default preload count
+    let preloadCount = 2;
+    
+    // In poor coverage zones (upper castle), preload more
+    if (currentStopNumber && currentStopNumber >= 9 && currentStopNumber <= 13) {
+      preloadCount = 4;
+      console.log(`[SmartPreload] Poor coverage zone (stop #${currentStopNumber}), preloading ${preloadCount} stops`);
+    } else if (currentStopNumber) {
+      console.log(`[SmartPreload] Standard zone (stop #${currentStopNumber}), preloading ${preloadCount} stops`);
+    } else {
+      // Initial preload (no current stop)
+      preloadCount = 3;
+      console.log(`[SmartPreload] Initial preload, downloading first ${preloadCount} stops`);
+    }
+
+    await this.preloadNextStops(currentStopNumber, tourStops, language, apiUrl, preloadCount, tourRoute);
+  }
+
+  // Multi-language preload - SIMPLIFIED: Only preloads the selected language
+  // The previous version was trying to preload multiple languages at once which caused issues
+  static async multiLanguagePreload(
+    currentStopNumber: number | null,
+    tourStops: any[],
+    primaryLanguage: string,
+    apiUrl: string,
+    additionalLanguages: string[] = [] // Not used anymore - kept for backwards compatibility
+  ): Promise<{ languages: Record<string, { preloaded: number; skipped: number; failed: number }> }> {
+    const result: { languages: Record<string, { preloaded: number; skipped: number; failed: number }> } = {
+      languages: {}
+    };
+
+    // Only preload the primary language
+    console.log(`[MultiPreload] Preloading only selected language: ${primaryLanguage}`);
+    
+    const langResult = await this.preloadNextStops(
+      currentStopNumber,
+      tourStops,
+      primaryLanguage,
+      apiUrl,
+      3 // Preload 3 stops
+    );
+    
+    result.languages[primaryLanguage] = langResult;
+
+    return result;
+  }
+}

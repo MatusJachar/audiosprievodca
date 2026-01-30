@@ -10,7 +10,7 @@ export default function LanguageSelect() {
 
   const handleLanguageSelect = async (langCode: string) => {
     await setLanguage(langCode as any);
-    router.push('/tour-select');
+    router.push('/tour');
   };
 
   return (
@@ -53,7 +53,7 @@ export default function LanguageSelect() {
       <View style={styles.footer}>
         <TouchableOpacity
           style={styles.continueButton}
-          onPress={() => router.push('/tour-select')}
+          onPress={() => router.push('/tour')}
         >
           <Text style={styles.continueButtonText}>Continue</Text>
           <Ionicons name="arrow-forward" size={20} color="#000" />

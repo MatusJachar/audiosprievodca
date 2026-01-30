@@ -1,10 +1,10 @@
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Modal, Alert, Platform } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Modal, Alert } from 'react-native';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useTourStore } from '../store/tourStore';
 import { useLanguageStore } from '../store/languageStore';
-import { useTourTypeStore } from '../store/tourTypeStore';
+import { TOUR_STOPS, LEGEND_INDEX } from '../store/tourTypeStore';
 import { useEffect, useMemo, useState, useRef } from 'react';
 import BackgroundWrapper from '../components/BackgroundWrapper';
 import { OfflineCacheManager } from '../utils/offlineCacheManager';
@@ -14,7 +14,6 @@ const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 export default function Tour() {
   const { tourStops, userProgress, loading, fetchTourStops, fetchUserProgress } = useTourStore();
   const selectedLanguage = useLanguageStore((state) => state.selectedLanguage);
-  const { getTourRoute } = useTourTypeStore();
   const [showDownloadModal, setShowDownloadModal] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState({ total: 0, downloaded: 0, currentItem: '' });
@@ -45,28 +44,25 @@ export default function Tour() {
   }, [selectedLanguage]);
 
   // Initial preload: When user enters tour, preload first 3 stops
-  // This happens after language and tour type selection
-  // NOW TOUR-ROUTE AWARE
   useEffect(() => {
     const runInitialPreload = async () => {
       if (!API_URL || tourStops.length === 0 || initialPreloadDone.current) return;
       
       initialPreloadDone.current = true;
       
-      const tourRoute = getTourRoute();
-      console.log(`[Tour] Starting initial preload for ${tourRoute.name}`);
-      console.log(`[Tour] Tour route: ${tourRoute.stopNumbers.join(' → ')}`);
+      console.log(`[Tour] Starting initial preload for Express+ Tour`);
+      console.log(`[Tour] Tour route: ${TOUR_STOPS.join(' → ')}`);
       setInitialPreloadStatus('Preparing tour...');
       
       try {
-        // Preload first 3 stops of the SELECTED TOUR ROUTE
+        // Preload first 3 stops
         await OfflineCacheManager.preloadNextStops(
-          0, // Start from beginning
+          0,
           tourStops,
           selectedLanguage,
           API_URL,
-          3, // Preload first 3 stops
-          tourRoute.stopNumbers // Pass the actual tour route!
+          3,
+          TOUR_STOPS
         );
         
         setInitialPreloadStatus('');
@@ -77,7 +73,6 @@ export default function Tour() {
       }
     };
 
-    // Run after a short delay to not block initial render
     const timer = setTimeout(runInitialPreload, 2000);
     return () => clearTimeout(timer);
   }, [tourStops.length, selectedLanguage]);
@@ -142,30 +137,39 @@ export default function Tour() {
     return names[code] || code;
   };
 
-  // Filter tour stops based on selected tour type
+  // Filter tour stops based on Express+ tour (stops 1,2,3,4,6,7,8,11,12 + Legend L3)
   const filteredTourStops = useMemo(() => {
-    const tourRoute = getTourRoute();
-    
     return tourStops.filter(stop => {
       // Check if it's a legend stop
       const isLegendStop = stop.stop_name && stop.stop_name.startsWith('Legend ');
       
       if (isLegendStop) {
-        // For legend stops, check if the index is in legendIndexes
-        // Legend stops have stop_name like "Legend 1", "Legend 2", etc.
+        // Only include Legend 3 (The Ghost of Spiš Castle)
         const legendMatch = stop.stop_name?.match(/Legend (\d+)/);
         if (legendMatch) {
           const legendNumber = parseInt(legendMatch[1]);
           const legendIndex = legendNumber - 1; // Convert to 0-based index
-          return tourRoute.legendIndexes.includes(legendIndex);
+          return legendIndex === LEGEND_INDEX; // Only L3
         }
         return false;
-      } else {
-        // For regular stops, check if stop_number is in stopNumbers
-        return tourRoute.stopNumbers.includes(stop.stop_number);
       }
+      
+      // For numbered stops, check if in our TOUR_STOPS array
+      if (stop.stop_number !== null && stop.stop_number !== undefined) {
+        return TOUR_STOPS.includes(stop.stop_number);
+      }
+      
+      return false;
+    }).sort((a, b) => {
+      // Sort: numbered stops first by stop_number, then legends
+      if (a.stop_number !== null && b.stop_number !== null) {
+        return a.stop_number - b.stop_number;
+      }
+      if (a.stop_number !== null) return -1;
+      if (b.stop_number !== null) return 1;
+      return 0;
     });
-  }, [tourStops, getTourRoute]);
+  }, [tourStops]);
 
   const isStopCompleted = (stopId: string) => {
     return userProgress?.completed_stops.includes(stopId) || false;
@@ -271,8 +275,8 @@ export default function Tour() {
         </View>
         
         <View style={styles.headerTitleContainer}>
-          <Text style={styles.headerTitle}>{getTourRoute().name}</Text>
-          <Text style={styles.headerSubtitle}>{getTourRoute().duration}</Text>
+          <Text style={styles.headerTitle}>Express+ Tour</Text>
+          <Text style={styles.headerSubtitle}>45-60 minutes</Text>
         </View>
         
         {/* Progress Bar */}

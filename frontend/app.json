@@ -1,23 +1,23 @@
 {
   "expo": {
-    "name": "Spiš Castle Audio Tour",
-    "slug": "spis-castle-tour",
+    "name": "Spišský hrad",
+    "slug": "spissky-hrad-tour",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "spiscastle",
+    "icon": "./assets/images/logo.png",
+    "scheme": "spisskygrad",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.spiscastle.audiotour"
+      "bundleIdentifier": "com.spisskygrad.freetour"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#1a1a1a"
+        "foregroundImage": "./assets/images/logo.png",
+        "backgroundColor": "#1a1a2e"
       },
-      "package": "com.spiscastle.audiotour",
+      "package": "com.spisskygrad.freetour",
       "edgeToEdgeEnabled": true,
       "permissions": [
         "android.permission.INTERNET",
