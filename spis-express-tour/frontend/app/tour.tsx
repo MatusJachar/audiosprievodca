@@ -138,30 +138,39 @@ export default function Tour() {
     return names[code] || code;
   };
 
-  // Filter tour stops based on selected tour type
+  // Filter tour stops based on Express+ tour (stops 1,2,3,4,6,7,8,11,12 + Legend L3)
   const filteredTourStops = useMemo(() => {
-    const tourRoute = getTourRoute();
-    
     return tourStops.filter(stop => {
       // Check if it's a legend stop
       const isLegendStop = stop.stop_name && stop.stop_name.startsWith('Legend ');
       
       if (isLegendStop) {
-        // For legend stops, check if the index is in legendIndexes
-        // Legend stops have stop_name like "Legend 1", "Legend 2", etc.
+        // Only include Legend 3 (The Ghost of Spiš Castle)
         const legendMatch = stop.stop_name?.match(/Legend (\d+)/);
         if (legendMatch) {
           const legendNumber = parseInt(legendMatch[1]);
           const legendIndex = legendNumber - 1; // Convert to 0-based index
-          return tourRoute.legendIndexes.includes(legendIndex);
+          return legendIndex === LEGEND_INDEX; // Only L3
         }
         return false;
-      } else {
-        // For regular stops, check if stop_number is in stopNumbers
-        return tourRoute.stopNumbers.includes(stop.stop_number);
       }
+      
+      // For numbered stops, check if in our TOUR_STOPS array
+      if (stop.stop_number !== null && stop.stop_number !== undefined) {
+        return TOUR_STOPS.includes(stop.stop_number);
+      }
+      
+      return false;
+    }).sort((a, b) => {
+      // Sort: numbered stops first by stop_number, then legends
+      if (a.stop_number !== null && b.stop_number !== null) {
+        return a.stop_number - b.stop_number;
+      }
+      if (a.stop_number !== null) return -1;
+      if (b.stop_number !== null) return 1;
+      return 0;
     });
-  }, [tourStops, getTourRoute]);
+  }, [tourStops]);
 
   const isStopCompleted = (stopId: string) => {
     return userProgress?.completed_stops.includes(stopId) || false;
