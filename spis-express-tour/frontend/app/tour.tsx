@@ -14,7 +14,6 @@ const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 export default function Tour() {
   const { tourStops, userProgress, loading, fetchTourStops, fetchUserProgress } = useTourStore();
   const selectedLanguage = useLanguageStore((state) => state.selectedLanguage);
-  const { getTourStops, getLegendIndex } = useTourTypeStore();
   const [showDownloadModal, setShowDownloadModal] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState({ total: 0, downloaded: 0, currentItem: '' });
