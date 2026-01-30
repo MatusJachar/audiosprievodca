@@ -250,7 +250,7 @@ export class OfflineCacheManager {
   }
 
   // Preload next stops in background (for poor coverage areas like stops 10-13)
-  // This version is TOUR-ROUTE AWARE - follows the actual tour order
+  // SIMPLIFIED VERSION - Direct ArrayBuffer approach (works in React Native)
   static async preloadNextStops(
     currentStopNumber: number | null,
     tourStops: any[],
@@ -261,132 +261,114 @@ export class OfflineCacheManager {
   ): Promise<{ preloaded: number; skipped: number; failed: number }> {
     const result = { preloaded: 0, skipped: 0, failed: 0 };
     
+    // Validate inputs
+    if (!language || !apiUrl || !tourStops || tourStops.length === 0) {
+      console.log('[Preload] Invalid inputs, skipping preload');
+      return result;
+    }
+    
     console.log(`[Preload] ========================================`);
-    console.log(`[Preload] Starting preload from stop ${currentStopNumber}`);
-    console.log(`[Preload] Will preload next ${preloadCount} stops`);
-    console.log(`[Preload] Language: ${language}`);
-    console.log(`[Preload] Tour route provided: ${tourRoute ? 'YES' : 'NO'}`);
+    console.log(`[Preload] Language: ${language}, Current stop: ${currentStopNumber}`);
     console.log(`[Preload] FileSystem available: ${this.isFileSystemAvailable()}`);
 
+    // Determine which stops to preload
     let stopsToPreload: any[] = [];
+    
+    // Get numbered stops only (exclude legends for now)
+    const numberedStops = tourStops
+      .filter(s => s.stop_number !== null && s.stop_number !== undefined)
+      .sort((a, b) => a.stop_number - b.stop_number);
 
     if (tourRoute && tourRoute.length > 0) {
-      // TOUR-ROUTE AWARE: Follow the actual tour order
-      console.log(`[Preload] Using tour route: ${tourRoute.join(' → ')}`);
-      
-      // Find current position in tour route
+      // Use tour route order
       const currentIndex = currentStopNumber !== null 
         ? tourRoute.indexOf(currentStopNumber)
         : -1;
       
-      if (currentIndex === -1) {
-        // If currentStopNumber is null or 0, start from beginning (initial preload)
-        const nextStopNumbers = tourRoute.slice(0, preloadCount);
-        console.log(`[Preload] Initial preload - stops: ${nextStopNumbers.join(', ')}`);
+      const startIndex = currentIndex === -1 ? 0 : currentIndex + 1;
+      const nextStopNumbers = tourRoute.slice(startIndex, startIndex + preloadCount);
+      
+      stopsToPreload = nextStopNumbers
+        .map(num => numberedStops.find(s => s.stop_number === num))
+        .filter(s => s !== undefined);
         
-        stopsToPreload = nextStopNumbers
-          .map(num => tourStops.find(s => s.stop_number === num))
-          .filter(s => s !== undefined);
-      } else {
-        // Get next N stops in the tour route order
-        const nextStopNumbers = tourRoute.slice(currentIndex + 1, currentIndex + 1 + preloadCount);
-        console.log(`[Preload] Next stops in tour: ${nextStopNumbers.join(', ')}`);
-        
-        stopsToPreload = nextStopNumbers
-          .map(num => tourStops.find(s => s.stop_number === num))
-          .filter(s => s !== undefined);
-      }
+      console.log(`[Preload] Tour route: ${tourRoute.slice(0, 5).join('→')}...`);
     } else {
-      // Fallback: Sequential order (for Complete tour or when no route provided)
-      if (currentStopNumber === null || currentStopNumber === 0) {
-        // Initial preload: get first N stops
-        const sortedStops = tourStops
-          .filter(s => s.stop_number !== null && s.stop_number !== undefined)
-          .sort((a, b) => a.stop_number - b.stop_number);
-        stopsToPreload = sortedStops.slice(0, preloadCount);
-      } else {
-        const sortedStops = tourStops
-          .filter(s => s.stop_number !== null && s.stop_number !== undefined)
-          .sort((a, b) => a.stop_number - b.stop_number);
-        
-        const currentIndex = sortedStops.findIndex(s => s.stop_number === currentStopNumber);
-        if (currentIndex === -1) {
-          console.log('[Preload] Current stop not found in tour');
-          return result;
-        }
-        stopsToPreload = sortedStops.slice(currentIndex + 1, currentIndex + 1 + preloadCount);
-      }
+      // Sequential order fallback
+      const currentIndex = currentStopNumber 
+        ? numberedStops.findIndex(s => s.stop_number === currentStopNumber)
+        : -1;
+      
+      const startIndex = currentIndex === -1 ? 0 : currentIndex + 1;
+      stopsToPreload = numberedStops.slice(startIndex, startIndex + preloadCount);
     }
 
     if (stopsToPreload.length === 0) {
-      console.log('[Preload] No more stops to preload');
+      console.log('[Preload] No stops to preload');
       return result;
     }
 
-    console.log(`[Preload] Stops to preload: ${stopsToPreload.map(s => s.stop_number || s.stop_name).join(', ')}`);
+    console.log(`[Preload] Will preload: ${stopsToPreload.map(s => `#${s.stop_number}`).join(', ')}`);
 
-    // Preload each stop in background
+    // Preload each stop
     for (const stop of stopsToPreload) {
       try {
         // Check if already cached
         const isCached = await this.isStopCached(stop.id, language);
         if (isCached) {
-          console.log(`[Preload] Stop ${stop.stop_number || stop.stop_name} already cached, skipping`);
+          console.log(`[Preload] #${stop.stop_number} already cached`);
           result.skipped++;
           continue;
         }
 
-        console.log(`[Preload] Downloading stop ${stop.stop_number || stop.stop_name} in ${language}...`);
-        
-        // Fetch audio from the streaming endpoint directly (more reliable)
+        // Fetch audio using ArrayBuffer (works in React Native)
         const audioUrl = `${apiUrl}/api/audio/stream/${stop.id}/${language}`;
-        console.log(`[Preload] Fetching from: ${audioUrl}`);
+        console.log(`[Preload] Fetching #${stop.stop_number}...`);
         
         const response = await fetch(audioUrl);
-        if (response.ok) {
-          // Get the audio as blob and convert to base64
-          const blob = await response.blob();
-          
-          if (blob.size > 0) {
-            // Convert blob to base64
-            const reader = new FileReader();
-            const base64Promise = new Promise<string>((resolve, reject) => {
-              reader.onloadend = () => {
-                const base64data = reader.result as string;
-                // Remove the data URL prefix to get just the base64
-                const base64 = base64data.split(',')[1];
-                resolve(base64);
-              };
-              reader.onerror = reject;
-            });
-            reader.readAsDataURL(blob);
-            
-            const audioBase64 = await base64Promise;
-            console.log(`[Preload] Downloaded ${blob.size} bytes, base64 length: ${audioBase64.length}`);
-            
-            const saved = await this.saveAudio(stop.id, language, audioBase64);
-            if (saved) {
-              console.log(`[Preload] ✓ Stop ${stop.stop_number || stop.stop_name} preloaded successfully`);
-              result.preloaded++;
-            } else {
-              console.warn(`[Preload] ✗ Stop ${stop.stop_number || stop.stop_name} save failed`);
-              result.failed++;
-            }
-          } else {
-            console.warn(`[Preload] Stop ${stop.stop_number || stop.stop_name} returned empty blob`);
-            result.failed++;
-          }
+        
+        if (!response.ok) {
+          console.warn(`[Preload] #${stop.stop_number} fetch failed: ${response.status}`);
+          result.failed++;
+          continue;
+        }
+        
+        // Get ArrayBuffer and convert to base64
+        const arrayBuffer = await response.arrayBuffer();
+        
+        if (arrayBuffer.byteLength === 0) {
+          console.warn(`[Preload] #${stop.stop_number} empty response`);
+          result.failed++;
+          continue;
+        }
+        
+        // Convert ArrayBuffer to base64 (React Native compatible)
+        const uint8Array = new Uint8Array(arrayBuffer);
+        let binary = '';
+        for (let i = 0; i < uint8Array.byteLength; i++) {
+          binary += String.fromCharCode(uint8Array[i]);
+        }
+        const audioBase64 = btoa(binary);
+        
+        console.log(`[Preload] #${stop.stop_number} downloaded: ${(arrayBuffer.byteLength / 1024).toFixed(1)}KB`);
+        
+        // Save to cache
+        const saved = await this.saveAudio(stop.id, language, audioBase64);
+        if (saved) {
+          console.log(`[Preload] ✓ #${stop.stop_number} saved`);
+          result.preloaded++;
         } else {
-          console.warn(`[Preload] Failed to fetch stop ${stop.stop_number || stop.stop_name} - Status: ${response.status}`);
+          console.warn(`[Preload] ✗ #${stop.stop_number} save failed`);
           result.failed++;
         }
+        
       } catch (error) {
-        console.error(`[Preload] Error preloading stop ${stop.stop_number || stop.stop_name}:`, error);
+        console.error(`[Preload] #${stop.stop_number} error:`, error);
         result.failed++;
       }
     }
 
-    console.log(`[Preload] Complete: ${result.preloaded} preloaded, ${result.skipped} skipped, ${result.failed} failed`);
+    console.log(`[Preload] Done: ${result.preloaded} saved, ${result.skipped} cached, ${result.failed} failed`);
     console.log(`[Preload] ========================================`);
     
     return result;
