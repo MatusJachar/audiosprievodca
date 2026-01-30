@@ -161,6 +161,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'transparent',
   },
+  adminButton: {
+    position: 'absolute',
+    top: 50,
+    right: 16,
+    zIndex: 10,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: 10,
+    borderRadius: 25,
+    borderWidth: 1,
+    borderColor: 'rgba(255,215,0,0.3)',
+  },
   content: {
     flex: 1,
     alignItems: 'center',
