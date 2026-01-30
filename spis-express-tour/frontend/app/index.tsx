@@ -122,7 +122,7 @@ export default function Index() {
             <View style={styles.featureIcon}>
               <Ionicons name="location" size={32} color="#FFD700" />
             </View>
-            <Text style={styles.featureNumber}>13</Text>
+            <Text style={styles.featureNumber}>10</Text>
             <Text style={styles.featureText}>Tour Stops</Text>
           </View>
           <View style={styles.featureDivider} />
