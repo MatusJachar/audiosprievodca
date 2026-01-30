@@ -50,7 +50,7 @@ export default function Index() {
         
         {/* Title Section */}
         <Text style={styles.title}>Spiš Castle</Text>
-        <Text style={styles.subtitle}>Audio Tour Guide</Text>
+        <Text style={styles.subtitle}>Free Audio Tour</Text>
         
         {/* Divider */}
         <View style={styles.divider} />
