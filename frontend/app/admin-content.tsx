@@ -260,6 +260,66 @@ export default function AdminContent() {
     );
   }
 
+  const renderBackgroundEditor = () => (
+    <View style={styles.editorContainer}>
+      <Text style={styles.editorTitle}>🖼️ Main Background Image</Text>
+      <Text style={styles.editorSubtitle}>
+        This image appears on the home screen. Change it for different seasons or special events.
+      </Text>
+      
+      <TouchableOpacity
+        style={styles.backgroundButton}
+        onPress={pickBackgroundImage}
+        disabled={uploadingImage}
+      >
+        {backgroundImage ? (
+          <Image 
+            source={{ uri: `data:image/png;base64,${backgroundImage}` }} 
+            style={styles.backgroundPreview}
+          />
+        ) : (
+          <View style={styles.backgroundPlaceholder}>
+            <Ionicons name="image-outline" size={64} color="#666" />
+            <Text style={styles.placeholderText}>No background image</Text>
+            <Text style={styles.placeholderSubtext}>Tap to upload</Text>
+          </View>
+        )}
+        {uploadingImage && (
+          <View style={styles.uploadingOverlay}>
+            <ActivityIndicator size="large" color="#FFD700" />
+            <Text style={styles.uploadingText}>Uploading...</Text>
+          </View>
+        )}
+      </TouchableOpacity>
+      
+      <TouchableOpacity
+        style={styles.changeImageButton}
+        onPress={pickBackgroundImage}
+        disabled={uploadingImage}
+      >
+        <Ionicons name="camera" size={20} color="#000" />
+        <Text style={styles.changeImageButtonText}>
+          {backgroundImage ? 'Change Image' : 'Upload Image'}
+        </Text>
+      </TouchableOpacity>
+      
+      <View style={styles.tipBox}>
+        <Ionicons name="bulb" size={20} color="#FFD700" />
+        <Text style={styles.tipText}>
+          Tip: Use a 16:9 landscape image for best results. Recommended size: 1920x1080 pixels.
+        </Text>
+      </View>
+      
+      <View style={styles.seasonSuggestions}>
+        <Text style={styles.seasonTitle}>Seasonal suggestions:</Text>
+        <Text style={styles.seasonItem}>🌸 Spring: Castle with blooming meadows</Text>
+        <Text style={styles.seasonItem}>☀️ Summer: Sunny castle view</Text>
+        <Text style={styles.seasonItem}>🍂 Autumn: Golden foliage around castle</Text>
+        <Text style={styles.seasonItem}>❄️ Winter: Snow-covered castle</Text>
+      </View>
+    </View>
+  );
+
   const renderShopEditor = () => (
     <View style={styles.editorContainer}>
       <Text style={styles.editorTitle}>Ticket Prices</Text>
