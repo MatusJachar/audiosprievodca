@@ -395,6 +395,21 @@ export default function Admin() {
           )}
         </TouchableOpacity>
       </View>
+
+      {/* Edit Content Section */}
+      <TouchableOpacity
+        style={styles.contentEditButton}
+        onPress={() => router.push('/admin-content')}
+      >
+        <View style={styles.contentEditLeft}>
+          <Ionicons name="create" size={24} color="#FFD700" />
+          <View style={styles.contentEditInfo}>
+            <Text style={styles.contentEditTitle}>Edit App Content</Text>
+            <Text style={styles.contentEditSubtitle}>Shop prices, Travel info, Discover section</Text>
+          </View>
+        </View>
+        <Ionicons name="chevron-forward" size={24} color="#aaa" />
+      </TouchableOpacity>
       
       <FlatList
         data={tourStops}
