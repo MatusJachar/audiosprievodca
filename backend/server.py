@@ -647,9 +647,6 @@ async def init_tour_data():
         logger.error(f"Error initializing tour data: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-# Include the router in the main app
-app.include_router(api_router)
-
 # ============================================
 # APP CONTENT MANAGEMENT (Editable from Admin)
 # ============================================
@@ -774,6 +771,9 @@ async def update_discover_content(content: DiscoverContent):
     except Exception as e:
         logger.error(f"Error updating discover content: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+# Include the router in the main app (MUST be after all routes are defined)
+app.include_router(api_router)
 
 app.add_middleware(
     CORSMiddleware,
