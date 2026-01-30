@@ -24,6 +24,14 @@ export default function TravelInfo() {
     });
   };
 
+  const handleOpenGPS = () => {
+    // GPS: 48°59.98956'N, 20°46.08196'E
+    const url = 'https://www.google.com/maps/search/?api=1&query=48.999826,20.768033';
+    Linking.openURL(url).catch(() => {
+      Alert.alert('Error', 'Unable to open maps');
+    });
+  };
+
   return (
     <BackgroundWrapper>
       <View style={styles.container}>
@@ -38,7 +46,7 @@ export default function TravelInfo() {
         </View>
         
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-          {/* Location */}
+          {/* Location & GPS */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Ionicons name="location" size={24} color="#FFD700" />
@@ -46,13 +54,44 @@ export default function TravelInfo() {
             </View>
             <Text style={styles.address}>Spišské Podhradie</Text>
             <Text style={styles.addressDetail}>053 04, Slovakia</Text>
+            
+            <View style={styles.gpsBox}>
+              <Ionicons name="navigate" size={18} color="#4CAF50" />
+              <Text style={styles.gpsText}>GPS: 48°59.98956'N, 20°46.08196'E</Text>
+            </View>
+            
             <TouchableOpacity 
               style={styles.mapButton}
-              onPress={() => handleOpenMaps('Spiš Castle, Slovakia')}
+              onPress={handleOpenGPS}
             >
               <Ionicons name="navigate" size={20} color="#000" />
               <Text style={styles.mapButtonText}>Open in Maps</Text>
             </TouchableOpacity>
+          </View>
+
+          {/* Opening Hours */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Ionicons name="time" size={24} color="#FFD700" />
+              <Text style={styles.sectionTitle}>Opening Hours</Text>
+            </View>
+            <View style={styles.hoursContainer}>
+              <View style={styles.hoursRow}>
+                <View style={styles.seasonLabel}>
+                  <Text style={styles.seasonIcon}>☀️</Text>
+                  <Text style={styles.hoursDay}>Summer (Jun - Sep)</Text>
+                </View>
+                <Text style={styles.hoursTime}>9:00 - 18:00</Text>
+              </View>
+              <View style={styles.hoursRow}>
+                <View style={styles.seasonLabel}>
+                  <Text style={styles.seasonIcon}>🍂</Text>
+                  <Text style={styles.hoursDay}>Spring/Autumn (Apr, Oct, Nov)</Text>
+                </View>
+                <Text style={styles.hoursTime}>9:00 - 16:00</Text>
+              </View>
+            </View>
+            <Text style={styles.hoursNote}>* Open Monday - Sunday</Text>
           </View>
 
           {/* By Car */}
@@ -62,11 +101,37 @@ export default function TravelInfo() {
               <Text style={styles.sectionTitle}>By Car</Text>
             </View>
             <Text style={styles.infoText}>
-              • From Košice: ~60 km (45 min) via E50{"\n"}
-              • From Poprad: ~45 km (35 min) via Route 18{"\n"}
-              • From Prešov: ~50 km (40 min) via E50{"\n"}
-              • Free parking available at castle base
+              The easiest way to reach Spiš Castle is by car. Parking is available directly below the castle.
             </Text>
+            
+            <View style={styles.routeBox}>
+              <Text style={styles.routeTitle}>🛣️ Route:</Text>
+              <Text style={styles.routeText}>
+                From D1 highway, exit towards Levoča, then continue to Spišské Podhradie.
+              </Text>
+            </View>
+            
+            <View style={styles.distanceList}>
+              <View style={styles.distanceItem}>
+                <Text style={styles.distanceCity}>From Poprad:</Text>
+                <Text style={styles.distanceValue}>~40 km</Text>
+              </View>
+              <View style={styles.distanceItem}>
+                <Text style={styles.distanceCity}>From Spišská Nová Ves:</Text>
+                <Text style={styles.distanceValue}>~25 km</Text>
+              </View>
+              <View style={styles.distanceItem}>
+                <Text style={styles.distanceCity}>From Košice:</Text>
+                <Text style={styles.distanceValue}>~60 km</Text>
+              </View>
+            </View>
+            
+            <View style={styles.parkingInfo}>
+              <Ionicons name="car" size={18} color="#4CAF50" />
+              <Text style={styles.parkingText}>
+                🅿️ Parking: Asphalt road leads to parking below castle. May be full during peak season - alternative parking along the road.
+              </Text>
+            </View>
           </View>
 
           {/* By Bus */}
@@ -76,11 +141,16 @@ export default function TravelInfo() {
               <Text style={styles.sectionTitle}>By Bus</Text>
             </View>
             <Text style={styles.infoText}>
-              Regular bus service from:{"\n"}
-              • Spišská Nová Ves (20 min){"\n"}
-              • Levoča (15 min){"\n"}
-              • Košice (1.5 hours)
+              Take a bus to Spišské Podhradie. From there, it's approximately 30-45 minutes walk to the castle on a tourist trail.
             </Text>
+            
+            <View style={styles.connectionList}>
+              <Text style={styles.connectionTitle}>Bus connections:</Text>
+              <Text style={styles.connectionItem}>• From Spišská Nová Ves (20 min)</Text>
+              <Text style={styles.connectionItem}>• From Levoča (15 min)</Text>
+              <Text style={styles.connectionItem}>• From Košice (1.5 hours)</Text>
+            </View>
+            
             <TouchableOpacity 
               style={styles.linkButton}
               onPress={() => handleOpenLink('https://cp.hnonline.sk/')}
@@ -97,10 +167,22 @@ export default function TravelInfo() {
               <Text style={styles.sectionTitle}>By Train</Text>
             </View>
             <Text style={styles.infoText}>
-              Nearest train station:{"\n"}
-              • Spišské Podhradie (2 km walk to castle){"\n"}
-              • Spišská Nová Ves (then bus)
+              From Poprad or Spišská Nová Ves, take a train to Spišské Vlachy and transfer to Spišské Podhradie.
             </Text>
+            
+            <View style={styles.warningBox}>
+              <Ionicons name="warning" size={18} color="#FF6B6B" />
+              <Text style={styles.warningText}>
+                Trains may not wait for connections - verify your connection in advance. Train to Spišské Podhradie runs only during summer tourist season!
+              </Text>
+            </View>
+            
+            <View style={styles.walkInfo}>
+              <Text style={styles.walkTitle}>🚶 Walking distances:</Text>
+              <Text style={styles.walkItem}>• From bus station: ~30-45 min</Text>
+              <Text style={styles.walkItem}>• From train station: ~20 min</Text>
+            </View>
+            
             <TouchableOpacity 
               style={styles.linkButton}
               onPress={() => handleOpenLink('https://www.zssk.sk/en/')}
@@ -110,74 +192,43 @@ export default function TravelInfo() {
             </TouchableOpacity>
           </View>
 
+          {/* Tourist Train */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Ionicons name="subway" size={24} color="#FFD700" />
+              <Text style={styles.sectionTitle}>Tourist Train 🚂</Text>
+            </View>
+            <Text style={styles.infoText}>
+              During the season, a tourist train runs from the bus station in Spišské Podhradie directly to the castle.
+            </Text>
+            <Text style={styles.highlightText}>
+              ⚠️ Check schedule in advance - runs only on selected days and times!
+            </Text>
+          </View>
+
           {/* Taxi */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Ionicons name="call" size={24} color="#FFD700" />
-              <Text style={styles.sectionTitle}>Taxi Services</Text>
+              <Text style={styles.sectionTitle}>Taxi / Transport</Text>
             </View>
+            <Text style={styles.infoText}>
+              From Spišské Podhradie to Prešov, Spišská Nová Ves, or Poprad:
+            </Text>
             
             <TouchableOpacity 
-              style={styles.taxiItem}
-              onPress={() => handleCall('+421901234567')}
+              style={styles.taxiMainItem}
+              onPress={() => handleCall('+421944376007')}
             >
               <View style={styles.taxiInfo}>
-                <Text style={styles.taxiName}>City Taxi Spišská</Text>
-                <Text style={styles.taxiNumber}>+421 901 234 567</Text>
+                <Text style={styles.taxiName}>🚕 Taxi Service</Text>
+                <Text style={styles.taxiNumber}>+421 944 376 007</Text>
+                <Text style={styles.taxiDest}>To: Prešov, Sp. Nová Ves, Poprad</Text>
               </View>
               <View style={styles.callButton}>
-                <Ionicons name="call" size={20} color="#fff" />
+                <Ionicons name="call" size={24} color="#fff" />
               </View>
             </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={styles.taxiItem}
-              onPress={() => handleCall('+421902345678')}
-            >
-              <View style={styles.taxiInfo}>
-                <Text style={styles.taxiName}>Express Taxi</Text>
-                <Text style={styles.taxiNumber}>+421 902 345 678</Text>
-              </View>
-              <View style={styles.callButton}>
-                <Ionicons name="call" size={20} color="#fff" />
-              </View>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={styles.taxiItem}
-              onPress={() => handleCall('+421903456789')}
-            >
-              <View style={styles.taxiInfo}>
-                <Text style={styles.taxiName}>Levoča Taxi</Text>
-                <Text style={styles.taxiNumber}>+421 903 456 789</Text>
-              </View>
-              <View style={styles.callButton}>
-                <Ionicons name="call" size={20} color="#fff" />
-              </View>
-            </TouchableOpacity>
-          </View>
-
-          {/* Opening Hours */}
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Ionicons name="time" size={24} color="#FFD700" />
-              <Text style={styles.sectionTitle}>Opening Hours</Text>
-            </View>
-            <View style={styles.hoursContainer}>
-              <View style={styles.hoursRow}>
-                <Text style={styles.hoursDay}>May - September</Text>
-                <Text style={styles.hoursTime}>9:00 - 19:00</Text>
-              </View>
-              <View style={styles.hoursRow}>
-                <Text style={styles.hoursDay}>April, October</Text>
-                <Text style={styles.hoursTime}>9:00 - 17:00</Text>
-              </View>
-              <View style={styles.hoursRow}>
-                <Text style={styles.hoursDay}>November - March</Text>
-                <Text style={styles.hoursTime}>10:00 - 16:00</Text>
-              </View>
-            </View>
-            <Text style={styles.hoursNote}>* Last entry 30 min before closing</Text>
           </View>
 
           <View style={{ height: 40 }} />
@@ -236,7 +287,21 @@ const styles = StyleSheet.create({
   addressDetail: {
     fontSize: 16,
     color: '#aaa',
+    marginBottom: 12,
+  },
+  gpsBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(76,175,80,0.15)',
+    padding: 12,
+    borderRadius: 8,
     marginBottom: 16,
+    gap: 10,
+  },
+  gpsText: {
+    fontSize: 13,
+    color: '#4CAF50',
+    fontFamily: 'monospace',
   },
   mapButton: {
     flexDirection: 'row',
@@ -252,68 +317,28 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#000',
   },
-  infoText: {
-    fontSize: 15,
-    color: '#ccc',
-    lineHeight: 24,
-  },
-  linkButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,215,0,0.15)',
-    padding: 14,
-    borderRadius: 12,
-    marginTop: 16,
-    gap: 10,
-    justifyContent: 'center',
-  },
-  linkButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#FFD700',
-  },
-  taxiItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 10,
-  },
-  taxiInfo: {
-    flex: 1,
-  },
-  taxiName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
-    marginBottom: 4,
-  },
-  taxiNumber: {
-    fontSize: 14,
-    color: '#FFD700',
-  },
-  callButton: {
-    backgroundColor: '#4CAF50',
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   hoursContainer: {
     marginBottom: 12,
   },
   hoursRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 10,
+    alignItems: 'center',
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255,255,255,0.1)',
   },
+  seasonLabel: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+  },
+  seasonIcon: {
+    fontSize: 16,
+  },
   hoursDay: {
-    fontSize: 15,
+    fontSize: 14,
     color: '#ccc',
   },
   hoursTime: {
@@ -326,5 +351,167 @@ const styles = StyleSheet.create({
     color: '#888',
     fontStyle: 'italic',
     marginTop: 8,
+  },
+  infoText: {
+    fontSize: 15,
+    color: '#ccc',
+    lineHeight: 22,
+    marginBottom: 16,
+  },
+  routeBox: {
+    backgroundColor: 'rgba(255,215,0,0.1)',
+    padding: 14,
+    borderRadius: 10,
+    marginBottom: 16,
+  },
+  routeTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#FFD700',
+    marginBottom: 6,
+  },
+  routeText: {
+    fontSize: 14,
+    color: '#ddd',
+    lineHeight: 20,
+  },
+  distanceList: {
+    marginBottom: 16,
+  },
+  distanceItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.05)',
+  },
+  distanceCity: {
+    fontSize: 14,
+    color: '#ccc',
+  },
+  distanceValue: {
+    fontSize: 14,
+    color: '#FFD700',
+    fontWeight: '600',
+  },
+  parkingInfo: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: 'rgba(76,175,80,0.1)',
+    padding: 14,
+    borderRadius: 10,
+    gap: 10,
+  },
+  parkingText: {
+    fontSize: 13,
+    color: '#ccc',
+    flex: 1,
+    lineHeight: 20,
+  },
+  connectionList: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    padding: 14,
+    borderRadius: 10,
+    marginBottom: 16,
+  },
+  connectionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#fff',
+    marginBottom: 10,
+  },
+  connectionItem: {
+    fontSize: 14,
+    color: '#ccc',
+    paddingVertical: 4,
+  },
+  linkButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,215,0,0.15)',
+    padding: 14,
+    borderRadius: 12,
+    gap: 10,
+    justifyContent: 'center',
+  },
+  linkButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#FFD700',
+  },
+  warningBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: 'rgba(255,107,107,0.1)',
+    padding: 14,
+    borderRadius: 10,
+    marginBottom: 16,
+    gap: 10,
+  },
+  warningText: {
+    fontSize: 13,
+    color: '#FF6B6B',
+    flex: 1,
+    lineHeight: 20,
+  },
+  walkInfo: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    padding: 14,
+    borderRadius: 10,
+    marginBottom: 16,
+  },
+  walkTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#fff',
+    marginBottom: 8,
+  },
+  walkItem: {
+    fontSize: 14,
+    color: '#ccc',
+    paddingVertical: 4,
+  },
+  highlightText: {
+    fontSize: 14,
+    color: '#FFD700',
+    fontStyle: 'italic',
+    marginTop: 8,
+  },
+  taxiMainItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(76,175,80,0.15)',
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(76,175,80,0.3)',
+  },
+  taxiInfo: {
+    flex: 1,
+  },
+  taxiName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 4,
+  },
+  taxiNumber: {
+    fontSize: 18,
+    color: '#4CAF50',
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  taxiDest: {
+    fontSize: 12,
+    color: '#aaa',
+  },
+  callButton: {
+    backgroundColor: '#4CAF50',
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
