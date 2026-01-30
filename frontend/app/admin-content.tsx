@@ -663,59 +663,75 @@ export default function AdminContent() {
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Edit Content</Text>
-        <TouchableOpacity onPress={saveContent} disabled={saving}>
+        <TouchableOpacity onPress={saveContent} disabled={saving || activeSection === 'background'}>
           {saving ? (
             <ActivityIndicator size="small" color="#FFD700" />
           ) : (
-            <Ionicons name="checkmark" size={24} color="#FFD700" />
+            <Ionicons name="checkmark" size={24} color={activeSection === 'background' ? '#666' : '#FFD700'} />
           )}
         </TouchableOpacity>
       </View>
       
-      {/* Section Tabs */}
-      <View style={styles.tabs}>
-        <TouchableOpacity
-          style={[styles.tab, activeSection === 'shop' && styles.tabActive]}
-          onPress={() => setActiveSection('shop')}
-        >
-          <Ionicons 
-            name="cart" 
-            size={20} 
-            color={activeSection === 'shop' ? '#000' : '#FFD700'} 
-          />
-          <Text style={[styles.tabText, activeSection === 'shop' && styles.tabTextActive]}>
-            Shop
-          </Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity
-          style={[styles.tab, activeSection === 'travel' && styles.tabActive]}
-          onPress={() => setActiveSection('travel')}
-        >
-          <Ionicons 
-            name="bus" 
-            size={20} 
-            color={activeSection === 'travel' ? '#000' : '#FFD700'} 
-          />
-          <Text style={[styles.tabText, activeSection === 'travel' && styles.tabTextActive]}>
-            Travel
-          </Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity
-          style={[styles.tab, activeSection === 'discover' && styles.tabActive]}
-          onPress={() => setActiveSection('discover')}
-        >
-          <Ionicons 
-            name="compass" 
-            size={20} 
-            color={activeSection === 'discover' ? '#000' : '#FFD700'} 
-          />
-          <Text style={[styles.tabText, activeSection === 'discover' && styles.tabTextActive]}>
-            Discover
-          </Text>
-        </TouchableOpacity>
-      </View>
+      {/* Section Tabs - Scrollable */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabsScroll}>
+        <View style={styles.tabs}>
+          <TouchableOpacity
+            style={[styles.tab, activeSection === 'background' && styles.tabActive]}
+            onPress={() => setActiveSection('background')}
+          >
+            <Ionicons 
+              name="image" 
+              size={20} 
+              color={activeSection === 'background' ? '#000' : '#FFD700'} 
+            />
+            <Text style={[styles.tabText, activeSection === 'background' && styles.tabTextActive]}>
+              Background
+            </Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={[styles.tab, activeSection === 'shop' && styles.tabActive]}
+            onPress={() => setActiveSection('shop')}
+          >
+            <Ionicons 
+              name="cart" 
+              size={20} 
+              color={activeSection === 'shop' ? '#000' : '#FFD700'} 
+            />
+            <Text style={[styles.tabText, activeSection === 'shop' && styles.tabTextActive]}>
+              Shop
+            </Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={[styles.tab, activeSection === 'travel' && styles.tabActive]}
+            onPress={() => setActiveSection('travel')}
+          >
+            <Ionicons 
+              name="bus" 
+              size={20} 
+              color={activeSection === 'travel' ? '#000' : '#FFD700'} 
+            />
+            <Text style={[styles.tabText, activeSection === 'travel' && styles.tabTextActive]}>
+              Travel
+            </Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={[styles.tab, activeSection === 'discover' && styles.tabActive]}
+            onPress={() => setActiveSection('discover')}
+          >
+            <Ionicons 
+              name="compass" 
+              size={20} 
+              color={activeSection === 'discover' ? '#000' : '#FFD700'} 
+            />
+            <Text style={[styles.tabText, activeSection === 'discover' && styles.tabTextActive]}>
+              Discover
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
       
       {loading ? (
         <View style={styles.loadingContainer}>
@@ -723,20 +739,23 @@ export default function AdminContent() {
         </View>
       ) : (
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {activeSection === 'background' && renderBackgroundEditor()}
           {activeSection === 'shop' && renderShopEditor()}
           {activeSection === 'travel' && renderTravelEditor()}
           {activeSection === 'discover' && renderDiscoverEditor()}
           
-          <TouchableOpacity style={styles.saveButton} onPress={saveContent} disabled={saving}>
-            {saving ? (
-              <ActivityIndicator size="small" color="#000" />
-            ) : (
-              <>
-                <Ionicons name="save" size={20} color="#000" />
-                <Text style={styles.saveButtonText}>Save Changes</Text>
-              </>
-            )}
-          </TouchableOpacity>
+          {activeSection !== 'background' && (
+            <TouchableOpacity style={styles.saveButton} onPress={saveContent} disabled={saving}>
+              {saving ? (
+                <ActivityIndicator size="small" color="#000" />
+              ) : (
+                <>
+                  <Ionicons name="save" size={20} color="#000" />
+                  <Text style={styles.saveButtonText}>Save Changes</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          )}
           
           <View style={{ height: 40 }} />
         </ScrollView>
