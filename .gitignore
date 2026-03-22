@@ -92,3 +92,7 @@ android-sdk/
 *.env.*
 export/database/dump/test_database/tour_audio.bson
 spissky-hrad-export.zip
+-e 
+# Environment files
+*.env
+*.env.*
