@@ -90,3 +90,4 @@ android-sdk/
 # Environment files
 *.env
 *.env.*
+export/database/dump/test_database/tour_audio.bson
