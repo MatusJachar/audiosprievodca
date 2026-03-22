@@ -1,17 +1,40 @@
 import { create } from 'zustand';
 
-// This app has only one tour - the Express+ tour
-// Stops: 1, 2, 3, 4, 6, 7, 8, 11, 12 + Legend L3 (The Ghost of Spiš Castle)
+// Tour types available in the app
+export type TourType = 'complete';
 
-export const TOUR_STOPS = [1, 2, 3, 4, 6, 7, 8, 11, 12];
-export const LEGEND_INDEX = 2; // L3 - The Ghost of Spiš Castle (0-indexed as 3rd legend)
-
-interface TourTypeState {
-  getTourStops: () => number[];
-  getLegendIndex: () => number;
+interface TourRoute {
+  id: TourType;
+  name: string;
+  description: string;
+  duration: string;
+  stopNumbers: number[];
+  legendIndexes: number[];
 }
 
-export const useTourTypeStore = create<TourTypeState>(() => ({
-  getTourStops: () => TOUR_STOPS,
-  getLegendIndex: () => LEGEND_INDEX,
+// Tour routes configuration - showing all stops
+export const TOUR_ROUTES: Record<TourType, TourRoute> = {
+  complete: {
+    id: 'complete',
+    name: 'Complete Tour',
+    description: 'Full castle experience with all stops and legends',
+    duration: '90 min',
+    stopNumbers: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
+    legendIndexes: [0, 1, 2, 3], // All 4 legends
+  },
+};
+
+interface TourTypeState {
+  selectedTourType: TourType;
+  setTourType: (type: TourType) => void;
+  getTourRoute: () => TourRoute;
+}
+
+export const useTourTypeStore = create<TourTypeState>((set, get) => ({
+  selectedTourType: 'complete',
+  setTourType: (type) => set({ selectedTourType: type }),
+  getTourRoute: () => {
+    const { selectedTourType } = get();
+    return TOUR_ROUTES[selectedTourType];
+  },
 }));
