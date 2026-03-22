@@ -1,1 +1,0 @@
-{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"},{"v":{"$numberInt":"2"},"key":{"stop_id":{"$numberInt":"1"},"language":{"$numberInt":"1"}},"name":"stop_id_1_language_1","unique":true}],"uuid":"7a13fb75513546af8afe64113b2c128c","collectionName":"tour_audio","type":"collection"}
