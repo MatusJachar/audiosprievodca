@@ -28,6 +28,7 @@ const COLORS = {
 export default function Tour() {
   const { tourStops, userProgress, loading, fetchTourStops, fetchUserProgress } = useTourStore();
   const selectedLanguage = useLanguageStore((state) => state.selectedLanguage);
+  const { getTourRoute } = useTourTypeStore();
   const [showDownloadModal, setShowDownloadModal] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState({ total: 0, downloaded: 0, currentItem: '' });
@@ -63,9 +64,10 @@ export default function Tour() {
       if (!API_URL || tourStops.length === 0 || initialPreloadDone.current) return;
       
       initialPreloadDone.current = true;
+      const tourRoute = getTourRoute();
       
-      console.log(`[Tour] Starting initial preload for Express+ Tour`);
-      console.log(`[Tour] Tour route: ${TOUR_STOPS.join(' → ')}`);
+      console.log(`[Tour] Starting initial preload for ${tourRoute.name}`);
+      console.log(`[Tour] Tour route: ${tourRoute.stopNumbers.join(' → ')}`);
       setInitialPreloadStatus('Preparing tour...');
       
       try {
@@ -76,7 +78,7 @@ export default function Tour() {
           selectedLanguage,
           API_URL,
           3,
-          TOUR_STOPS
+          tourRoute.stopNumbers
         );
         
         setInitialPreloadStatus('');
