@@ -153,26 +153,28 @@ export default function Tour() {
     return names[code] || code;
   };
 
-  // Filter tour stops based on Express+ tour (stops 1,2,3,4,6,7,8,11,12 + Legend L3)
+  // Filter tour stops based on selected tour type
   const filteredTourStops = useMemo(() => {
+    const tourRoute = getTourRoute();
+    
     return tourStops.filter(stop => {
       // Check if it's a legend stop
       const isLegendStop = stop.stop_name && stop.stop_name.startsWith('Legend ');
       
       if (isLegendStop) {
-        // Only include Legend 3 (The Ghost of Spiš Castle)
+        // For legend stops, check if the index is in legendIndexes
         const legendMatch = stop.stop_name?.match(/Legend (\d+)/);
         if (legendMatch) {
           const legendNumber = parseInt(legendMatch[1]);
           const legendIndex = legendNumber - 1; // Convert to 0-based index
-          return legendIndex === LEGEND_INDEX; // Only L3
+          return tourRoute.legendIndexes.includes(legendIndex);
         }
         return false;
       }
       
-      // For numbered stops, check if in our TOUR_STOPS array
+      // For numbered stops, check if the stop_number is in the route
       if (stop.stop_number !== null && stop.stop_number !== undefined) {
-        return TOUR_STOPS.includes(stop.stop_number);
+        return tourRoute.stopNumbers.includes(stop.stop_number);
       }
       
       return false;
