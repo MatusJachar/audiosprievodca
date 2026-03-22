@@ -104,6 +104,32 @@ export default function StopDetail() {
     cleanup();
   }, [stopId, selectedLanguage]);
 
+  // Get next stop in tour order
+  const getNextStop = () => {
+    if (!stop) return null;
+    const tourRoute = getTourRoute();
+    const currentStopNumber = stop.stop_number;
+    
+    if (currentStopNumber) {
+      // For numbered stops, find next in tour route
+      const currentIndex = tourRoute.stopNumbers.indexOf(currentStopNumber);
+      if (currentIndex !== -1 && currentIndex < tourRoute.stopNumbers.length - 1) {
+        const nextStopNumber = tourRoute.stopNumbers[currentIndex + 1];
+        return tourStops.find(s => s.stop_number === nextStopNumber);
+      } else if (currentIndex === tourRoute.stopNumbers.length - 1) {
+        // Last numbered stop - go to legend
+        if (tourRoute.legendIndexes.length > 0) {
+          const legendIndex = tourRoute.legendIndexes[0];
+          return tourStops.find(s => s.stop_name?.includes(`Legend ${legendIndex + 1}`));
+        }
+      }
+    }
+    return null;
+  };
+
+  const nextStop = getNextStop();
+  const [autoAdvanceCountdown, setAutoAdvanceCountdown] = useState<number | null>(null);
+
   const onStatus = (status: AVPlaybackStatus) => {
     if (status.isLoaded) {
       setPosition(status.positionMillis || 0);
@@ -113,7 +139,43 @@ export default function StopDetail() {
       if (status.didJustFinish) {
         setIsPlaying(false);
         markStopComplete('default-user', stopId as string);
+        
+        // Start auto-advance countdown if there's a next stop
+        if (nextStop) {
+          setAutoAdvanceCountdown(5);
+        }
       }
+    }
+  };
+
+  // Auto-advance countdown
+  useEffect(() => {
+    if (autoAdvanceCountdown === null) return;
+    
+    if (autoAdvanceCountdown <= 0) {
+      // Navigate to next stop
+      if (nextStop) {
+        router.replace({ pathname: '/stop-detail', params: { stopId: nextStop.id } });
+      }
+      setAutoAdvanceCountdown(null);
+      return;
+    }
+    
+    const timer = setTimeout(() => {
+      setAutoAdvanceCountdown(prev => prev !== null ? prev - 1 : null);
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }, [autoAdvanceCountdown, nextStop]);
+
+  const cancelAutoAdvance = () => {
+    setAutoAdvanceCountdown(null);
+  };
+
+  const goToNextStop = () => {
+    if (nextStop) {
+      setAutoAdvanceCountdown(null);
+      router.replace({ pathname: '/stop-detail', params: { stopId: nextStop.id } });
     }
   };
 
