@@ -255,7 +255,7 @@ export default function AdminContent() {
   if (checking) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#FFD700" />
+        <ActivityIndicator size="large" color="#4A90D9" />
       </View>
     );
   }
@@ -286,7 +286,7 @@ export default function AdminContent() {
         )}
         {uploadingImage && (
           <View style={styles.uploadingOverlay}>
-            <ActivityIndicator size="large" color="#FFD700" />
+            <ActivityIndicator size="large" color="#4A90D9" />
             <Text style={styles.uploadingText}>Uploading...</Text>
           </View>
         )}
@@ -304,7 +304,7 @@ export default function AdminContent() {
       </TouchableOpacity>
       
       <View style={styles.tipBox}>
-        <Ionicons name="bulb" size={20} color="#FFD700" />
+        <Ionicons name="bulb" size={20} color="#4A90D9" />
         <Text style={styles.tipText}>
           Tip: Use a 16:9 landscape image for best results. Recommended size: 1920x1080 pixels.
         </Text>
@@ -665,9 +665,9 @@ export default function AdminContent() {
         <Text style={styles.headerTitle}>Edit Content</Text>
         <TouchableOpacity onPress={saveContent} disabled={saving || activeSection === 'background'}>
           {saving ? (
-            <ActivityIndicator size="small" color="#FFD700" />
+            <ActivityIndicator size="small" color="#4A90D9" />
           ) : (
-            <Ionicons name="checkmark" size={24} color={activeSection === 'background' ? '#666' : '#FFD700'} />
+            <Ionicons name="checkmark" size={24} color={activeSection === 'background' ? '#666' : '#4A90D9'} />
           )}
         </TouchableOpacity>
       </View>
@@ -682,7 +682,7 @@ export default function AdminContent() {
             <Ionicons 
               name="image" 
               size={20} 
-              color={activeSection === 'background' ? '#000' : '#FFD700'} 
+              color={activeSection === 'background' ? '#000' : '#4A90D9'} 
             />
             <Text style={[styles.tabText, activeSection === 'background' && styles.tabTextActive]}>
               Background
@@ -696,7 +696,7 @@ export default function AdminContent() {
             <Ionicons 
               name="cart" 
               size={20} 
-              color={activeSection === 'shop' ? '#000' : '#FFD700'} 
+              color={activeSection === 'shop' ? '#000' : '#4A90D9'} 
             />
             <Text style={[styles.tabText, activeSection === 'shop' && styles.tabTextActive]}>
               Shop
@@ -710,7 +710,7 @@ export default function AdminContent() {
             <Ionicons 
               name="bus" 
               size={20} 
-              color={activeSection === 'travel' ? '#000' : '#FFD700'} 
+              color={activeSection === 'travel' ? '#000' : '#4A90D9'} 
             />
             <Text style={[styles.tabText, activeSection === 'travel' && styles.tabTextActive]}>
               Travel
@@ -724,7 +724,7 @@ export default function AdminContent() {
             <Ionicons 
               name="compass" 
               size={20} 
-              color={activeSection === 'discover' ? '#000' : '#FFD700'} 
+              color={activeSection === 'discover' ? '#000' : '#4A90D9'} 
             />
             <Text style={[styles.tabText, activeSection === 'discover' && styles.tabTextActive]}>
               Discover
@@ -735,7 +735,7 @@ export default function AdminContent() {
       
       {loading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#FFD700" />
+          <ActivityIndicator size="large" color="#4A90D9" />
         </View>
       ) : (
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -811,12 +811,12 @@ const styles = StyleSheet.create({
     minWidth: 80,
   },
   tabActive: {
-    backgroundColor: '#FFD700',
+    backgroundColor: '#4A90D9',
   },
   tabText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#FFD700',
+    color: '#4A90D9',
   },
   tabTextActive: {
     color: '#000',
@@ -834,7 +834,7 @@ const styles = StyleSheet.create({
   editorTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#FFD700',
+    color: '#4A90D9',
     marginBottom: 16,
     marginTop: 8,
   },
@@ -861,7 +861,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFD700',
+    backgroundColor: '#4A90D9',
     padding: 16,
     borderRadius: 12,
     gap: 10,
@@ -918,14 +918,14 @@ const styles = StyleSheet.create({
   },
   uploadingText: {
     fontSize: 14,
-    color: '#FFD700',
+    color: '#4A90D9',
     marginTop: 12,
   },
   changeImageButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFD700',
+    backgroundColor: '#4A90D9',
     padding: 14,
     borderRadius: 10,
     gap: 8,
@@ -959,7 +959,7 @@ const styles = StyleSheet.create({
   seasonTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#FFD700',
+    color: '#4A90D9',
     marginBottom: 10,
   },
   seasonItem: {

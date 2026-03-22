@@ -38,14 +38,14 @@ export default function AdminLogin() {
       
       <View style={styles.content}>
         <View style={styles.iconContainer}>
-          <Ionicons name="lock-closed" size={80} color="#FFD700" />
+          <Ionicons name="lock-closed" size={80} color="#4A90D9" />
         </View>
         
         <Text style={styles.title}>Admin Panel</Text>
         <Text style={styles.subtitle}>Enter password to continue</Text>
         
         <View style={styles.inputContainer}>
-          <Ionicons name="key" size={20} color="#FFD700" style={styles.inputIcon} />
+          <Ionicons name="key" size={20} color="#4A90D9" style={styles.inputIcon} />
           <TextInput
             style={styles.input}
             placeholder="Password"
@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFD700',
+    backgroundColor: '#4A90D9',
     paddingHorizontal: 32,
     paddingVertical: 16,
     borderRadius: 12,
@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   backButtonText: {
-    color: '#FFD700',
+    color: '#4A90D9',
     fontSize: 14,
   },
   hint: {
