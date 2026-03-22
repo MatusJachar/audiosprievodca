@@ -101,3 +101,7 @@ spissky-hrad-export.zip
 *.env
 *.env.*
 spissky-hrad-export/database/dump.archive
+-e 
+# Environment files
+*.env
+*.env.*
