@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7.0
+    container_name: spissky-hrad-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: spis_castle_db
+    volumes:
+      - mongodb_data:/data/db
+      - ./database/restore.sh:/docker-entrypoint-initdb.d/restore.sh:ro
+      - ./database/dump:/dump:ro
+    ports:
+      - "27017:27017"
+    networks:
+      - app-network
+
+  # FastAPI Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: spissky-hrad-backend
+    restart: unless-stopped
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017
+      - DB_NAME=spis_castle_db
+      - PYTHONUNBUFFERED=1
+    ports:
+      - "8001:8001"
+    depends_on:
+      - mongodb
+    volumes:
+      - ./assets:/app/assets:ro
+    networks:
+      - app-network
+
+  # Nginx Reverse Proxy (for production)
+  nginx:
+    image: nginx:alpine
+    container_name: spissky-hrad-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  app-network:
+    driver: bridge
