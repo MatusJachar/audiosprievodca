@@ -382,6 +382,34 @@ export default function StopDetail() {
                 <Ionicons name="stop" size={22} color="#FF5252" />
               </Pressable>
             </View>
+
+            {/* Auto-advance countdown */}
+            {autoAdvanceCountdown !== null && nextStop && (
+              <View style={styles.autoAdvanceContainer}>
+                <View style={styles.autoAdvanceContent}>
+                  <Ionicons name="arrow-forward-circle" size={24} color="#4A90D9" />
+                  <Text style={styles.autoAdvanceText}>
+                    Ďalšia zastávka za {autoAdvanceCountdown}s...
+                  </Text>
+                </View>
+                <Pressable onPress={cancelAutoAdvance} style={styles.cancelBtn}>
+                  <Text style={styles.cancelBtnText}>Zrušiť</Text>
+                </Pressable>
+              </View>
+            )}
+
+            {/* Next Stop Button */}
+            {nextStop && autoAdvanceCountdown === null && (
+              <Pressable onPress={goToNextStop} style={styles.nextStopBtn}>
+                <View style={styles.nextStopContent}>
+                  <Text style={styles.nextStopLabel}>Ďalšia zastávka</Text>
+                  <Text style={styles.nextStopName}>
+                    {nextStop.content?.[selectedLanguage]?.title || nextStop.stop_name || `Stop ${nextStop.stop_number}`}
+                  </Text>
+                </View>
+                <Ionicons name="arrow-forward" size={24} color="#fff" />
+              </Pressable>
+            )}
           </View>
         </ScrollView>
       </View>
