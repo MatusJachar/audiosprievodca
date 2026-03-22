@@ -2,7 +2,7 @@
 
 ## Complete Export Package for Hetzner Deployment
 
-This package contains everything needed to deploy the Spišský hrad Audio Tour application on your own server.
+This package contains everything needed to deploy the Spišský hrad Audio Tour application.
 
 ---
 
@@ -10,26 +10,55 @@ This package contains everything needed to deploy the Spišský hrad Audio Tour 
 
 ```
 spissky-hrad-export/
-├── docker-compose.yml      # One-command deployment
+├── docker-compose.yml         # One-command deployment
 ├── docker/
-│   └── nginx.conf          # Reverse proxy configuration
+│   └── nginx.conf             # Reverse proxy configuration
 ├── backend/
-│   ├── server.py           # FastAPI application
-│   ├── requirements.txt    # Python dependencies
-│   ├── Dockerfile          # Backend container
-│   └── .env.example        # Environment template
-├── frontend/
-│   ├── app/                # React Native screens
-│   ├── assets/             # Images, fonts
-│   ├── store/              # State management
-│   ├── app.json            # Expo configuration
-│   ├── eas.json            # EAS build config
-│   └── package.json        # Node dependencies
+│   ├── server.py              # FastAPI application
+│   ├── requirements.txt       # Python dependencies
+│   ├── Dockerfile             # Backend container
+│   └── .env.example           # Environment template
+├── frontend/                  # Complete Expo React Native app
+│   ├── app/                   # All screens
+│   ├── assets/                # Images, logo
+│   ├── store/                 # State management
+│   ├── app.json               # Expo configuration
+│   └── package.json           # Dependencies
 ├── database/
-│   ├── dump/               # MongoDB backup (154 audio files, 17 stops)
-│   └── restore.sh          # Database restore script
-└── README.md               # This file
+│   ├── dump/                  # MongoDB backup
+│   │   └── test_database/     # 154 audio files, 17 stops
+│   └── restore.sh             # Database restore script
+└── README.md                  # This file
 ```
+
+---
+
+## 🏰 Tour Configuration
+
+### Tour Stops (8 total)
+| # | Stop Name |
+|---|-----------|
+| 1 | Welcome / Vitajte |
+| 2 | In Front of the Castle Photography |
+| 4 | In the Kitchen |
+| 6 | On the Romanesque Forecourt |
+| 8 | Lower Courtyard |
+| 11 | Tower |
+| 12 | Romanesque Palace |
+| L3 | 👻 The Ghost of Spiš Castle (Legend) |
+
+### Languages (9 total)
+| Code | Language | Flag |
+|------|----------|------|
+| sk | Slovak | 🇸🇰 |
+| en | English | 🇬🇧 |
+| de | German | 🇩🇪 |
+| pl | Polish | 🇵🇱 |
+| hu | Hungarian | 🇭🇺 |
+| ru | Russian | 🇷🇺 |
+| es | Spanish | 🇪🇸 |
+| zh | Chinese | 🇨🇳 |
+| fr | French | 🇫🇷 |
 
 ---
 
@@ -43,30 +72,29 @@ spissky-hrad-export/
 ### Deployment
 
 ```bash
-# 1. Clone or extract the package
-cd spissky-hrad-export
+# 1. Extract the package
+unzip spissky-hrad-export.zip
+cd export
 
 # 2. Start all services
 docker-compose up -d
 
-# 3. Wait for services to initialize (about 30 seconds)
+# 3. Wait for services to initialize (~30 seconds)
 docker-compose logs -f
 
 # 4. Test the API
 curl http://localhost:8001/api/tour-stops
 ```
 
-The backend API will be available at:
-- **Direct:** http://localhost:8001/api/
-- **Via Nginx:** http://localhost/api/
+**API available at:** http://localhost:8001/api/
 
 ---
 
 ## 📱 Mobile App Build (EAS)
 
 ### Prerequisites
-- Node.js 18+ installed
-- Expo CLI: `npm install -g expo-cli eas-cli`
+- Node.js 18+
+- Expo CLI: `npm install -g eas-cli`
 - Expo account: https://expo.dev
 
 ### Build Commands
@@ -91,8 +119,7 @@ eas build --platform ios --profile production
 ```
 
 ### Configure API URL
-
-Before building, update `frontend/.env`:
+Update `frontend/.env` before building:
 ```
 EXPO_PUBLIC_BACKEND_URL=https://your-server.com
 ```
@@ -104,18 +131,20 @@ EXPO_PUBLIC_BACKEND_URL=https://your-server.com
 ### Collections
 | Collection | Documents | Description |
 |------------|-----------|-------------|
-| tour_stops | 17 | Tour stop metadata & translations |
-| tour_audio | 154 | Audio files (9 languages × 17 stops) |
+| tour_stops | 17 | Tour stop metadata & 9-language translations |
+| tour_audio | 154 | Audio files (17 stops × 9 languages) |
 | app_settings | 1 | Background image, site settings |
 | user_progress | 1 | User progress tracking |
 
-### Manual Restore (if needed)
+### Audio Files
+- **Total:** 154 MP3 files
+- **Formula:** 17 stops × 9 languages = 153 (+ 1 extra)
+- **Displayed:** 8 stops (7 numbered + 1 legend)
+- **Languages:** sk, en, de, pl, hu, ru, es, zh, fr
 
+### Manual Restore
 ```bash
-# Enter MongoDB container
 docker exec -it spissky-hrad-mongodb bash
-
-# Restore database
 mongorestore --db spis_castle_db /dump/test_database --drop
 ```
 
@@ -142,143 +171,99 @@ mongorestore --db spis_castle_db /dump/test_database --drop
 |----------|--------|-------------|
 | `/api/images/background` | GET/POST | Background image |
 
-### Admin
+### Admin Operations
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/tour-stops/{id}/description` | PUT | Update description |
+| `/api/tour-stops/{id}/description` | PUT | Update stop description |
 | `/api/tour-stops/{id}/image` | POST | Upload stop image |
-| `/api/tour-stops/{id}/audio/{language}` | POST | Upload audio |
+| `/api/tour-stops/{id}/audio/{lang}` | POST | Upload audio file |
 
 ---
 
-## 🌍 Languages Supported
+## 🎨 App Features
 
-| Code | Language | Native Name |
-|------|----------|-------------|
-| sk | Slovak | Slovenčina |
-| en | English | English |
-| de | German | Deutsch |
-| pl | Polish | Polski |
-| hu | Hungarian | Magyar |
-| ru | Russian | Русский |
-| es | Spanish | Español |
-| zh | Chinese | 中文 |
-| fr | French | Français |
+### Color Scheme
+- **Primary:** #4A90D9 (Royal Blue)
+- **Secondary:** #7B68EE (Slate Blue)
+- **Accent:** #E8B923 (Gold)
+- **Background:** #1a1a2e (Dark Blue)
 
----
+### Key Features
+- ✅ **9 Language Support** with emoji flags
+- ✅ **8 Audio Tour Stops** (7 + 1 legend)
+- ✅ **Offline Mode** - Download all audio for offline use
+- ✅ **Auto-Advance** - Automatic navigation to next stop after audio completes
+- ✅ **Next Stop Button** - Manual navigation to next stop
+- ✅ **Admin Panel** - Edit content, upload audio/images
+- ✅ **Blue Professional Theme** - Consistent across all screens
 
-## 🏰 Tour Stops (Express+ Tour)
-
-| Stop | Name |
-|------|------|
-| 1 | Welcome / Vitajte |
-| 2 | In Front of Castle Photography |
-| 3 | At the Castle Model |
-| 4 | In the Kitchen |
-| 6 | On the Romanesque Forecourt |
-| 7 | On the Upper Terrace |
-| 8 | Lower Courtyard |
-| 11 | Tower |
-| 12 | Romanesque Palace |
-| L3 | The Ghost of Spiš Castle (Legend) |
+### Admin Panel Access
+- **Password:** castle2025
+- **Access:** Tap gear icon on home page
 
 ---
 
-## 💰 Monetization Ready
-
-### Google AdMob
-The app is prepared for AdMob integration:
-1. Create AdMob account at https://admob.google.com
-2. Add app and get App ID
-3. Update `app.json` with AdMob config
-4. Install: `npx expo install react-native-google-mobile-ads`
-
-### Local Business Partners
-Backend supports partner CRUD:
-- `/api/admin/partners` - Partner management
-- Categories: restaurant, hotel, shop, transport, attraction
-
----
-
-## 🔧 Configuration
-
-### Environment Variables
-
-**Backend (.env)**
-```
-MONGO_URL=mongodb://mongodb:27017
-DB_NAME=spis_castle_db
-```
-
-**Frontend (.env)**
-```
-EXPO_PUBLIC_BACKEND_URL=https://your-domain.com
-```
-
-### SSL/HTTPS (Production)
-
-1. Obtain SSL certificates (Let's Encrypt recommended)
-2. Place in `docker/ssl/`
-3. Uncomment HTTPS section in `nginx.conf`
-4. Restart nginx: `docker-compose restart nginx`
-
----
-
-## 📊 Revenue Projections
+## 💰 Revenue Projections
 
 ### Assumptions
 - 50,000 castle visitors/year
-- 5% app adoption rate = 2,500 users
+- 5% app adoption = 2,500 users
 - Mix of free (ads) and premium features
 
 ### Potential Revenue Streams
 | Source | Annual Estimate |
 |--------|-----------------|
-| AdMob (€0.50 CPM) | €500-1,000 |
+| AdMob Ads | €500-1,000 |
 | Local Partner Listings | €1,000-2,000 |
-| Premium Features (future) | €2,000-5,000 |
+| Premium Features | €2,000-5,000 |
 | **Total Potential** | **€3,500-8,000** |
+
+---
+
+## 🔧 Configuration
+
+### Backend Environment (.env)
+```
+MONGO_URL=mongodb://mongodb:27017
+DB_NAME=spis_castle_db
+```
+
+### Frontend Environment (.env)
+```
+EXPO_PUBLIC_BACKEND_URL=https://your-domain.com
+```
 
 ---
 
 ## 🆘 Troubleshooting
 
-### MongoDB won't start
+### MongoDB Issues
 ```bash
 docker-compose logs mongodb
-# Check disk space
-df -h
+df -h  # Check disk space
 ```
 
-### Backend errors
+### Backend Errors
 ```bash
 docker-compose logs backend
-# Restart backend
 docker-compose restart backend
 ```
 
-### Audio not playing
-- Check browser console for CORS errors
-- Verify `/api/audio/stream/{id}/{lang}` returns audio
-- Check MongoDB tour_audio collection has data
-
----
-
-## 📞 Support
-
-For technical support or customization requests:
-- GitHub Issues: [your-repo]/issues
-- Email: support@example.com
+### Audio Not Playing
+1. Check browser console for CORS errors
+2. Verify audio endpoint: `curl http://localhost:8001/api/audio/stream/{stop_id}/sk`
+3. Check MongoDB: `tour_audio` collection has data
 
 ---
 
 ## 📄 License
 
-This project is proprietary software. All rights reserved.
+Proprietary software. All rights reserved.
 Audio content © Spišský hrad / Slovak National Heritage Board.
 
 ---
 
+**App Name:** Spišský hrad  
+**Package ID:** com.spisskygrad.freetour  
 **Version:** 1.0.0  
-**Last Updated:** March 2026  
-**Export Date:** $(date)
+**Export Date:** March 2026
