@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useTourStore } from '../store/tourStore';
 import { useLanguageStore } from '../store/languageStore';
+import { useTourTypeStore } from '../store/tourTypeStore';
 import { useEffect, useMemo, useState, useRef } from 'react';
 import { OfflineCacheManager } from '../utils/offlineCacheManager';
 import { LinearGradient } from 'expo-linear-gradient';
