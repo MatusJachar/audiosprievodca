@@ -4,10 +4,10 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useTourStore } from '../store/tourStore';
 import { useLanguageStore } from '../store/languageStore';
-import { TOUR_STOPS, LEGEND_INDEX } from '../store/tourTypeStore';
 import { useEffect, useMemo, useState, useRef } from 'react';
 import { OfflineCacheManager } from '../utils/offlineCacheManager';
 import { LinearGradient } from 'expo-linear-gradient';
+import BackgroundWrapper from '../components/BackgroundWrapper';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
