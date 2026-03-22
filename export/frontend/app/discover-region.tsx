@@ -56,7 +56,7 @@ export default function DiscoverRegion() {
               </View>
               
               <View style={styles.cardIcon}>
-                <Ionicons name="phone-portrait" size={36} color="#FFD700" />
+                <Ionicons name="phone-portrait" size={36} color="#4A90D9" />
               </View>
               
               <Text style={styles.cardTitle}>📱 App Guide</Text>
@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
   heroTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#FFD700',
+    color: '#4A90D9',
     textAlign: 'center',
   },
   heroSubtitle: {
@@ -211,14 +211,14 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     borderWidth: 2,
-    borderColor: '#FFD700',
+    borderColor: '#4A90D9',
     alignItems: 'center',
   },
   cardGreen: {
     borderColor: '#4CAF50',
   },
   cardBadge: {
-    backgroundColor: '#FFD700',
+    backgroundColor: '#4A90D9',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 10,
@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
   priceNew: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#FFD700',
+    color: '#4A90D9',
   },
   priceLabel: {
     fontSize: 11,
@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFD700',
+    backgroundColor: '#4A90D9',
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 20,
@@ -347,7 +347,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     borderLeftWidth: 3,
-    borderLeftColor: '#FFD700',
+    borderLeftColor: '#4A90D9',
   },
   testimonialQuote: {
     fontSize: 13,
@@ -356,7 +356,7 @@ const styles = StyleSheet.create({
   },
   testimonialAuthor: {
     fontSize: 11,
-    color: '#FFD700',
+    color: '#4A90D9',
     marginTop: 8,
   },
 });

@@ -96,7 +96,7 @@ export default function Settings() {
             onPress={() => router.push('/language-select')}
           >
             <View style={styles.settingLeft}>
-              <Ionicons name="language" size={24} color="#FFD700" />
+              <Ionicons name="language" size={24} color="#4A90D9" />
               <View style={styles.settingInfo}>
                 <Text style={styles.settingLabel}>Tour Language</Text>
                 <Text style={styles.settingValue}>
@@ -173,7 +173,7 @@ export default function Settings() {
             onPress={handleDownloadContent}
           >
             <View style={styles.settingLeft}>
-              <Ionicons name="download" size={24} color="#FFD700" />
+              <Ionicons name="download" size={24} color="#4A90D9" />
               <View style={styles.settingInfo}>
                 <Text style={styles.settingLabel}>Download Tour</Text>
                 <Text style={styles.settingSubtext}>
@@ -243,7 +243,7 @@ export default function Settings() {
           <Text style={styles.sectionTitle}>About</Text>
           <View style={styles.settingCard}>
             <View style={styles.settingLeft}>
-              <Ionicons name="business" size={24} color="#FFD700" />
+              <Ionicons name="business" size={24} color="#4A90D9" />
               <View style={styles.settingInfo}>
                 <Text style={styles.settingLabel}>Spiš Castle Audio Tour</Text>
                 <Text style={styles.settingSubtext}>Version 1.0.0</Text>
@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
   settingLeft: { flexDirection: 'row', alignItems: 'center', flex: 1, gap: 16 },
   settingInfo: { flex: 1 },
   settingLabel: { fontSize: 16, fontWeight: '600', color: '#fff', marginBottom: 2 },
-  settingValue: { fontSize: 14, color: '#FFD700' },
+  settingValue: { fontSize: 14, color: '#4A90D9' },
   settingSubtext: { fontSize: 14, color: '#aaa' },
   toggle: { width: 48, height: 28, borderRadius: 14, backgroundColor: '#2a2a2a', padding: 2 },
   toggleActive: { backgroundColor: '#4CAF50' },

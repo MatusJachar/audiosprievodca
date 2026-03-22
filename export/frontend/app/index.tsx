@@ -116,7 +116,7 @@ export default function Index() {
             <View style={styles.featureIcon}>
               <Ionicons name="location" size={28} color={COLORS.primary} />
             </View>
-            <Text style={styles.featureNumber}>10</Text>
+            <Text style={styles.featureNumber}>8</Text>
             <Text style={styles.featureText}>Zastávok</Text>
           </View>
           <View style={styles.featureDivider} />

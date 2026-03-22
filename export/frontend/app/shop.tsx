@@ -53,7 +53,7 @@ export default function Shop() {
           {/* Entrance Tickets Section */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Ionicons name="ticket" size={28} color="#FFD700" />
+              <Ionicons name="ticket" size={28} color="#4A90D9" />
               <Text style={styles.sectionTitle}>Entrance Fees</Text>
             </View>
             
@@ -96,7 +96,7 @@ export default function Shop() {
           {/* Night Tours */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Ionicons name="moon" size={28} color="#FFD700" />
+              <Ionicons name="moon" size={28} color="#4A90D9" />
               <Text style={styles.sectionTitle}>Night Tours 🌙</Text>
             </View>
             <Text style={styles.nightTourInfo}>
@@ -118,7 +118,7 @@ export default function Shop() {
           {/* Castle Shop */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Ionicons name="bag" size={28} color="#FFD700" />
+              <Ionicons name="bag" size={28} color="#4A90D9" />
               <Text style={styles.sectionTitle}>Castle Gift Shop</Text>
             </View>
             <Text style={styles.sectionDescription}>
@@ -127,19 +127,19 @@ export default function Shop() {
             
             <View style={styles.shopItems}>
               <View style={styles.shopItem}>
-                <Ionicons name="book" size={32} color="#FFD700" />
+                <Ionicons name="book" size={32} color="#4A90D9" />
                 <Text style={styles.shopItemName}>History Books</Text>
               </View>
               <View style={styles.shopItem}>
-                <Ionicons name="shirt" size={32} color="#FFD700" />
+                <Ionicons name="shirt" size={32} color="#4A90D9" />
                 <Text style={styles.shopItemName}>T-Shirts</Text>
               </View>
               <View style={styles.shopItem}>
-                <Ionicons name="gift" size={32} color="#FFD700" />
+                <Ionicons name="gift" size={32} color="#4A90D9" />
                 <Text style={styles.shopItemName}>Souvenirs</Text>
               </View>
               <View style={styles.shopItem}>
-                <Ionicons name="image" size={32} color="#FFD700" />
+                <Ionicons name="image" size={32} color="#4A90D9" />
                 <Text style={styles.shopItemName}>Postcards</Text>
               </View>
             </View>
@@ -148,7 +148,7 @@ export default function Shop() {
               style={styles.shopButton}
               onPress={() => handleOpenLink('https://www.spisskyhrad.sk/en/shop/')}
             >
-              <Ionicons name="storefront" size={22} color="#FFD700" />
+              <Ionicons name="storefront" size={22} color="#4A90D9" />
               <Text style={styles.shopButtonText}>Visit Online Shop</Text>
             </TouchableOpacity>
           </View>
@@ -156,7 +156,7 @@ export default function Shop() {
           {/* Audio Guide Info */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Ionicons name="headset" size={28} color="#FFD700" />
+              <Ionicons name="headset" size={28} color="#4A90D9" />
               <Text style={styles.sectionTitle}>Audio Guide</Text>
             </View>
             <View style={styles.audioGuideInfo}>
@@ -185,28 +185,28 @@ export default function Shop() {
           {/* Contact */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Ionicons name="information-circle" size={28} color="#FFD700" />
+              <Ionicons name="information-circle" size={28} color="#4A90D9" />
               <Text style={styles.sectionTitle}>Need Help?</Text>
             </View>
             <TouchableOpacity 
               style={styles.contactItem}
               onPress={() => handleOpenLink('mailto:info@spisskyhrad.sk')}
             >
-              <Ionicons name="mail" size={22} color="#FFD700" />
+              <Ionicons name="mail" size={22} color="#4A90D9" />
               <Text style={styles.contactText}>info@spisskyhrad.sk</Text>
             </TouchableOpacity>
             <TouchableOpacity 
               style={styles.contactItem}
               onPress={() => Linking.openURL('tel:+421534541336')}
             >
-              <Ionicons name="call" size={22} color="#FFD700" />
+              <Ionicons name="call" size={22} color="#4A90D9" />
               <Text style={styles.contactText}>+421 53 454 1336</Text>
             </TouchableOpacity>
             <TouchableOpacity 
               style={styles.contactItem}
               onPress={() => handleOpenLink('https://www.spisskyhrad.sk')}
             >
-              <Ionicons name="globe" size={22} color="#FFD700" />
+              <Ionicons name="globe" size={22} color="#4A90D9" />
               <Text style={styles.contactText}>www.spisskyhrad.sk</Text>
             </TouchableOpacity>
           </View>
@@ -318,7 +318,7 @@ const styles = StyleSheet.create({
   },
   nightTourInfo: {
     fontSize: 15,
-    color: '#FFD700',
+    color: '#4A90D9',
     textAlign: 'center',
     marginBottom: 16,
     fontWeight: '500',
@@ -342,13 +342,13 @@ const styles = StyleSheet.create({
   priceValue: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#FFD700',
+    color: '#4A90D9',
   },
   buyButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFD700',
+    backgroundColor: '#4A90D9',
     padding: 16,
     borderRadius: 12,
     gap: 10,
@@ -391,7 +391,7 @@ const styles = StyleSheet.create({
   shopButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#FFD700',
+    color: '#4A90D9',
   },
   audioGuideInfo: {
     marginBottom: 16,

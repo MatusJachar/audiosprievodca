@@ -308,7 +308,7 @@ export default function Admin() {
         <View style={styles.stopHeader}>
           <View style={styles.stopNumber}>
             {isLegendsStop ? (
-              <Ionicons name="book" size={20} color="#FFD700" />
+              <Ionicons name="book" size={20} color="#4A90D9" />
             ) : (
               <Text style={styles.stopNumberText}>{item.stop_number}</Text>
             )}
@@ -391,7 +391,7 @@ export default function Admin() {
           )}
           {uploadingImage && (
             <View style={styles.uploadingOverlay}>
-              <ActivityIndicator size="large" color="#FFD700" />
+              <ActivityIndicator size="large" color="#4A90D9" />
             </View>
           )}
         </TouchableOpacity>
@@ -403,7 +403,7 @@ export default function Admin() {
         onPress={() => router.push('/admin-content')}
       >
         <View style={styles.contentEditLeft}>
-          <Ionicons name="create" size={24} color="#FFD700" />
+          <Ionicons name="create" size={24} color="#4A90D9" />
           <View style={styles.contentEditInfo}>
             <Text style={styles.contentEditTitle}>Edit App Content</Text>
             <Text style={styles.contentEditSubtitle}>Shop prices, Travel info, Discover section</Text>
@@ -534,7 +534,7 @@ export default function Admin() {
               </View>
 
               <View style={styles.audioHintContainer}>
-                <Ionicons name="information-circle" size={20} color="#FFD700" />
+                <Ionicons name="information-circle" size={20} color="#4A90D9" />
                 <Text style={styles.audioHintText}>
                   Upload MP3 audio files (max 50MB per file)
                 </Text>
@@ -553,7 +553,7 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 24, paddingTop: 60, backgroundColor: '#1a1a1a' },
   headerTitle: { fontSize: 20, fontWeight: 'bold', color: '#fff' },
   backgroundSection: { backgroundColor: '#1a1a1a', padding: 16, marginHorizontal: 16, marginTop: 16, borderRadius: 12 },
-  sectionTitle: { fontSize: 16, fontWeight: 'bold', color: '#FFD700', marginBottom: 12 },
+  sectionTitle: { fontSize: 16, fontWeight: 'bold', color: '#4A90D9', marginBottom: 12 },
   backgroundButton: { width: '100%', height: 150, borderRadius: 12, overflow: 'hidden', backgroundColor: '#2a2a2a' },
   backgroundPreview: { width: '100%', height: '100%' },
   backgroundPlaceholder: { flex: 1, justifyContent: 'center', alignItems: 'center' },
@@ -567,7 +567,7 @@ const styles = StyleSheet.create({
   listContent: { padding: 16 },
   stopCard: { backgroundColor: '#1a1a1a', borderRadius: 12, padding: 16, marginBottom: 12 },
   stopHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
-  stopNumber: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#FFD700', justifyContent: 'center', alignItems: 'center', marginRight: 12 },
+  stopNumber: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#4A90D9', justifyContent: 'center', alignItems: 'center', marginRight: 12 },
   stopNumberText: { fontSize: 18, fontWeight: 'bold', color: '#000' },
   stopInfo: { flex: 1 },
   stopTitle: { fontSize: 16, fontWeight: 'bold', color: '#fff', marginBottom: 4 },
@@ -583,7 +583,7 @@ const styles = StyleSheet.create({
   modalTitle: { fontSize: 20, fontWeight: 'bold', color: '#fff' },
   languageTabs: { padding: 16, maxHeight: 80 },
   languageTab: { alignItems: 'center', padding: 8, marginRight: 8, borderRadius: 8, backgroundColor: '#2a2a2a', minWidth: 60 },
-  languageTabActive: { backgroundColor: '#FFD700' },
+  languageTabActive: { backgroundColor: '#4A90D9' },
   languageTabText: { fontSize: 24, marginBottom: 4 },
   languageTabLabel: { fontSize: 10, color: '#aaa', fontWeight: '600' },
   languageTabLabelActive: { color: '#000' },
@@ -591,7 +591,7 @@ const styles = StyleSheet.create({
   label: { fontSize: 14, fontWeight: 'bold', color: '#aaa', marginBottom: 8, textTransform: 'uppercase' },
   input: { backgroundColor: '#2a2a2a', color: '#fff', padding: 16, borderRadius: 8, fontSize: 16, marginBottom: 20 },
   textArea: { height: 200 },
-  saveButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFD700', padding: 16, borderRadius: 12, gap: 8, marginTop: 12 },
+  saveButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#4A90D9', padding: 16, borderRadius: 12, gap: 8, marginTop: 12 },
   saveButtonText: { fontSize: 16, fontWeight: 'bold', color: '#000' },
   imageModalContent: { padding: 24 },
   sectionSubtitle: { fontSize: 18, fontWeight: 'bold', color: '#fff', marginBottom: 16 },
@@ -599,10 +599,10 @@ const styles = StyleSheet.create({
   stopImagePreview: { width: '100%', height: 200, borderRadius: 12, backgroundColor: '#2a2a2a' },
   stopImagePlaceholder: { width: '100%', height: 200, borderRadius: 12, backgroundColor: '#2a2a2a', justifyContent: 'center', alignItems: 'center' },
   imageStatusText: { fontSize: 14, color: '#4CAF50', marginTop: 8, textAlign: 'center' },
-  uploadButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFD700', padding: 16, borderRadius: 12, gap: 8 },
+  uploadButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#4A90D9', padding: 16, borderRadius: 12, gap: 8 },
   uploadButtonText: { fontSize: 16, fontWeight: 'bold', color: '#000' },
   legendsSection: { marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: '#333' },
-  legendsSectionTitle: { fontSize: 14, fontWeight: 'bold', color: '#FFD700', marginBottom: 12 },
+  legendsSectionTitle: { fontSize: 14, fontWeight: 'bold', color: '#4A90D9', marginBottom: 12 },
   legendItem: { backgroundColor: '#2a2a2a', padding: 12, borderRadius: 8, marginBottom: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   legendTitle: { fontSize: 14, color: '#fff', flex: 1 },
   audioModalContent: { padding: 24 },

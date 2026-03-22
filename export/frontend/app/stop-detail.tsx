@@ -104,6 +104,32 @@ export default function StopDetail() {
     cleanup();
   }, [stopId, selectedLanguage]);
 
+  // Get next stop in tour order
+  const getNextStop = () => {
+    if (!stop) return null;
+    const tourRoute = getTourRoute();
+    const currentStopNumber = stop.stop_number;
+    
+    if (currentStopNumber) {
+      // For numbered stops, find next in tour route
+      const currentIndex = tourRoute.stopNumbers.indexOf(currentStopNumber);
+      if (currentIndex !== -1 && currentIndex < tourRoute.stopNumbers.length - 1) {
+        const nextStopNumber = tourRoute.stopNumbers[currentIndex + 1];
+        return tourStops.find(s => s.stop_number === nextStopNumber);
+      } else if (currentIndex === tourRoute.stopNumbers.length - 1) {
+        // Last numbered stop - go to legend
+        if (tourRoute.legendIndexes.length > 0) {
+          const legendIndex = tourRoute.legendIndexes[0];
+          return tourStops.find(s => s.stop_name?.includes(`Legend ${legendIndex + 1}`));
+        }
+      }
+    }
+    return null;
+  };
+
+  const nextStop = getNextStop();
+  const [autoAdvanceCountdown, setAutoAdvanceCountdown] = useState<number | null>(null);
+
   const onStatus = (status: AVPlaybackStatus) => {
     if (status.isLoaded) {
       setPosition(status.positionMillis || 0);
@@ -113,7 +139,43 @@ export default function StopDetail() {
       if (status.didJustFinish) {
         setIsPlaying(false);
         markStopComplete('default-user', stopId as string);
+        
+        // Start auto-advance countdown if there's a next stop
+        if (nextStop) {
+          setAutoAdvanceCountdown(5);
+        }
       }
+    }
+  };
+
+  // Auto-advance countdown
+  useEffect(() => {
+    if (autoAdvanceCountdown === null) return;
+    
+    if (autoAdvanceCountdown <= 0) {
+      // Navigate to next stop
+      if (nextStop) {
+        router.replace({ pathname: '/stop-detail', params: { stopId: nextStop.id } });
+      }
+      setAutoAdvanceCountdown(null);
+      return;
+    }
+    
+    const timer = setTimeout(() => {
+      setAutoAdvanceCountdown(prev => prev !== null ? prev - 1 : null);
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }, [autoAdvanceCountdown, nextStop]);
+
+  const cancelAutoAdvance = () => {
+    setAutoAdvanceCountdown(null);
+  };
+
+  const goToNextStop = () => {
+    if (nextStop) {
+      setAutoAdvanceCountdown(null);
+      router.replace({ pathname: '/stop-detail', params: { stopId: nextStop.id } });
     }
   };
 
@@ -320,6 +382,34 @@ export default function StopDetail() {
                 <Ionicons name="stop" size={22} color="#FF5252" />
               </Pressable>
             </View>
+
+            {/* Auto-advance countdown */}
+            {autoAdvanceCountdown !== null && nextStop && (
+              <View style={styles.autoAdvanceContainer}>
+                <View style={styles.autoAdvanceContent}>
+                  <Ionicons name="arrow-forward-circle" size={24} color="#4A90D9" />
+                  <Text style={styles.autoAdvanceText}>
+                    Ďalšia zastávka za {autoAdvanceCountdown}s...
+                  </Text>
+                </View>
+                <Pressable onPress={cancelAutoAdvance} style={styles.cancelBtn}>
+                  <Text style={styles.cancelBtnText}>Zrušiť</Text>
+                </Pressable>
+              </View>
+            )}
+
+            {/* Next Stop Button */}
+            {nextStop && autoAdvanceCountdown === null && (
+              <Pressable onPress={goToNextStop} style={styles.nextStopBtn}>
+                <View style={styles.nextStopContent}>
+                  <Text style={styles.nextStopLabel}>Ďalšia zastávka</Text>
+                  <Text style={styles.nextStopName}>
+                    {nextStop.content?.[selectedLanguage]?.title || nextStop.stop_name || `Stop ${nextStop.stop_number}`}
+                  </Text>
+                </View>
+                <Ionicons name="arrow-forward" size={24} color="#fff" />
+              </Pressable>
+            )}
           </View>
         </ScrollView>
       </View>
@@ -332,29 +422,38 @@ const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', padding: 16, paddingTop: 56, gap: 16 },
   backBtn: { padding: 8 },
-  badge: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#FFD700', justifyContent: 'center', alignItems: 'center' },
-  badgeText: { fontSize: 18, fontWeight: 'bold', color: '#000' },
+  badge: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#4A90D9', justifyContent: 'center', alignItems: 'center' },
+  badgeText: { fontSize: 18, fontWeight: 'bold', color: '#fff' },
   scroll: { flex: 1, padding: 20 },
   completedBanner: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(76,175,80,0.2)', padding: 10, borderRadius: 8, marginBottom: 16, gap: 8 },
   completedText: { color: '#4CAF50', fontWeight: '600' },
-  preloadBanner: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,215,0,0.15)', padding: 10, borderRadius: 8, marginBottom: 12, gap: 8 },
-  preloadText: { color: '#FFD700', fontSize: 13, fontWeight: '500' },
+  preloadBanner: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(74,144,217,0.15)', padding: 10, borderRadius: 8, marginBottom: 12, gap: 8 },
+  preloadText: { color: '#4A90D9', fontSize: 13, fontWeight: '500' },
   preloadTextReady: { color: '#4CAF50' },
   title: { fontSize: 26, fontWeight: 'bold', color: '#fff', marginBottom: 12 },
-  desc: { fontSize: 15, color: '#ccc', lineHeight: 24, marginBottom: 20 },
-  player: { backgroundColor: 'rgba(30,30,30,0.95)', borderRadius: 16, padding: 20 },
+  desc: { fontSize: 15, color: '#ccc', lineHeight: 24, marginBottom: 20, maxHeight: 200 },
+  player: { backgroundColor: 'rgba(30,30,50,0.95)', borderRadius: 16, padding: 20, borderWidth: 1, borderColor: 'rgba(74,144,217,0.2)' },
   offlineIndicator: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(76,175,80,0.15)', paddingVertical: 6, paddingHorizontal: 12, borderRadius: 20, marginBottom: 12, alignSelf: 'center', gap: 6 },
   offlineIndicatorText: { fontSize: 12, color: '#4CAF50', fontWeight: '500' },
   progressRow: { marginBottom: 8 },
-  progressBg: { height: 6, backgroundColor: '#444', borderRadius: 3, overflow: 'hidden' },
-  progressFill: { height: '100%', backgroundColor: '#FFD700' },
+  progressBg: { height: 6, backgroundColor: '#333', borderRadius: 3, overflow: 'hidden' },
+  progressFill: { height: '100%', backgroundColor: '#4A90D9' },
   timeRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 },
   time: { color: '#888', fontSize: 12 },
   controls: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 12 },
-  speedBtn: { backgroundColor: '#333', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6 },
-  speedText: { color: '#FFD700', fontWeight: 'bold' },
+  speedBtn: { backgroundColor: '#252542', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6 },
+  speedText: { color: '#4A90D9', fontWeight: 'bold' },
   skipBtn: { padding: 10, alignItems: 'center' },
   skipText: { color: '#888', fontSize: 10, marginTop: 2 },
-  playBtn: { width: 60, height: 60, borderRadius: 30, backgroundColor: '#FFD700', justifyContent: 'center', alignItems: 'center' },
+  playBtn: { width: 60, height: 60, borderRadius: 30, backgroundColor: '#4A90D9', justifyContent: 'center', alignItems: 'center' },
   stopBtn: { padding: 10 },
+  autoAdvanceContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'rgba(74,144,217,0.15)', padding: 12, borderRadius: 10, marginTop: 16 },
+  autoAdvanceContent: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  autoAdvanceText: { color: '#4A90D9', fontSize: 14, fontWeight: '500' },
+  cancelBtn: { backgroundColor: 'rgba(255,82,82,0.2)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6 },
+  cancelBtnText: { color: '#FF5252', fontSize: 13, fontWeight: '600' },
+  nextStopBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#4A90D9', padding: 16, borderRadius: 12, marginTop: 16 },
+  nextStopContent: { flex: 1 },
+  nextStopLabel: { color: 'rgba(255,255,255,0.7)', fontSize: 12, marginBottom: 2 },
+  nextStopName: { color: '#fff', fontSize: 16, fontWeight: '600' },
 });

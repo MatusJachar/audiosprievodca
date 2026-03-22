@@ -49,7 +49,7 @@ export default function TravelInfo() {
           {/* Location & GPS */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Ionicons name="location" size={24} color="#FFD700" />
+              <Ionicons name="location" size={24} color="#4A90D9" />
               <Text style={styles.sectionTitle}>Castle Location</Text>
             </View>
             <Text style={styles.address}>Spišské Podhradie</Text>
@@ -72,7 +72,7 @@ export default function TravelInfo() {
           {/* Opening Hours */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Ionicons name="time" size={24} color="#FFD700" />
+              <Ionicons name="time" size={24} color="#4A90D9" />
               <Text style={styles.sectionTitle}>Opening Hours</Text>
             </View>
             <View style={styles.hoursContainer}>
@@ -97,7 +97,7 @@ export default function TravelInfo() {
           {/* By Car */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Ionicons name="car" size={24} color="#FFD700" />
+              <Ionicons name="car" size={24} color="#4A90D9" />
               <Text style={styles.sectionTitle}>By Car</Text>
             </View>
             <Text style={styles.infoText}>
@@ -137,7 +137,7 @@ export default function TravelInfo() {
           {/* By Bus */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Ionicons name="bus" size={24} color="#FFD700" />
+              <Ionicons name="bus" size={24} color="#4A90D9" />
               <Text style={styles.sectionTitle}>By Bus</Text>
             </View>
             <Text style={styles.infoText}>
@@ -155,7 +155,7 @@ export default function TravelInfo() {
               style={styles.linkButton}
               onPress={() => handleOpenLink('https://cp.hnonline.sk/')}
             >
-              <Ionicons name="time" size={18} color="#FFD700" />
+              <Ionicons name="time" size={18} color="#4A90D9" />
               <Text style={styles.linkButtonText}>Check Bus Schedule</Text>
             </TouchableOpacity>
           </View>
@@ -163,7 +163,7 @@ export default function TravelInfo() {
           {/* By Train */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Ionicons name="train" size={24} color="#FFD700" />
+              <Ionicons name="train" size={24} color="#4A90D9" />
               <Text style={styles.sectionTitle}>By Train</Text>
             </View>
             <Text style={styles.infoText}>
@@ -187,7 +187,7 @@ export default function TravelInfo() {
               style={styles.linkButton}
               onPress={() => handleOpenLink('https://www.zssk.sk/en/')}
             >
-              <Ionicons name="train" size={18} color="#FFD700" />
+              <Ionicons name="train" size={18} color="#4A90D9" />
               <Text style={styles.linkButtonText}>Train Timetable (ZSSK)</Text>
             </TouchableOpacity>
           </View>
@@ -195,7 +195,7 @@ export default function TravelInfo() {
           {/* Tourist Train */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Ionicons name="subway" size={24} color="#FFD700" />
+              <Ionicons name="subway" size={24} color="#4A90D9" />
               <Text style={styles.sectionTitle}>Tourist Train 🚂</Text>
             </View>
             <Text style={styles.infoText}>
@@ -209,7 +209,7 @@ export default function TravelInfo() {
           {/* Taxi */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Ionicons name="call" size={24} color="#FFD700" />
+              <Ionicons name="call" size={24} color="#4A90D9" />
               <Text style={styles.sectionTitle}>Taxi / Transport</Text>
             </View>
             <Text style={styles.infoText}>
@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFD700',
+    backgroundColor: '#4A90D9',
     padding: 14,
     borderRadius: 12,
     gap: 8,
@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
   hoursTime: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#FFD700',
+    color: '#4A90D9',
   },
   hoursNote: {
     fontSize: 13,
@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
   routeTitle: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#FFD700',
+    color: '#4A90D9',
     marginBottom: 6,
   },
   routeText: {
@@ -391,7 +391,7 @@ const styles = StyleSheet.create({
   },
   distanceValue: {
     fontSize: 14,
-    color: '#FFD700',
+    color: '#4A90D9',
     fontWeight: '600',
   },
   parkingInfo: {
@@ -437,7 +437,7 @@ const styles = StyleSheet.create({
   linkButtonText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#FFD700',
+    color: '#4A90D9',
   },
   warningBox: {
     flexDirection: 'row',
@@ -473,7 +473,7 @@ const styles = StyleSheet.create({
   },
   highlightText: {
     fontSize: 14,
-    color: '#FFD700',
+    color: '#4A90D9',
     fontStyle: 'italic',
     marginTop: 8,
   },
