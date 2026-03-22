@@ -237,7 +237,7 @@ export default function Tour() {
           {completed && (
             <Ionicons name="checkmark-circle" size={24} color="#4CAF50" />
           )}
-          <Ionicons name={isLegendStop ? "book" : "play-circle"} size={32} color="#FFD700" />
+          <Ionicons name={isLegendStop ? "book" : "play-circle"} size={32} color="#4A90D9" />
         </View>
       </TouchableOpacity>
     );
@@ -247,7 +247,7 @@ export default function Tour() {
     return (
       <BackgroundWrapper>
         <View style={[styles.container, styles.centered]}>
-          <ActivityIndicator size="large" color="#FFD700" />
+          <ActivityIndicator size="large" color="#4A90D9" />
           <Text style={styles.loadingText}>Loading tour...</Text>
         </View>
       </BackgroundWrapper>
@@ -277,7 +277,7 @@ export default function Tour() {
               <Ionicons 
                 name={isOfflineCached ? "checkmark-circle" : "cloud-download"} 
                 size={20} 
-                color={isOfflineCached ? "#4CAF50" : "#FFD700"} 
+                color={isOfflineCached ? "#4CAF50" : "#4A90D9"} 
               />
               <Text style={[
                 styles.downloadHeaderText,
@@ -311,7 +311,7 @@ export default function Tour() {
       {/* Initial Preload Status */}
       {initialPreloadStatus !== '' && (
         <View style={styles.preloadStatusBar}>
-          <ActivityIndicator size="small" color="#FFD700" />
+          <ActivityIndicator size="small" color="#4A90D9" />
           <Text style={styles.preloadStatusText}>{initialPreloadStatus}</Text>
         </View>
       )}
@@ -360,7 +360,7 @@ export default function Tour() {
               ) : downloadStatus === 'error' ? (
                 <Ionicons name="alert-circle" size={64} color="#FF5252" />
               ) : (
-                <Ionicons name="cloud-download" size={64} color="#FFD700" />
+                <Ionicons name="cloud-download" size={64} color="#4A90D9" />
               )}
               
               <Text style={styles.modalTitle}>
@@ -380,7 +380,7 @@ export default function Tour() {
             {/* Download Progress */}
             {downloading && (
               <View style={styles.downloadProgressSection}>
-                <ActivityIndicator size="large" color="#FFD700" />
+                <ActivityIndicator size="large" color="#4A90D9" />
                 <View style={styles.progressBarContainer}>
                   <View style={styles.downloadProgressBar}>
                     <View 
@@ -423,7 +423,7 @@ export default function Tour() {
                     style={styles.redownloadButton}
                     onPress={handleDownloadForOffline}
                   >
-                    <Ionicons name="refresh" size={20} color="#FFD700" />
+                    <Ionicons name="refresh" size={20} color="#4A90D9" />
                     <Text style={styles.redownloadButtonText}>Re-download Tour</Text>
                   </TouchableOpacity>
                 )}
@@ -465,7 +465,7 @@ export default function Tour() {
             {/* Info Notice */}
             {!downloading && downloadStatus !== 'complete' && (
               <View style={styles.platformNotice}>
-                <Ionicons name="information-circle" size={20} color="#FFD700" />
+                <Ionicons name="information-circle" size={20} color="#4A90D9" />
                 <Text style={styles.platformNoticeText}>
                   Downloads audio for offline use. Works on all platforms.
                 </Text>
@@ -514,7 +514,7 @@ const styles = StyleSheet.create({
   },
   headerSubtitle: {
     fontSize: 14,
-    color: '#FFD700',
+    color: '#4A90D9',
     fontWeight: '600',
   },
   progressContainer: {
@@ -528,7 +528,7 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#FFD700',
+    backgroundColor: '#4A90D9',
     borderRadius: 4,
   },
   progressText: {
@@ -551,7 +551,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   preloadStatusText: {
-    color: '#FFD700',
+    color: '#4A90D9',
     fontSize: 13,
     fontWeight: '500',
   },
@@ -568,7 +568,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#FFD700',
+    backgroundColor: '#4A90D9',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
@@ -605,12 +605,12 @@ const styles = StyleSheet.create({
   offlineBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFD700',
+    backgroundColor: '#4A90D9',
     marginHorizontal: 16,
     marginBottom: 16,
     padding: 16,
     borderRadius: 16,
-    shadowColor: '#FFD700',
+    shadowColor: '#4A90D9',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -679,7 +679,7 @@ const styles = StyleSheet.create({
   downloadHeaderText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#FFD700',
+    color: '#4A90D9',
   },
   downloadHeaderTextCached: {
     color: '#4CAF50',
@@ -739,13 +739,13 @@ const styles = StyleSheet.create({
   },
   downloadProgressFill: {
     height: '100%',
-    backgroundColor: '#FFD700',
+    backgroundColor: '#4A90D9',
     borderRadius: 4,
   },
   progressPercentage: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#FFD700',
+    color: '#4A90D9',
     minWidth: 40,
     textAlign: 'right',
   },
@@ -763,7 +763,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFD700',
+    backgroundColor: '#4A90D9',
     padding: 16,
     borderRadius: 12,
     gap: 8,
@@ -781,13 +781,13 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#FFD700',
+    borderColor: '#4A90D9',
     gap: 8,
   },
   redownloadButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#FFD700',
+    color: '#4A90D9',
   },
   closeModalButton: {
     alignItems: 'center',
@@ -811,7 +811,7 @@ const styles = StyleSheet.create({
   platformNoticeText: {
     flex: 1,
     fontSize: 12,
-    color: '#FFD700',
+    color: '#4A90D9',
     lineHeight: 16,
   },
 });
