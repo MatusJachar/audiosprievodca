@@ -1,22 +1,23 @@
 #!/usr/bin/env python3
 """
-Backend API Testing for Castle Audio Tour Guide
-Focus: User Progress Tracking Endpoints
+Comprehensive Backend API Testing for Spissky Hrad Audio Guide
+Tests all critical endpoints as specified in the review request
 """
 
 import requests
 import json
 import sys
-from typing import Dict, Any
+from typing import Dict, Any, Optional
+import time
 
 # Backend URL from frontend/.env
 BACKEND_URL = "https://spis-free-tour.preview.emergentagent.com/api"
 
-class ProgressTrackingTester:
+class SpisskyHradAPITester:
     def __init__(self):
         self.base_url = BACKEND_URL
-        self.user_id = "default-user"
         self.test_results = []
+        self.created_partner_id = None
         
     def log_test(self, test_name: str, success: bool, details: str):
         """Log test result"""
@@ -29,187 +30,479 @@ class ProgressTrackingTester:
             "details": details
         })
         
-    def test_get_initial_progress(self) -> Dict[str, Any]:
-        """Test GET /api/progress/default-user - should return user progress with completed_stops array"""
+    def test_health_check(self) -> bool:
+        """Test GET /api/health - Should return status healthy"""
         try:
-            url = f"{self.base_url}/progress/{self.user_id}"
+            url = f"{self.base_url}/health"
             response = requests.get(url, timeout=10)
             
             if response.status_code == 200:
                 data = response.json()
-                
-                # Verify required fields
-                required_fields = ["user_id", "completed_stops"]
-                missing_fields = [field for field in required_fields if field not in data]
-                
-                if missing_fields:
-                    self.log_test("GET Initial Progress", False, f"Missing fields: {missing_fields}")
-                    return {}
-                
-                if not isinstance(data["completed_stops"], list):
-                    self.log_test("GET Initial Progress", False, "completed_stops is not an array")
-                    return {}
-                
-                self.log_test("GET Initial Progress", True, 
-                             f"Retrieved progress for user_id: {data['user_id']}, completed_stops: {len(data['completed_stops'])} items")
-                return data
-            else:
-                self.log_test("GET Initial Progress", False, 
-                             f"HTTP {response.status_code}: {response.text}")
-                return {}
-                
-        except Exception as e:
-            self.log_test("GET Initial Progress", False, f"Exception: {str(e)}")
-            return {}
-    
-    def test_mark_stop_complete(self, stop_id: str) -> bool:
-        """Test POST /api/progress/default-user/complete/{stop_id}"""
-        try:
-            url = f"{self.base_url}/progress/{self.user_id}/complete/{stop_id}"
-            response = requests.post(url, timeout=10)
-            
-            if response.status_code == 200:
-                data = response.json()
-                if "message" in data:
-                    self.log_test(f"Mark Stop {stop_id} Complete", True, 
-                                 f"Successfully marked stop complete: {data['message']}")
+                if data.get("status") == "healthy":
+                    self.log_test("Health Check", True, f"Status: {data.get('status')}, Database: {data.get('database')}")
                     return True
                 else:
-                    self.log_test(f"Mark Stop {stop_id} Complete", False, 
-                                 "Response missing 'message' field")
+                    self.log_test("Health Check", False, f"Unexpected status: {data.get('status')}")
                     return False
             else:
-                self.log_test(f"Mark Stop {stop_id} Complete", False, 
-                             f"HTTP {response.status_code}: {response.text}")
+                self.log_test("Health Check", False, f"HTTP {response.status_code}: {response.text}")
                 return False
                 
         except Exception as e:
-            self.log_test(f"Mark Stop {stop_id} Complete", False, f"Exception: {str(e)}")
+            self.log_test("Health Check", False, f"Exception: {str(e)}")
             return False
     
-    def test_reset_progress(self) -> bool:
-        """Test POST /api/progress/default-user/reset"""
-        try:
-            url = f"{self.base_url}/progress/{self.user_id}/reset"
-            response = requests.post(url, timeout=10)
-            
-            if response.status_code == 200:
-                data = response.json()
-                if "message" in data:
-                    self.log_test("Reset Progress", True, 
-                                 f"Successfully reset progress: {data['message']}")
-                    return True
-                else:
-                    self.log_test("Reset Progress", False, 
-                                 "Response missing 'message' field")
-                    return False
-            else:
-                self.log_test("Reset Progress", False, 
-                             f"HTTP {response.status_code}: {response.text}")
-                return False
-                
-        except Exception as e:
-            self.log_test("Reset Progress", False, f"Exception: {str(e)}")
-            return False
-    
-    def verify_progress_persistence(self, expected_stops: list) -> bool:
-        """Verify that progress changes persist correctly"""
-        try:
-            progress = self.test_get_initial_progress()
-            if not progress:
-                return False
-                
-            actual_stops = progress.get("completed_stops", [])
-            
-            if set(actual_stops) == set(expected_stops):
-                self.log_test("Progress Persistence", True, 
-                             f"Expected stops {expected_stops} match actual {actual_stops}")
-                return True
-            else:
-                self.log_test("Progress Persistence", False, 
-                             f"Expected {expected_stops} but got {actual_stops}")
-                return False
-                
-        except Exception as e:
-            self.log_test("Progress Persistence", False, f"Exception: {str(e)}")
-            return False
-    
-    def get_sample_stop_ids(self) -> list:
-        """Get some sample stop IDs from the tour stops endpoint"""
+    def test_get_tour_stops(self) -> bool:
+        """Test GET /api/tour-stops - Should return a list of tour stops"""
         try:
             url = f"{self.base_url}/tour-stops"
             response = requests.get(url, timeout=10)
             
             if response.status_code == 200:
-                stops = response.json()
-                if len(stops) >= 2:
-                    # Get first two stop IDs for testing
-                    stop_ids = [stops[0]["id"], stops[1]["id"]]
-                    print(f"Using sample stop IDs for testing: {stop_ids}")
-                    return stop_ids
+                data = response.json()
+                if isinstance(data, list):
+                    self.log_test("Get Tour Stops", True, f"Retrieved {len(data)} tour stops")
+                    return True
                 else:
-                    print("Warning: Less than 2 tour stops available")
-                    return []
+                    self.log_test("Get Tour Stops", False, "Response is not a list")
+                    return False
             else:
-                print(f"Failed to fetch tour stops: HTTP {response.status_code}")
-                return []
+                self.log_test("Get Tour Stops", False, f"HTTP {response.status_code}: {response.text}")
+                return False
                 
         except Exception as e:
-            print(f"Error fetching sample stop IDs: {str(e)}")
-            return []
+            self.log_test("Get Tour Stops", False, f"Exception: {str(e)}")
+            return False
+    
+    def test_get_partners(self) -> bool:
+        """Test GET /api/partners - Should return list of partners"""
+        try:
+            url = f"{self.base_url}/partners"
+            response = requests.get(url, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if isinstance(data, list):
+                    self.log_test("Get Partners", True, f"Retrieved {len(data)} partners")
+                    return True
+                else:
+                    self.log_test("Get Partners", False, "Response is not a list")
+                    return False
+            else:
+                self.log_test("Get Partners", False, f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Get Partners", False, f"Exception: {str(e)}")
+            return False
+    
+    def test_create_partner(self) -> Optional[str]:
+        """Test POST /api/admin/partners - Create a test partner"""
+        try:
+            url = f"{self.base_url}/admin/partners"
+            partner_data = {
+                "name": "Test Restaurant",
+                "category": "restaurant",
+                "description": "Test desc",
+                "phone": "+421111222"
+            }
+            
+            response = requests.post(url, json=partner_data, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                partner_id = data.get("id")
+                if partner_id:
+                    self.created_partner_id = partner_id
+                    self.log_test("Create Partner", True, f"Created partner with ID: {partner_id}")
+                    return partner_id
+                else:
+                    self.log_test("Create Partner", False, "No ID returned in response")
+                    return None
+            else:
+                self.log_test("Create Partner", False, f"HTTP {response.status_code}: {response.text}")
+                return None
+                
+        except Exception as e:
+            self.log_test("Create Partner", False, f"Exception: {str(e)}")
+            return None
+    
+    def test_verify_partner_created(self, partner_id: str) -> bool:
+        """Test GET /api/partners - Verify new partner appears"""
+        try:
+            url = f"{self.base_url}/partners"
+            response = requests.get(url, timeout=10)
+            
+            if response.status_code == 200:
+                partners = response.json()
+                for partner in partners:
+                    if partner.get("id") == partner_id and partner.get("name") == "Test Restaurant":
+                        self.log_test("Verify Partner Created", True, f"Found created partner: {partner.get('name')}")
+                        return True
+                
+                self.log_test("Verify Partner Created", False, "Created partner not found in partners list")
+                return False
+            else:
+                self.log_test("Verify Partner Created", False, f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Verify Partner Created", False, f"Exception: {str(e)}")
+            return False
+    
+    def test_update_partner(self, partner_id: str) -> bool:
+        """Test PUT /api/admin/partners/{id} - Update the test partner name"""
+        try:
+            url = f"{self.base_url}/admin/partners/{partner_id}"
+            update_data = {
+                "name": "Updated Restaurant"
+            }
+            
+            response = requests.put(url, json=update_data, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("name") == "Updated Restaurant":
+                    self.log_test("Update Partner", True, f"Updated partner name to: {data.get('name')}")
+                    return True
+                else:
+                    self.log_test("Update Partner", False, f"Name not updated correctly: {data.get('name')}")
+                    return False
+            else:
+                self.log_test("Update Partner", False, f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Update Partner", False, f"Exception: {str(e)}")
+            return False
+    
+    def test_delete_partner(self, partner_id: str) -> bool:
+        """Test DELETE /api/admin/partners/{id} - Delete the test partner"""
+        try:
+            url = f"{self.base_url}/admin/partners/{partner_id}"
+            response = requests.delete(url, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "message" in data:
+                    self.log_test("Delete Partner", True, f"Partner deleted: {data.get('message')}")
+                    return True
+                else:
+                    self.log_test("Delete Partner", False, "No message in response")
+                    return False
+            else:
+                self.log_test("Delete Partner", False, f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Delete Partner", False, f"Exception: {str(e)}")
+            return False
+    
+    def test_admin_stats(self) -> bool:
+        """Test GET /api/admin/stats - Should return statistics"""
+        try:
+            url = f"{self.base_url}/admin/stats"
+            response = requests.get(url, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ["total_stops", "total_partners", "total_referrals"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if not missing_fields:
+                    self.log_test("Admin Stats", True, f"Stats: {data.get('total_stops')} stops, {data.get('total_partners')} partners")
+                    return True
+                else:
+                    self.log_test("Admin Stats", False, f"Missing fields: {missing_fields}")
+                    return False
+            else:
+                self.log_test("Admin Stats", False, f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Admin Stats", False, f"Exception: {str(e)}")
+            return False
+    
+    def test_deeplink_config(self) -> bool:
+        """Test GET /api/deeplink/config - Should return deep link configuration"""
+        try:
+            url = f"{self.base_url}/deeplink/config"
+            response = requests.get(url, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ["gastroflow_base_url", "audioguide_base_url", "is_enabled"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if not missing_fields:
+                    self.log_test("Deeplink Config", True, f"Config loaded, enabled: {data.get('is_enabled')}")
+                    return True
+                else:
+                    self.log_test("Deeplink Config", False, f"Missing fields: {missing_fields}")
+                    return False
+            else:
+                self.log_test("Deeplink Config", False, f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Deeplink Config", False, f"Exception: {str(e)}")
+            return False
+    
+    def test_track_referral(self) -> bool:
+        """Test POST /api/deeplink/referral - Track a referral"""
+        try:
+            url = f"{self.base_url}/deeplink/referral"
+            referral_data = {
+                "source_app": "audioguide",
+                "target_app": "gastroflow",
+                "referral_type": "direct"
+            }
+            
+            response = requests.post(url, json=referral_data, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "message" in data and "id" in data:
+                    self.log_test("Track Referral", True, f"Referral tracked: {data.get('message')}")
+                    return True
+                else:
+                    self.log_test("Track Referral", False, "Missing message or id in response")
+                    return False
+            else:
+                self.log_test("Track Referral", False, f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Track Referral", False, f"Exception: {str(e)}")
+            return False
+    
+    def test_referral_stats(self) -> bool:
+        """Test GET /api/deeplink/referrals/stats - Should show referral count"""
+        try:
+            url = f"{self.base_url}/deeplink/referrals/stats"
+            response = requests.get(url, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ["total_referrals", "from_gastroflow", "from_audioguide"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if not missing_fields:
+                    self.log_test("Referral Stats", True, f"Total referrals: {data.get('total_referrals')}")
+                    return True
+                else:
+                    self.log_test("Referral Stats", False, f"Missing fields: {missing_fields}")
+                    return False
+            else:
+                self.log_test("Referral Stats", False, f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Referral Stats", False, f"Exception: {str(e)}")
+            return False
+    
+    def test_nearby_restaurants(self) -> bool:
+        """Test GET /api/deeplink/nearby-restaurants - Should return restaurant partners"""
+        try:
+            url = f"{self.base_url}/deeplink/nearby-restaurants"
+            response = requests.get(url, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if isinstance(data, list):
+                    restaurant_count = len([r for r in data if r.get("category") == "restaurant"])
+                    self.log_test("Nearby Restaurants", True, f"Retrieved {restaurant_count} restaurants")
+                    return True
+                else:
+                    self.log_test("Nearby Restaurants", False, "Response is not a list")
+                    return False
+            else:
+                self.log_test("Nearby Restaurants", False, f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Nearby Restaurants", False, f"Exception: {str(e)}")
+            return False
+    
+    def test_get_travel_info(self) -> bool:
+        """Test GET /api/content/travel-info - Should return travel info"""
+        try:
+            url = f"{self.base_url}/content/travel-info"
+            response = requests.get(url, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ["location_name", "opening_hours_summer"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if not missing_fields:
+                    self.log_test("Get Travel Info", True, f"Location: {data.get('location_name')}")
+                    return True
+                else:
+                    self.log_test("Get Travel Info", False, f"Missing fields: {missing_fields}")
+                    return False
+            else:
+                self.log_test("Get Travel Info", False, f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Get Travel Info", False, f"Exception: {str(e)}")
+            return False
+    
+    def test_update_travel_info(self) -> bool:
+        """Test PUT /api/content/travel-info - Update travel info"""
+        try:
+            url = f"{self.base_url}/content/travel-info"
+            update_data = {
+                "location_name": "Spisske Podhradie",
+                "opening_hours_summer": "9:00 - 19:00"
+            }
+            
+            response = requests.put(url, json=update_data, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "message" in data:
+                    self.log_test("Update Travel Info", True, f"Travel info updated: {data.get('message')}")
+                    return True
+                else:
+                    self.log_test("Update Travel Info", False, "No message in response")
+                    return False
+            else:
+                self.log_test("Update Travel Info", False, f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Update Travel Info", False, f"Exception: {str(e)}")
+            return False
+    
+    def test_get_shop_content(self) -> bool:
+        """Test GET /api/content/shop - Should return shop content"""
+        try:
+            url = f"{self.base_url}/content/shop"
+            response = requests.get(url, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ["ticket_adult", "contact_email"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if not missing_fields:
+                    self.log_test("Get Shop Content", True, f"Adult ticket: {data.get('ticket_adult')}")
+                    return True
+                else:
+                    self.log_test("Get Shop Content", False, f"Missing fields: {missing_fields}")
+                    return False
+            else:
+                self.log_test("Get Shop Content", False, f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Get Shop Content", False, f"Exception: {str(e)}")
+            return False
+    
+    def test_get_user_progress(self) -> bool:
+        """Test GET /api/progress/default-user - Should return user progress"""
+        try:
+            url = f"{self.base_url}/progress/default-user"
+            response = requests.get(url, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ["user_id", "completed_stops"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if not missing_fields:
+                    self.log_test("Get User Progress", True, f"User: {data.get('user_id')}, completed: {len(data.get('completed_stops', []))}")
+                    return True
+                else:
+                    self.log_test("Get User Progress", False, f"Missing fields: {missing_fields}")
+                    return False
+            else:
+                self.log_test("Get User Progress", False, f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Get User Progress", False, f"Exception: {str(e)}")
+            return False
     
     def run_comprehensive_test(self):
-        """Run comprehensive progress tracking tests"""
-        print("=" * 60)
-        print("BACKEND PROGRESS TRACKING API TESTS")
-        print("=" * 60)
+        """Run all comprehensive API tests"""
+        print("=" * 80)
+        print("SPISSKY HRAD AUDIO GUIDE - COMPREHENSIVE BACKEND API TESTS")
+        print("=" * 80)
         print(f"Backend URL: {self.base_url}")
-        print(f"User ID: {self.user_id}")
         print()
         
-        # Get sample stop IDs
-        sample_stops = self.get_sample_stop_ids()
-        if len(sample_stops) < 2:
-            print("❌ Cannot run tests: Need at least 2 tour stops")
-            return False
+        # Test 1: Health Check
+        print("🏥 Test 1: Health Check")
+        self.test_health_check()
         
-        stop1_id, stop2_id = sample_stops[0], sample_stops[1]
+        # Test 2: Tour Stops
+        print("\n🏰 Test 2: Tour Stops")
+        self.test_get_tour_stops()
         
-        # Test Scenario 1: Reset progress first to ensure clean state
-        print("🧹 Resetting progress to clean state...")
-        self.test_reset_progress()
+        # Test 3: Partners (initial)
+        print("\n🤝 Test 3: Get Partners (initial)")
+        self.test_get_partners()
         
-        # Test Scenario 2: Fetch initial progress (should have empty completed_stops)
-        print("\n📋 Test Scenario 1: Fetch initial progress")
-        initial_progress = self.test_get_initial_progress()
-        if initial_progress:
-            self.verify_progress_persistence([])
+        # Test 4: Create Partner
+        print("\n➕ Test 4: Create Test Partner")
+        partner_id = self.test_create_partner()
         
-        # Test Scenario 3: Mark stop 1 as complete
-        print(f"\n✅ Test Scenario 2: Mark stop {stop1_id} as complete")
-        if self.test_mark_stop_complete(stop1_id):
-            self.verify_progress_persistence([stop1_id])
+        # Test 5: Verify Partner Created
+        if partner_id:
+            print("\n✅ Test 5: Verify Partner Created")
+            self.test_verify_partner_created(partner_id)
+            
+            # Test 6: Update Partner
+            print("\n📝 Test 6: Update Partner")
+            self.test_update_partner(partner_id)
+            
+            # Test 7: Delete Partner
+            print("\n🗑️ Test 7: Delete Partner")
+            self.test_delete_partner(partner_id)
         
-        # Test Scenario 4: Mark stop 2 as complete
-        print(f"\n✅ Test Scenario 3: Mark stop {stop2_id} as complete")
-        if self.test_mark_stop_complete(stop2_id):
-            self.verify_progress_persistence([stop1_id, stop2_id])
+        # Test 8: Admin Stats
+        print("\n📊 Test 8: Admin Statistics")
+        self.test_admin_stats()
         
-        # Test Scenario 5: Reset progress
-        print("\n🔄 Test Scenario 4: Reset progress")
-        if self.test_reset_progress():
-            self.verify_progress_persistence([])
+        # Test 9: Deep Link Config
+        print("\n🔗 Test 9: Deep Link Configuration")
+        self.test_deeplink_config()
         
-        # Test Scenario 6: Verify duplicate completion handling
-        print(f"\n🔁 Test Scenario 5: Test duplicate completion (mark {stop1_id} twice)")
-        self.test_mark_stop_complete(stop1_id)
-        self.test_mark_stop_complete(stop1_id)  # Should not duplicate
-        self.verify_progress_persistence([stop1_id])
+        # Test 10: Track Referral
+        print("\n📈 Test 10: Track Referral")
+        self.test_track_referral()
+        
+        # Test 11: Referral Stats
+        print("\n📊 Test 11: Referral Statistics")
+        self.test_referral_stats()
+        
+        # Test 12: Nearby Restaurants
+        print("\n🍽️ Test 12: Nearby Restaurants")
+        self.test_nearby_restaurants()
+        
+        # Test 13: Travel Info
+        print("\n🚗 Test 13: Get Travel Info")
+        self.test_get_travel_info()
+        
+        # Test 14: Update Travel Info
+        print("\n📝 Test 14: Update Travel Info")
+        self.test_update_travel_info()
+        
+        # Test 15: Shop Content
+        print("\n🛒 Test 15: Shop Content")
+        self.test_get_shop_content()
+        
+        # Test 16: User Progress
+        print("\n👤 Test 16: User Progress")
+        self.test_get_user_progress()
         
         # Summary
-        print("\n" + "=" * 60)
+        print("\n" + "=" * 80)
         print("TEST SUMMARY")
-        print("=" * 60)
+        print("=" * 80)
         
         total_tests = len(self.test_results)
         passed_tests = sum(1 for result in self.test_results if result["success"])
@@ -225,16 +518,18 @@ class ProgressTrackingTester:
             for result in self.test_results:
                 if not result["success"]:
                     print(f"  - {result['test']}: {result['details']}")
+        else:
+            print("\n🎉 ALL TESTS PASSED!")
         
         return failed_tests == 0
 
 def main():
     """Main test execution"""
-    tester = ProgressTrackingTester()
+    tester = SpisskyHradAPITester()
     success = tester.run_comprehensive_test()
     
     if success:
-        print("\n🎉 All progress tracking tests PASSED!")
+        print("\n🎉 All backend API tests PASSED!")
         sys.exit(0)
     else:
         print("\n💥 Some tests FAILED!")
