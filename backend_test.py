@@ -426,6 +426,140 @@ class SpisskyHradAPITester:
             self.log_test("Get User Progress", False, f"Exception: {str(e)}")
             return False
     
+    def get_first_tour_stop_id(self) -> Optional[str]:
+        """Get the first tour stop ID for QR code testing"""
+        try:
+            url = f"{self.base_url}/tour-stops"
+            response = requests.get(url, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if isinstance(data, list) and len(data) > 0:
+                    return data[0].get("id")
+            return None
+        except Exception:
+            return None
+    
+    def test_get_tour_stop_detail(self, stop_id: str) -> bool:
+        """Test GET /api/tour-stops/{id} - Should return tour stop details"""
+        try:
+            url = f"{self.base_url}/tour-stops/{stop_id}"
+            response = requests.get(url, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ["id", "stop_number", "content"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if not missing_fields:
+                    self.log_test("Get Tour Stop Detail", True, f"Stop #{data.get('stop_number')}: {data.get('id')}")
+                    return True
+                else:
+                    self.log_test("Get Tour Stop Detail", False, f"Missing fields: {missing_fields}")
+                    return False
+            else:
+                self.log_test("Get Tour Stop Detail", False, f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Get Tour Stop Detail", False, f"Exception: {str(e)}")
+            return False
+    
+    def test_qr_all_codes(self) -> bool:
+        """Test GET /api/qr/all?size=300 - Should return all QR codes as base64"""
+        try:
+            url = f"{self.base_url}/qr/all?size=300"
+            response = requests.get(url, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "qr_codes" in data and isinstance(data["qr_codes"], list):
+                    qr_count = len(data["qr_codes"])
+                    # Check if each QR code has qr_base64 field
+                    valid_qrs = all("qr_base64" in qr for qr in data["qr_codes"])
+                    if valid_qrs:
+                        self.log_test("QR All Codes", True, f"Retrieved {qr_count} QR codes with base64 data")
+                        return True
+                    else:
+                        self.log_test("QR All Codes", False, "Some QR codes missing qr_base64 field")
+                        return False
+                else:
+                    self.log_test("QR All Codes", False, "Missing qr_codes array in response")
+                    return False
+            else:
+                self.log_test("QR All Codes", False, f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("QR All Codes", False, f"Exception: {str(e)}")
+            return False
+    
+    def test_qr_single_base64(self, stop_id: str) -> bool:
+        """Test GET /api/qr/stop/{id}?format=base64 - Should return single QR as base64"""
+        try:
+            url = f"{self.base_url}/qr/stop/{stop_id}?format=base64"
+            response = requests.get(url, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "qr_base64" in data and data["qr_base64"]:
+                    self.log_test("QR Single Base64", True, f"Retrieved QR code for stop {stop_id}")
+                    return True
+                else:
+                    self.log_test("QR Single Base64", False, "Missing or empty qr_base64 field")
+                    return False
+            else:
+                self.log_test("QR Single Base64", False, f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("QR Single Base64", False, f"Exception: {str(e)}")
+            return False
+    
+    def test_qr_single_png(self, stop_id: str) -> bool:
+        """Test GET /api/qr/stop/{id}?format=png&size=400 - Should return PNG image"""
+        try:
+            url = f"{self.base_url}/qr/stop/{stop_id}?format=png&size=400"
+            response = requests.get(url, timeout=10)
+            
+            if response.status_code == 200:
+                content_type = response.headers.get('content-type', '')
+                if 'image/png' in content_type:
+                    self.log_test("QR Single PNG", True, f"Retrieved PNG QR code for stop {stop_id}")
+                    return True
+                else:
+                    self.log_test("QR Single PNG", False, f"Wrong content-type: {content_type}")
+                    return False
+            else:
+                self.log_test("QR Single PNG", False, f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("QR Single PNG", False, f"Exception: {str(e)}")
+            return False
+    
+    def test_qr_print_sheet(self) -> bool:
+        """Test GET /api/qr/print-sheet - Should return A4 print sheet as PNG"""
+        try:
+            url = f"{self.base_url}/qr/print-sheet"
+            response = requests.get(url, timeout=10)
+            
+            if response.status_code == 200:
+                content_type = response.headers.get('content-type', '')
+                if 'image/png' in content_type:
+                    self.log_test("QR Print Sheet", True, "Retrieved A4 print sheet with all QR codes")
+                    return True
+                else:
+                    self.log_test("QR Print Sheet", False, f"Wrong content-type: {content_type}")
+                    return False
+            else:
+                self.log_test("QR Print Sheet", False, f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_test("QR Print Sheet", False, f"Exception: {str(e)}")
+            return False
+    
     def run_comprehensive_test(self):
         """Run all comprehensive API tests"""
         print("=" * 80)
@@ -442,61 +576,81 @@ class SpisskyHradAPITester:
         print("\n🏰 Test 2: Tour Stops")
         self.test_get_tour_stops()
         
-        # Test 3: Partners (initial)
-        print("\n🤝 Test 3: Get Partners (initial)")
+        # Get first tour stop ID for detailed tests
+        first_stop_id = self.get_first_tour_stop_id()
+        if first_stop_id:
+            print(f"\n🎯 Test 3: Tour Stop Detail (ID: {first_stop_id[:8]}...)")
+            self.test_get_tour_stop_detail(first_stop_id)
+        
+        # Test 4: Partners (initial)
+        print("\n🤝 Test 4: Get Partners (initial)")
         self.test_get_partners()
         
-        # Test 4: Create Partner
-        print("\n➕ Test 4: Create Test Partner")
+        # Test 5: Create Partner
+        print("\n➕ Test 5: Create Test Partner")
         partner_id = self.test_create_partner()
         
-        # Test 5: Verify Partner Created
+        # Test 6: Verify Partner Created
         if partner_id:
-            print("\n✅ Test 5: Verify Partner Created")
+            print("\n✅ Test 6: Verify Partner Created")
             self.test_verify_partner_created(partner_id)
             
-            # Test 6: Update Partner
-            print("\n📝 Test 6: Update Partner")
+            # Test 7: Update Partner
+            print("\n📝 Test 7: Update Partner")
             self.test_update_partner(partner_id)
             
-            # Test 7: Delete Partner
-            print("\n🗑️ Test 7: Delete Partner")
+            # Test 8: Delete Partner
+            print("\n🗑️ Test 8: Delete Partner")
             self.test_delete_partner(partner_id)
         
-        # Test 8: Admin Stats
-        print("\n📊 Test 8: Admin Statistics")
-        self.test_admin_stats()
+        # QR Code Tests (NEW)
+        if first_stop_id:
+            print("\n📱 Test 9: QR All Codes")
+            self.test_qr_all_codes()
+            
+            print(f"\n📱 Test 10: QR Single Base64 (Stop: {first_stop_id[:8]}...)")
+            self.test_qr_single_base64(first_stop_id)
+            
+            print(f"\n📱 Test 11: QR Single PNG (Stop: {first_stop_id[:8]}...)")
+            self.test_qr_single_png(first_stop_id)
+            
+            print("\n📱 Test 12: QR Print Sheet")
+            self.test_qr_print_sheet()
         
-        # Test 9: Deep Link Config
-        print("\n🔗 Test 9: Deep Link Configuration")
+        # Test 13: Deep Link Config
+        print("\n🔗 Test 13: Deep Link Configuration")
         self.test_deeplink_config()
         
-        # Test 10: Track Referral
-        print("\n📈 Test 10: Track Referral")
+        # Test 14: Track Referral
+        print("\n📈 Test 14: Track Referral")
         self.test_track_referral()
         
-        # Test 11: Referral Stats
-        print("\n📊 Test 11: Referral Statistics")
+        # Test 15: Referral Stats
+        print("\n📊 Test 15: Referral Statistics")
         self.test_referral_stats()
         
-        # Test 12: Nearby Restaurants
-        print("\n🍽️ Test 12: Nearby Restaurants")
+        # Test 16: Nearby Restaurants
+        print("\n🍽️ Test 16: Nearby Restaurants")
         self.test_nearby_restaurants()
         
-        # Test 13: Travel Info
-        print("\n🚗 Test 13: Get Travel Info")
+        # Test 17: Travel Info
+        print("\n🚗 Test 17: Get Travel Info")
         self.test_get_travel_info()
         
-        # Test 14: Update Travel Info
-        print("\n📝 Test 14: Update Travel Info")
+        # Test 18: Update Travel Info
+        print("\n📝 Test 18: Update Travel Info")
         self.test_update_travel_info()
         
-        # Test 15: Shop Content
-        print("\n🛒 Test 15: Shop Content")
+        # Test 19: Shop Content
+        print("\n🛒 Test 19: Shop Content")
         self.test_get_shop_content()
         
-        # Test 16: User Progress
-        print("\n👤 Test 16: User Progress")
+        # Test 20: Admin Stats
+        print("\n📊 Test 20: Admin Statistics")
+        self.test_admin_stats()
+        
+        # Test 21: User Progress
+        print("\n👤 Test 21: User Progress")
         self.test_get_user_progress()
         
         # Summary
