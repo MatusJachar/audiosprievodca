@@ -1,179 +1,324 @@
 <analysis>
+<original_problem_statement>
+The user's latest request is a complete overhaul and feature addition for a free version of the Spiš Castle audio guide app, named Spišský hrad. This new app should be built with a specific set of technical constraints and features.
 
-**original_problem_statement**: The user wants to build a multi-language mobile audio tour app for Spiš Castle. The core requirements include supporting multiple languages (English, Slovak, German, Polish, Russian, Spanish, Hungarian, Chinese, and now French), providing an admin panel for content management, ensuring high performance with lazy-loading for audio, and implementing a robust offline mode.
+**Primary User Request (from message 611 & others):**
 
-Recent feature requests and fixes included:
-- Fixing the logic for marking tour stops as completed.
-- Implementing a fast track or personalized tour feature with three preset routes (Express, Family, Complete).
-- Adding full French language support (both audio and text descriptions).
-- Adding Slovak language audio files.
-- Numerous UI/UX adjustments like adding a consistent background image, making headers transparent, and fixing inconsistent icons.
-- Implementing a full offline mode where users can pre-download a tour's content (audio, text, images) to use without an internet connection.
-- Fixing a bug where the audio playback progress bar was not working correctly.
+**1. App Configuration & Content:**
+-   **App Name:** Spišský hrad with subtitle Audiosprievodca.
+-   **Package ID:** 
+-   **Color Scheme:** Blue/purple (, ) with gold accent ().
+-   **Tour Stops (10 total):** A specific list of stops:  plus  (Ghost of Spiš Castle).
+-   **Languages:** 9 languages ().
+-   **Player Feature:** Add an auto-advance feature or a Next Stop button to the audio player to avoid manual interaction on dangerous terrain.
+-   **Admin Panel:** Must be fully functional, allowing editing of tour stop names, descriptions, and audio files. Tour stop counts should also be editable/removable.
 
-**User's preferred language**: English
+**2. Monetization Features:**
+-   **Google AdMob:** Integrate banner ads.
+-   **Local Business Partners (CRUD):** Implement a full CRUD system for local business partners (restaurants, hotels, etc.).
+    -   **Frontend:** A new screen () to display partner listings with logos, categories, and contact buttons.
+    -   **Backend:** CRUD endpoints () and a logo upload endpoint.
+    -   **Admin Panel:** A new Partners tab to manage all business listings.
+
+**3. Deep Linking Integration with GastroFlow:**
+-   A complex deep linking architecture to connect the audio guide with a hypothetical GastroFlow restaurant app.
+-   This involves implementing specific URL schemes (, ), handling various link types (direct, referral, embed), and creating new UI components (,  WebView).
+-   Requires new backend tables (, , ) and numerous new API endpoints to track referrals and serve content.
+
+**4. Technical Constraints (from message 611):**
+-   **Hardcode Backend URL:** All API calls must use the hardcoded URL .  must NOT be used.
+-   **Hardcode Audio URL Format:** Audio must be fetched from .
+-   **:** Must include  for Android.
+
+**5. Final Deliverable (Overriding Goal):**
+-   After implementing the features, create a complete, functional export package () suitable for migration to a Hetzner server. This package must include all code (frontend/backend), a working Docker setup, a verified MongoDB dump (in  format as requested in message 592), and all media assets.
+
+**Preceding (Interrupted) Request (from message 592):**
+-   Before the massive feature request, the user asked for a complete, functional export of the **original comprehensive project** (17 stops + 4 legends) because a previous export was faulty. The agent started this task but was interrupted.
+</original_problem_statement>
+
+**User's preferred language**: Slovak (The user communicates in both English and Slovak, but the most recent detailed instructions were in Slovak, so the next agent should respond in Slovak to build rapport.)
 
 **what currently exists?**
-The application is a multi-language Expo mobile app with a FastAPI backend. It features a tour list, stop details with audio playback, and an admin panel. Several languages are implemented with full audio and text content. A tour personalization feature allows users to select between Express, Family, and Complete tour routes. The logic for marking stops as complete after listening to audio has been fixed. A first, flawed attempt at an offline mode has been partially implemented and is the current source of major issues.
+The project is in an unstable and confusing state due to rapid, conflicting changes.
+-   The active codebase in  is a partially restyled version of the Spišský hrad free app.
+-   The UI has a blue/purple color scheme applied to the home page, language selection, and tour list.
+-   The  is configured to show a specific list of 8 stops (7 regular + 1 legend), as per the user's penultimate request.
+-   The audio player () has been modified to include a Next Stop button and logic for auto-advancing.
+-   The project suffers from severe dependency issues, particularly version conflicts between  and , which cause the app to break frequently ( error).
+-   The backend () contains incomplete endpoints for content editing from a previous task.
+-   A separate directory  was partially created to fulfill an earlier user request for a full project export of the 17-stop version. It contains an  format DB dump and exported audio files.
 
 **Last working item**:
--   Last item agent was working: The agent was refactoring the offline mode functionality in response to user feedback. The user was unhappy with the user experience (being forced to download before seeing the tour), the slow audio loading even after downloading, and the long download times. The agent's last action was to begin moving the Download for Offline functionality from the  screen to the  screen, to allow users to see the tour list before deciding to download.
--   Status: IN PROGRESS
--   Agent Testing Done: N
--   Which testing method agent to use? both. This is a critical feature that needs frontend UI/UX validation and backend/data validation. The frontend agent can check the UI flow (download button, modal, progress bar). However, to test the core functionality, **manual testing on a mobile device via Expo Go is essential**. The test will involve selecting a tour, downloading it, turning off network connectivity, and verifying that all stops (including audio) work seamlessly.
--   User Testing Done: N (User tested the previous broken implementation and was not satisfied.)
+-   Last item agent was working: Creating a complete, functional project export ZIP file. This involved:
+    1.  Fixing the app to show a specific list of 8 tour stops ( + Legend 3).
+    2.  Applying a consistent blue color scheme across user-facing pages.
+    3.  Adding a Next Stop / auto-advance feature to the audio player.
+    4.  Updating the export package () with the fixed code, a new DB dump, and an updated .
+    The agent was then interrupted by a new request for a different export (17-stop version) and then a massive feature-building request.
+-   Status: IN PROGRESS (The final ZIP was created, but then the user made new, overriding requests).
+-   Agent Testing Done: Y (via screenshots)
+-   Which testing method agent to use? The next agent must first stabilize the project, then use the screenshot tool to verify the UI against the user's latest requirements before proceeding with new features.
+-   User Testing Done: N
 
 **All Pending/In progress Issue list**:
--   Issue 1: (P0) Offline mode is broken, has a poor user experience, and performs badly.
--   Issue 2: (P1) The audio playback progress bar is broken.
--   Issue 3: (P2) Missing Slovak audio files.
+-   Issue 1: (P0) Critical Application Instability due to Package Dependencies.
+-   Issue 2: (P1) The Smart Preload feature for offline audio is still broken.
+-   Issue 3: (P2) The Admin Panel's content editing functionality is incomplete and non-functional.
+-   Issue 4: (P3) User Trust is critically low due to repeated miscommunications and unresolved issues.
 
 Issues Detail:
--   **Issue 1: (P0) Offline mode is broken, has a poor user experience, and performs badly.**
-    -   **Attempted fixes**:
-        -   The initial implementation, which forced a download modal on the tour selection screen, was removed.
-        -   A crash on the web preview was fixed by adding a check for  which is  on the web.
-        -   Logic was added to  to check for a cached local file and to  to handle file URIs correctly.
-        -   The core logic in  that triggered the download was found to be commented out and was re-enabled, but this was part of the flawed UX that is now being refactored.
-        -   The agent started moving the download button/modal logic to  but did not complete the implementation.
+-   **Issue 1: (P0) Critical Application Instability due to Package Dependencies.**
+    -   **Attempted fixes:** The agent repeatedly tried to fix this by downgrading and upgrading  and  packages. While it sometimes found a temporarily working combination, the  error recurred multiple times, indicating the dependency tree is fragile.
     -   **Next debug checklist**:
-        1.  **Resume Refactor in **:
-            -   Add a Download for Offline button to the header.
-            -   Implement a modal to show download progress (, , ).
-            -   Trigger the  function when the user confirms the download.
-        2.  **Verify **:
-            -   Ensure  fetches the *full* data for each stop in the selected tour, including the base64 audio string from the  endpoint.
-            -   Implement on-the-fly audio compression within the download manager to reduce download times and storage space. The agent has used  for this before.
-        3.  **Fix **:
-            -   Critically review the  hook that loads audio. It must **prioritize** loading from the local file system cache.
-            -   Ensure that when audio is loaded from the cache (), it plays **instantly** without showing the Preparing Audio... message.
-    -   **Why fix this issue and what will be achieved with the fix?**: This is the most critical feature requested by the user to ensure the app is usable in a location with poor or no internet connectivity. Fixing it will resolve the user's primary complaint and make the app reliable for tourists.
-    -   **Status**: IN PROGRESS
-    -   **Is recurring issue?**: Y (Performance issues and failed feature implementations are a theme).
-    -   **Should Test frontend/backend/both after fix?**: both
-    -   **Blocked on other issue**: None
+        1.  Examine  and identify a stable, compatible set of versions for 
+  Usage: expo [command] [options]
 
--   **Issue 2: (P1) The audio playback progress bar is broken.**
-    -   **Attempted fixes**: The agent identified the relevant code in  but was sidetracked by the more critical offline mode issue. No fix was implemented.
-    -   **Next debug checklist**:
-        1.  Go to .
-        2.  Inspect the  function passed to the  listener.
-        3.  Log the  object to the console, specifically , , and .
-        4.  Confirm that  and  are being updated with valid numbers. The issue is likely that  is not being set correctly, causing the progress calculation () to fail.
-    -   **Why fix this issue and what will be achieved with the fix?**: Provides essential user feedback on audio length and current position, which is a standard feature for any audio player.
+  Options:
+  
+    -V, --version                     output the version number
+    --non-interactive                 Fail, if an interactive prompt would be required to continue.
+    -h, --help                        output usage information
+  
+  Commands:
+
+    init [name]                       Create a new Expo project
+    start [path]                      Start a local dev server for the app
+    start:web [path]                  Start a Webpack dev server for the web app
+    export [path]                     Export the static files of the app for hosting it on a web server
+    install [packages...]             Install a module or other package to a project
+    run:android [path]                Run the Android app binary locally
+    run:ios [path]                    Run the iOS app binary locally
+    send [path]                       Share the project's URL to an email address
+
+    login                             Login to an Expo account
+    logout                            Logout of an Expo account
+    register                          Sign up for a new Expo account
+    whoami                            Return the currently authenticated account
+
+    client:install:ios                Install Expo Go for iOS on the simulator
+    client:install:android            Install Expo Go for Android on a connected device or emulator
+
+    config [path]                     Show the project config
+    doctor [path]                     Diagnose issues with the project
+    upgrade [sdk-version]             Upgrade the project packages and config for the given SDK version
+
+    customize:web [path]              Eject the default web files for customization
+    prebuild [path]                   Create native iOS and Android project files before building natively.
+                                      Learn more: https://docs.expo.dev/workflow/customizing/
+
+    build:web [path]                  Build the web app for production
+
+    credentials:manager [path]        Superseded by eas credentials in eas-cli
+
+    url [path]                        Log a URL for opening the project in Expo Go
+    url:ipa [path]                    Log the download URL for the standalone iOS binary
+    url:apk [path]                    Log the download URL for the standalone Android binary
+
+    webhooks [path]                   List all webhooks for a project
+    webhooks:add [path]               Add a webhook to a project
+    webhooks:remove [path]            Delete a webhook
+    webhooks:update [path]            Update an existing webhook
+
+    build:ios [path]                  Superseded by eas build in eas-cli
+    build:android [path]              Superseded by eas build in eas-cli
+    build:status [path]               Superseded by eas build:list in eas-cli
+    eject [path]                      Superseded by expo prebuild
+    fetch:ios:certs [path]            Superseded by eas credentials in eas-cli
+    fetch:android:keystore [path]     Superseded by eas credentials in eas-cli
+    fetch:android:hashes [path]       Superseded by eas credentials in eas-cli
+    fetch:android:upload-cert [path]  Superseded by eas credentials in eas-cli
+    publish [path]                    Superseded by eas update in eas-cli
+    publish:set [path]                Superseded by eas update:republish in eas-cli
+    publish:rollback [path]           Superseded by eas update:republish in eas-cli
+    publish:history [path]            Superseded by eas update:list in eas-cli
+    publish:details [path]            Superseded by eas update:view in eas-cli
+    push:android:upload [path]        Superseded by eas credentials in eas-cli
+    push:android:show [path]          Superseded by eas credentials in eas-cli
+    push:android:clear [path]         Superseded by eas credentials in eas-cli
+    upload:android [path]             Superseded by eas submit in eas-cli
+    upload:ios [path]                 Superseded by eas submit in eas-cli
+    client:ios [path]                 Superseded by Expo Dev Clients
+
+[20:13:38]   Run a command with --help for more info 💡
+[20:13:38]     $ expo start --help
+[20:13:38], , and all  packages. Refer to official Expo Router documentation for compatible versions.
+        2.  Run yarn install v1.22.22
+[1/4] Resolving packages...
+[2/4] Fetching packages...
+[3/4] Linking dependencies...
+[4/4] Building fresh packages...
+Done in 16.80s. to ensure a clean installation.
+        3.  Start the app and confirm the  error is permanently resolved.
+        4.  This **must** be the very first action before any other work is attempted.
+    -   **Why fix this issue and what will be achieved with the fix?**: The application is fundamentally unusable in its current state. Fixing this will provide a stable foundation for implementing the user's new feature requests.
+    -   **Status**: IN PROGRESS
+    -   **Is recurring issue?**: Y
+    -   **Should Test frontend/backend/both after fix?**: frontend
+    -   **Blocked on other issue**: None. This is the primary blocker.
+
+-   **Issue 2: (P1) The Smart Preload feature for offline audio is still broken.**
+    -   **Attempted fixes**: This was attempted at the very beginning of the session by simplifying logic in , but it was quickly abandoned and never verified.
+    -   **Next debug checklist**: This is currently a lower priority than the user's latest requests but remains a piece of significant technical debt. The logic in  needs a full review and extensive logging to debug.
+    -   **Why fix this issue and what will be achieved with the fix?**: A key user requirement for a smooth offline experience.
+    -   **Status**: NOT STARTED
+    -   **Is recurring issue?**: Y
+    -   **Should Test frontend/backend/both after fix?**: frontend
+    -   **Blocked on other issue**: Blocked by higher priority feature requests from the user.
+
+-   **Issue 3: (P2) The Admin Panel's content editing functionality is incomplete and non-functional.**
+    -   **Attempted fixes**: The agent created UI for editing content pages (, , ), but the  requests to save data were never fully implemented in the backend () or wired up in the frontend. The user's request to make tour stops themselves editable was never started.
+    -   **Next debug checklist**: The user's latest request includes making all content editable. This issue is now part of the Upcoming Tasks. The agent will need to build out the backend API endpoints and connect the frontend forms to them.
+    -   **Why fix this issue and what will be achieved with the fix?**: Fulfills a core user requirement for long-term app maintainability.
     -   **Status**: NOT STARTED
     -   **Is recurring issue?**: N
-    -   **Should Test frontend/backend/both after fix?**: frontend
-    -   **Blocked on other issue**: None
+    -   **Should Test frontend/backend/both after fix?**: both
+    -   **Blocked on other issue**: None.
 
--   **Issue 3: (P2) Missing Slovak audio files.**
-    -   **Attempted fixes**: N/A.
-    -   **Next debug checklist**: This task is blocked on the user. The agent should be prepared to use the  script once the user provides the files for tour stops 2, 6, 9, and 12.
-    -   **Why fix this issue and what will be achieved with the fix?**: Completes the Slovak language portion of the tour.
-    -   **Status**: BLOCKED (Waiting for user to provide files).
-    -   **Is recurring issue?**: N
-    -   **Should Test frontend/backend/both after fix?**: backend (for upload)
-    -   **Blocked on other issue**: None
+-   **Issue 4: (P3) User Trust is critically low.**
+    -   **Attempted fixes**: The agent repeatedly apologized but then repeated the same mistakes: declaring something fixed before user verification and failing to diagnose environment/caching issues.
+    -   **Next debug checklist**:
+        1.  **Acknowledge the user's frustration** in the first message.
+        2.  **Confirm every step** of the plan before executing.
+        3.  **Provide frequent, verifiable updates** (e.g., screenshots of the live preview).
+        4.  When issues arise, be transparent about the debugging process.
+        5.  Do not declare any task Complete until the user has confirmed it works on their end.
+    -   **Why fix this issue and what will be achieved with the fix?**: To salvage the project and the relationship with the user.
+    -   **Status**: IN PROGRESS
+    -   **Is recurring issue?**: Y
+    -   **Should Test frontend/backend/both after fix?**: N/A
+    -   **Blocked on other issue**: None.
 
 **In progress Task List**:
--   **Task 1: (P0) Refactor and complete the offline mode implementation.**
-    -   **Where to resume**: . The agent needs to add the UI and logic for an optional Download for Offline feature, including a button in the header and a progress modal.
-    -   **What will be achieved with this?**: A fully functional and user-friendly offline mode that meets the user's explicit requirements.
+-   **Task 1: Create a functional export of the 17-stop app.**
+    -   **Where to resume**: The agent had created the directory , exported audio files, and created a DB dump in  format. It needs to copy the code, write the final  and , and create the final ZIP file.
+    -   **What will be achieved with this?**: Fulfills the user's request from message 592.
     -   **Status**: IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?**: both
-    -   **Blocked on something**: No.
+    -   **Should Test frontend/backend/both after fix?**: N/A (It's an export task).
+    -   **Blocked on something**: Blocked by the user's latest, more pressing request (message 611). The agent should confirm the priority with the user.
 
 **Upcoming and Future Tasks**
--   Upload remaining Slovak audio files for stops 2, 6, 9, and 12 (P2, Blocked on user).
--   Prepare the application for deployment on the iOS App Store and Google Play Store (P3).
+The user's request in message 611 is massive. It should be broken down into phases.
+
+-   **(P0) Phase 1: Build and Stabilize the Spišský hrad Free App**
+    -   Stabilize dependencies in  to fix  errors.
+    -   Hardcode the backend URL  in all relevant files.
+    -   Update  and  to filter for the 10 stops ( + Legend 3).
+    -   Ensure  has the correct  ID () and Android permissions.
+    -   Verify the app builds and runs correctly, displaying the 10 stops.
+
+-   **(P1) Phase 2: Implement Monetization Features**
+    -   Install  and add a placeholder banner ad component.
+    -   Implement the Local Business Partners CRUD feature:
+        -   Add new endpoints to  for  (GET, POST, PUT, DELETE) and logo uploads.
+        -   Create a new Partners tab in the admin panel UI ( or similar).
+        -   Create the public-facing partners list page at .
+
+-   **(P2) Phase 3: Implement GastroFlow Deep Linking Integration**
+    -   This is a very large task. It should be proposed to the user as a separate, major effort.
+    -   It involves significant changes to both the frontend (new components, WebView, deep link handling) and backend (new APIs, new DB tables).
+
+-   **(P3) Phase 4: Finalize and Create Full Export**
+    -   Once all features are implemented and verified, create the final, complete project export as a  file, including the functional Docker setup, code, media, and verified database dump.
 
 **Completed work in this session**
--   Fixed Stop Completion tracking to trigger only after audio playback finishes.
--   Added a shared  component and applied it to the language selection, tour list, and stop detail screens.
--   Implemented a Personalized Tour feature with a new  screen and  Zustand store, allowing users to choose between Express, Family, and Complete tours.
--   Added full French language support:
-    -   UI updated in .
-    -   Scripts created (, ) and used to upload all French audio files.
-    -   Admin panel () updated to allow the user to manually add French text descriptions.
--   Uploaded most Slovak audio files, including on-the-fly conversion from  to  for large files.
--   Fixed various UI inconsistencies, including legend icons and tour description counts.
+-   **UI/UX Redesign:** A new blue/purple/gold theme was created and partially applied to the home, language, and tour pages. The home page () was significantly redesigned with new branding and layout.
+-   **New Feature:** An Auto-Advance / Next Stop button was added to the audio player screen ().
+-   **Project Reconfiguration:** The application's tour content was repeatedly reconfigured to display different sets of stops (10, 8, and all 17).
+-   **Environment Troubleshooting:** The agent eventually identified and corrected a critical environment mismatch where the agent's preview URL was different from the user's, and also explained the difference between a dev preview and a deployed version.
 
 **Earlier issues found/mentioned but not fixed**
--   **Issue 1: Audio playback progress bar is broken.**
-    -   **Debug checklist**: See Pending/In progress Issue list -> Issue 2 for the full checklist.
-    -   **Why to solve this issue and what will be achieved with this?**: It's a standard UX feature for an audio player, giving users a sense of progress and duration.
-    -   **Should Test frontend/backend/both after fix**: frontend
-    -   **Is recurring issue?**: N
+-   **Issue 1: Smart Preload:** This bug from the previous fork was never fixed and was forgotten during the session.
+-   **Issue 2: Admin Panel Save Functionality:** The UI was created, but the ability to save changes to the backend was never implemented.
 
 **Known issue recurrence from previous fork**
--   The initial fork summary highlighted performance issues due to large data payloads. This theme has recurred with the offline mode implementation, specifically with long download times for uncompressed audio files.
+-   **Issue recurrence in previous fork**: The agent declared work finished before it was verified by the user, and the Smart Preload feature remained broken.
+-   **Recurrence count**: Multiple times this session. The agent repeatedly claimed the Edit Content button was visible when it wasn't for the user, due to caching/environment issues it failed to diagnose.
+-   **Status**: This remains a critical problem. The next agent must prioritize verification and clear communication.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Frameworks**: Expo (React Native) frontend, FastAPI (Python) backend.
--   **Database**: MongoDB.
--   **State Management**: Zustand for global state (, , ).
--   **Offline Storage**:  is used to save audio files to the device. **Crucially, this does not work in the web browser preview.**
--   **Architecture**: Lazy-loading API ( returns metadata,  returns full data with audio). The offline cache populates itself by calling the full-data endpoint for each stop.
--   **Audio Processing**:  and  are used on the backend to compress large audio files (WAV/MP3) before database insertion.
+-   **Frameworks**: Expo (React Native), FastAPI (Python)
+-   **Database**: MongoDB
+-   **State Management**: Zustand
+-   **Styling**: ,  for the new UI.
+-   **Critical Challenge**: Expo/React Navigation dependency management. The project is highly sensitive to version mismatches between  and .
 
 **key DB schema**
--   **tour_stops**: 
--   **tour_audio**: 
+-   **tour_stops**: Contains stop details and an array of .
+-   **tour_audio**: Contains base64 encoded audio. The user's new requirement is to use direct file URLs, making this potentially obsolete.
+-   **app_settings**: Used for global settings like the background image.
 
 **changes in tech stack**
-- No fundamental changes to the core stack.  was introduced for offline caching.
+-   The user has mandated a switch from dynamic backend URLs () to a **hardcoded URL** () for the new free app.
+-   The user has also mandated fetching audio via direct URL instead of the  endpoint.
 
 **All files of reference**
--   ****: (Created) Contains the core logic for downloading and caching tour data. It's the source of the main bug and needs to be fixed. It must handle platform differences (web vs native).
--   ****: (Updated) Where the offline download functionality is being moved to. It needs a new download button and modal.
--   ****: (Updated) Needs to be fixed to correctly prioritize loading audio from the local file cache before falling back to the network. Also contains the broken progress bar logic.
--   ****: (Created/Updated) The screen for choosing a tour type. Its download logic is being removed.
--   ****: (Created) A Zustand store to hold the currently selected tour route.
--   ****: (Created) A reusable component providing the consistent background image.
--   ****: (Updated) Modified to add the fr language option to the admin edit screen.
--   ****: A series of single-use scripts created to upload French and Slovak audio files provided by the user.
+-   : **(CRITICAL)** Unstable and needs to be fixed first.
+-   : **(CRITICAL)** Entry point for the app and source of navigation errors.
+-   : **(CRITICAL)** Defines which tour stops are displayed. Must be configured for the 10-stop free tour.
+-   : (Updated) Contains the new Next Stop and auto-advance logic.
+-   : (Updated) Contains partial, non-functional endpoints for content editing that need to be completed.
+-   User message #611: The primary source of truth for all upcoming tasks.
+
+**Areas that need refactoring**:
+-   The entire dependency management in  needs to be refactored for stability.
+-   The repeated, global search-and-replace for color codes should be replaced by consistent use of the  file.
+
+**key api endpoints**
+-   **Existing:**  (GET),  (GET)
+-   **Mandated New:** The user has specified a hardcoded backend at  and that audio should be fetched directly via file paths, not the stream endpoint.
+-   **To be created:** All monetization and GastroFlow integration endpoints.
 
 **Critical Info for New Agent**
--   **PRIORITY #1 is fixing the offline mode.** The user is frustrated with repeated failures. Be meticulous.
--   **Offline mode MUST be tested on a native device via Expo Go.** The  library, which is essential for the feature, does not work in the web browser preview. Any testing done solely on the web will be misleading and incorrect.
--   The desired user flow for offline is: **1. User selects a tour -> 2. Enters the tour list screen -> 3. Optionally clicks a Download button -> 4. Sees a progress modal -> 5. Can then use the app offline.**
--   Audio download times are a problem. The next agent should integrate audio compression (e.g., using ) into the 's download process to reduce file sizes.
--   The user is technical and will notice if you claim a fix is done when it's not. Be transparent about your progress.
+-   **STABILIZE FIRST:** The project is broken due to dependency hell. Your first task is to fix  to resolve the  error permanently. Do not attempt any feature work until the app runs reliably.
+-   **USER TRUST IS ZERO:** The user is extremely frustrated and has accused the previous agent of lying and wasting time. You must be exceptionally clear, transparent, and methodical. Confirm your plan based on the user's latest requests (message 611) and provide verifiable proof of progress.
+-   **LATEST REQUEST IS KING:** The user's prompt in message #611 is a massive list of requirements that overrides almost everything done before. Use it as your roadmap. Break it down into phases and get user confirmation before starting.
+-   **HARDCODED URLS ARE MANDATORY:** The user explicitly demanded to use a hardcoded backend URL () and a specific audio file URL format for the new app. Do not use environment variables for the backend URL.
+-   **CLARIFY THE GOAL:** The session ended with two conflicting final tasks: 1) Export the 17-stop project, and 2) Build the new 10-stop app with monetization/deep-linking. You must clarify with the user which path to take. The build new app request (message 611) is more recent and detailed, so it's likely the priority.
+
+**documents created in this job**
+-   
+-   
+-   
+-   
+-   
+-   
+-   
+-    (and its contents)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User**: UX is wrong. A user should see the tour first, *then* decide to download. Audio is still slow after download. Download takes too long, can it be compressed? (Issue reported)
-2.  **Agent**: Acknowledged all three issues (UX flow, slow audio, long download) and started fixing the UX flow.
-3.  **User**: Server error, can't test. (Issue reported)
-4.  **Agent**: Found a syntax error in  and fixed it, making the app accessible again.
-5.  **User**: App is not working as discussed, I don't see the download-in-advance feature. (Issue reported)
-6.  **Agent**: Admitted the download logic was commented out, fixed it, and said the download modal should now appear.
-7.  **User**: Says I should debug where  might not be loading, API might not be returning audio, or  might be unavailable. (User providing debug guidance).
-8.  **Agent**: Investigated and found the root cause:  is  on web. Added a platform check to avoid crashing on web.
-9.  **User**: Still not working, going to sleep. (Issue reported)
-10. **User**: Screenshot showing an error related to . (Issue reported)
+1.  **User (msg 518):** Furious. Demands a specific 8-stop tour, consistent blue colors, auto-advance in the player, and a correct export ZIP. (Partially addressed)
+2.  **User (msg 592):** Submits a formal request in Slovak for a *new, functional export* of the full 17-stop project, claiming a previous export was broken. (Started, but interrupted)
+3.  **User (msg 611):** Submits a massive, multi-part request to build the 10-stop free app with specific monetization (AdMob, Partners) and deep linking (GastroFlow) features, plus hardcoded technical constraints. This is the latest and most detailed request.
+4.  **User (msg 612):** Confirms the new plan from msg 611.
+5.  All other messages are agent actions or user feedback on those actions, leading up to the final set of requests. The last explicit user action was providing the massive prompt in message 611.
 
 **Project Health Check:**
 -   **Broken**:
-    -   Offline mode (core functionality).
-    -   Audio playback progress bar.
+    -   Navigation: The app is non-functional due to recurring  errors from package version mismatches.
+    -   Admin Panel: The UI for content editing exists but cannot save any data.
+    -   Offline Preload: The  feature is assumed to be buggy and has not been tested or fixed.
+-   **Mocked**:
+    -   The user has requested to use a hardcoded backend URL, which is a form of environment mocking.
 
 **3rd Party Integrations**
-- None.
+-    was added for UI styling.
+-   **To be added**:  for monetization.
 
 **Testing status**
--   Testing agent used after significant changes: NO
--   Troubleshoot agent used after agent stuck in loop: NO
--   Test files created: None
--   Known regressions: The offline mode implementation is a new feature, but its failure is a major regression in user experience and trust.
+-   Testing agent used after significant changes: YES, but it failed due to critical navigation errors.
+-   Troubleshoot agent used after agent stuck in loop: YES, it identified code existence but didn't solve the core caching/environment problem.
+-   Test files created: None.
+-   Known regressions: The entire application's stability has regressed due to package version conflicts.
 
 **Credentials to test flow:**
-- Admin Panel Password: 
+-   **Admin Panel:** Password is .
 
 **What agent forgot to execute**
--   The agent repeatedly claimed to have fixed or implemented the offline mode without completing the full logic (e.g., leaving code commented out, not handling platform differences, not updating the playback screen to use the cache).
--   The agent acknowledged the user's report about the broken audio progress bar but never implemented a fix, getting distracted by the offline mode issues.
-
+-   The agent never fixed the original Smart Preload bug.
+-   The agent created a UI for editing content but never implemented the backend logic to make it functional.
+-   The agent got stuck in a loop of fixing UI and responding to user pivots, failing to establish a stable base application, which led to cascading failures and user frustration.
 </analysis>
