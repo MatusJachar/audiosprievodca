@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"}],"uuid":"a6f5c9b84eab4d1094454ba00b3684f7","collectionName":"deeplink_config","type":"collection"}

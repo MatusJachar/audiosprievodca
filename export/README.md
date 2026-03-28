@@ -232,6 +232,15 @@ http://YOUR_SERVER_IP:8002/api
 | POST | `/api/admin/partners/{id}/logo` | Upload partner logo |
 | POST | `/api/admin/partners/seed` | Seed sample partners |
 
+### QR Code Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/qr/all?size=300` | All QR codes as base64 JSON |
+| GET | `/api/qr/stop/{id}?format=base64` | Single QR as base64 JSON |
+| GET | `/api/qr/stop/{id}?format=png&size=600` | Single QR as downloadable PNG |
+| GET | `/api/qr/print-sheet` | A4 print sheet with all QR codes (PNG) |
+
 ### Deep Linking / GastroFlow Endpoints
 
 | Method | Endpoint | Description |
@@ -440,14 +449,20 @@ spissky-hrad-export/
 
 - **URL:** `http://YOUR_SERVER_IP/admin-login` (via mobile app)
 - **Password:** `castle2025`
-- **Features:**
-  - Dashboard statistics
-  - Edit tour stop names and descriptions (all 9 languages)
-  - Delete/add tour stops
-  - Full partner CRUD (add, edit, toggle, delete)
-  - Content management (travel info, tickets, region info)
-  - Deep linking configuration
-  - Referral tracking stats
+- **Tabs:**
+  - **Prehlad** - Dashboard statistics (stops, audio files, languages, partners, referrals, users)
+  - **Zastavky** - Edit tour stop names and descriptions (all 9 languages), delete/add stops
+  - **Partneri** - Full partner CRUD (add, edit, toggle visibility, delete)
+  - **QR Kody** - QR code generation per stop, individual download, A4 print sheet
+  - **Obsah** - Content management (travel info, tickets, region info)
+  - **Links** - Deep linking configuration and referral stats
+
+### QR Code Feature
+- Each tour stop gets a unique QR code with stop name and URL
+- Individual QR codes downloadable as high-resolution PNG (up to 1000px)
+- Full A4 print sheet with ALL QR codes - one-click download
+- Print and place at physical tour stop locations on the castle
+- Visitors scan with smartphone camera to access audio guide
 
 ---
 

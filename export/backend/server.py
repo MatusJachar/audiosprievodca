@@ -1,5 +1,6 @@
-from fastapi import FastAPI, APIRouter, HTTPException, UploadFile, File
+from fastapi import FastAPI, APIRouter, HTTPException, UploadFile, File, Query
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import Response
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -12,6 +13,9 @@ import uuid
 from datetime import datetime
 import base64
 import asyncio
+import io
+import qrcode
+from PIL import Image as PILImage, ImageDraw, ImageFont
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -948,6 +952,258 @@ async def get_admin_stats():
         }
     except Exception as e:
         logger.error(f"Error fetching admin stats: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ============================================
+# QR CODE GENERATION
+# ============================================
+
+def generate_qr_code_image(data: str, label: str = "", size: int = 400) -> bytes:
+    """Generate a QR code as PNG bytes with optional label"""
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_H,
+        box_size=10,
+        border=2,
+    )
+    qr.add_data(data)
+    qr.make(fit=True)
+    
+    qr_img = qr.make_image(fill_color="#1a1a2e", back_color="white").convert("RGB")
+    qr_img = qr_img.resize((size, size), PILImage.LANCZOS)
+    
+    if label:
+        # Add label text below QR code
+        total_height = size + 80
+        canvas = PILImage.new("RGB", (size + 40, total_height), "white")
+        canvas.paste(qr_img, (20, 10))
+        
+        draw = ImageDraw.Draw(canvas)
+        try:
+            font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 20)
+            font_small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 14)
+        except (OSError, IOError):
+            font = ImageFont.load_default()
+            font_small = font
+        
+        # Draw label centered
+        bbox = draw.textbbox((0, 0), label, font=font)
+        text_w = bbox[2] - bbox[0]
+        x = (size + 40 - text_w) // 2
+        draw.text((x, size + 15), label, fill="#1a1a2e", font=font)
+        
+        # Draw subtitle
+        subtitle = "Spissky hrad Audio Guide"
+        bbox2 = draw.textbbox((0, 0), subtitle, font=font_small)
+        text_w2 = bbox2[2] - bbox2[0]
+        x2 = (size + 40 - text_w2) // 2
+        draw.text((x2, size + 45), subtitle, fill="#7B68EE", font=font_small)
+        
+        img_bytes = io.BytesIO()
+        canvas.save(img_bytes, format="PNG")
+    else:
+        img_bytes = io.BytesIO()
+        qr_img.save(img_bytes, format="PNG")
+    
+    img_bytes.seek(0)
+    return img_bytes.getvalue()
+
+@api_router.get("/qr/stop/{stop_id}")
+async def get_qr_code_for_stop(
+    stop_id: str,
+    base_url: str = Query(default="https://spisskyhrad.sk/tour"),
+    size: int = Query(default=400, ge=100, le=1000),
+    format: str = Query(default="png", regex="^(png|base64)$")
+):
+    """Generate QR code for a specific tour stop"""
+    try:
+        stop = await db.tour_stops.find_one({"id": stop_id})
+        if not stop:
+            raise HTTPException(status_code=404, detail="Tour stop not found")
+        
+        # Build QR data URL
+        stop_num = stop.get("stop_number")
+        stop_name = stop.get("stop_name", "")
+        
+        if stop_num:
+            qr_url = f"{base_url}/stop/{stop_num}"
+            label = f"Stop {stop_num}"
+        else:
+            qr_url = f"{base_url}/legend/{stop_name}"
+            label = stop_name or "Legend"
+        
+        # Get title for label
+        content = stop.get("content", {})
+        title = content.get("en", {}).get("title", "") or content.get("sk", {}).get("title", "")
+        if title:
+            label = f"{label}: {title}"
+        
+        png_bytes = generate_qr_code_image(qr_url, label=label, size=size)
+        
+        if format == "base64":
+            b64 = base64.b64encode(png_bytes).decode("utf-8")
+            return {
+                "stop_id": stop_id,
+                "qr_url": qr_url,
+                "label": label,
+                "qr_base64": b64,
+                "size": size
+            }
+        
+        return Response(
+            content=png_bytes,
+            media_type="image/png",
+            headers={
+                "Content-Disposition": f'attachment; filename="qr_stop_{stop_num or stop_name}.png"',
+                "Cache-Control": "public, max-age=3600"
+            }
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating QR code: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/qr/all")
+async def get_all_qr_codes(
+    base_url: str = Query(default="https://spisskyhrad.sk/tour"),
+    size: int = Query(default=300, ge=100, le=800)
+):
+    """Get QR codes for all tour stops as base64"""
+    try:
+        all_stops = await db.tour_stops.find().to_list(100)
+        
+        results = []
+        for stop in all_stops:
+            stop_id = stop.get("id")
+            stop_num = stop.get("stop_number")
+            stop_name = stop.get("stop_name", "")
+            
+            if stop_num:
+                qr_url = f"{base_url}/stop/{stop_num}"
+                label = f"Stop {stop_num}"
+            else:
+                qr_url = f"{base_url}/legend/{stop_name}"
+                label = stop_name or "Legend"
+            
+            content = stop.get("content", {})
+            title = content.get("en", {}).get("title", "") or content.get("sk", {}).get("title", "")
+            if title:
+                label = f"{label}: {title}"
+            
+            png_bytes = generate_qr_code_image(qr_url, label=label, size=size)
+            b64 = base64.b64encode(png_bytes).decode("utf-8")
+            
+            results.append({
+                "stop_id": stop_id,
+                "stop_number": stop_num,
+                "stop_name": stop_name,
+                "title": title,
+                "qr_url": qr_url,
+                "label": label,
+                "qr_base64": b64
+            })
+        
+        # Sort: numbered first, then legends
+        numbered = sorted([r for r in results if r["stop_number"]], key=lambda x: x["stop_number"])
+        legends = [r for r in results if not r["stop_number"]]
+        
+        return {"qr_codes": numbered + legends, "total": len(results)}
+    except Exception as e:
+        logger.error(f"Error generating all QR codes: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/qr/print-sheet")
+async def get_qr_print_sheet(
+    base_url: str = Query(default="https://spisskyhrad.sk/tour"),
+):
+    """Generate a printable A4 sheet with all QR codes as PNG"""
+    try:
+        all_stops = await db.tour_stops.find().to_list(100)
+        
+        # Sort stops
+        numbered = sorted([s for s in all_stops if s.get("stop_number")], key=lambda x: x["stop_number"])
+        legends = [s for s in all_stops if not s.get("stop_number") and s.get("stop_name", "").startswith("Legend")]
+        stops = numbered + legends
+        
+        # A4 at 150 DPI: 1240 x 1754 pixels
+        page_w, page_h = 1240, 1754
+        qr_size = 250
+        cols = 4
+        margin_x = 30
+        margin_y = 80
+        spacing_x = (page_w - 2 * margin_x) // cols
+        spacing_y = qr_size + 60
+        
+        # Calculate pages needed
+        items_per_page = cols * ((page_h - margin_y * 2) // spacing_y)
+        pages_needed = max(1, (len(stops) + items_per_page - 1) // items_per_page)
+        
+        # Generate single page (first page)
+        page = PILImage.new("RGB", (page_w, page_h), "white")
+        draw = ImageDraw.Draw(page)
+        
+        try:
+            title_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 28)
+            label_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 14)
+            small_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 11)
+        except (OSError, IOError):
+            title_font = ImageFont.load_default()
+            label_font = title_font
+            small_font = title_font
+        
+        # Title
+        draw.text((margin_x, 20), "Spissky Hrad - QR Codes", fill="#1a1a2e", font=title_font)
+        draw.text((margin_x, 55), f"Audio Tour Guide | {len(stops)} stops", fill="#7B68EE", font=small_font)
+        
+        for idx, stop in enumerate(stops[:items_per_page]):
+            col = idx % cols
+            row = idx // cols
+            
+            x = margin_x + col * spacing_x
+            y = margin_y + row * spacing_y
+            
+            stop_num = stop.get("stop_number")
+            stop_name = stop.get("stop_name", "")
+            content = stop.get("content", {})
+            title = content.get("en", {}).get("title", "") or content.get("sk", {}).get("title", "")
+            
+            if stop_num:
+                qr_url = f"{base_url}/stop/{stop_num}"
+                label_text = f"Stop {stop_num}"
+            else:
+                qr_url = f"{base_url}/legend/{stop_name}"
+                label_text = stop_name or "Legend"
+            
+            # Generate QR code
+            qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_H, box_size=6, border=1)
+            qr.add_data(qr_url)
+            qr.make(fit=True)
+            qr_img = qr.make_image(fill_color="#1a1a2e", back_color="white").convert("RGB")
+            qr_img = qr_img.resize((qr_size, qr_size), PILImage.LANCZOS)
+            
+            page.paste(qr_img, (x + 10, y))
+            
+            # Label
+            draw.text((x + 10, y + qr_size + 5), label_text, fill="#1a1a2e", font=label_font)
+            if title:
+                short_title = title[:25] + "..." if len(title) > 25 else title
+                draw.text((x + 10, y + qr_size + 22), short_title, fill="#666666", font=small_font)
+        
+        img_bytes = io.BytesIO()
+        page.save(img_bytes, format="PNG", quality=95)
+        img_bytes.seek(0)
+        
+        return Response(
+            content=img_bytes.getvalue(),
+            media_type="image/png",
+            headers={
+                "Content-Disposition": 'attachment; filename="spissky_hrad_qr_codes.png"',
+                "Cache-Control": "no-cache"
+            }
+        )
+    except Exception as e:
+        logger.error(f"Error generating QR print sheet: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 # ============================================

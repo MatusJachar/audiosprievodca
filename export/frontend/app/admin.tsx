@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator, Modal } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator, Modal, Image, Linking, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,7 +19,7 @@ const COLORS = {
   success: '#4CAF50',
 };
 
-type TabType = 'stops' | 'partners' | 'content' | 'deeplink' | 'stats';
+type TabType = 'stops' | 'partners' | 'content' | 'deeplink' | 'stats' | 'qrcodes';
 
 interface TourStopItem {
   id: string;
@@ -64,6 +64,8 @@ export default function Admin() {
   const [editingStop, setEditingStop] = useState<TourStopItem | null>(null);
   const [editingPartner, setEditingPartner] = useState<PartnerItem | null>(null);
   const [showAddPartner, setShowAddPartner] = useState(false);
+  const [qrCodes, setQrCodes] = useState<any[]>([]);
+  const [qrLoading, setQrLoading] = useState(false);
 
   // New partner form state
   const [newPartner, setNewPartner] = useState({
@@ -88,6 +90,12 @@ export default function Admin() {
       } else if (activeTab === 'partners') {
         const res = await fetch(`${API_URL}/api/partners?active_only=false`);
         setPartners(await res.json());
+      } else if (activeTab === 'qrcodes') {
+        setQrLoading(true);
+        const res = await fetch(`${API_URL}/api/qr/all?size=300`);
+        const data = await res.json();
+        setQrCodes(data.qr_codes || []);
+        setQrLoading(false);
       }
     } catch (error) {
       console.error('Error loading data:', error);
@@ -379,6 +387,74 @@ export default function Admin() {
     </View>
   );
 
+  // ============ QR CODES ============
+
+  const handleDownloadQR = (qr: any) => {
+    // On web, open the QR code image URL for download
+    const downloadUrl = `${API_URL}/api/qr/stop/${qr.stop_id}?format=png&size=600`;
+    if (Platform.OS === 'web') {
+      window.open(downloadUrl, '_blank');
+    } else {
+      Linking.openURL(downloadUrl);
+    }
+  };
+
+  const handleDownloadPrintSheet = () => {
+    const sheetUrl = `${API_URL}/api/qr/print-sheet`;
+    if (Platform.OS === 'web') {
+      window.open(sheetUrl, '_blank');
+    } else {
+      Linking.openURL(sheetUrl);
+    }
+  };
+
+  const renderQRCodes = () => {
+    if (qrLoading) {
+      return (
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+          <Text style={{ color: COLORS.textSecondary, marginTop: 12 }}>Generovanie QR kodov...</Text>
+        </View>
+      );
+    }
+
+    return (
+      <View>
+        {/* Print All Button */}
+        <TouchableOpacity style={styles.printAllButton} onPress={handleDownloadPrintSheet}>
+          <Ionicons name="print" size={20} color="#000" />
+          <Text style={styles.printAllButtonText}>Stiahnut tlacovy harok (vsetky QR)</Text>
+        </TouchableOpacity>
+
+        <Text style={styles.qrSectionTitle}>
+          {qrCodes.length} QR kodov pre zastavky
+        </Text>
+
+        {/* QR Code Grid */}
+        <View style={styles.qrGrid}>
+          {qrCodes.map((qr, idx) => (
+            <View key={idx} style={styles.qrCard}>
+              <Image
+                source={{ uri: `data:image/png;base64,${qr.qr_base64}` }}
+                style={styles.qrImage}
+                resizeMode="contain"
+              />
+              <Text style={styles.qrLabel}>{qr.label}</Text>
+              <Text style={styles.qrUrl} numberOfLines={1}>{qr.qr_url}</Text>
+              <TouchableOpacity
+                style={styles.qrDownloadButton}
+                onPress={() => handleDownloadQR(qr)}
+              >
+                <Ionicons name="download" size={16} color="#000" />
+                <Text style={styles.qrDownloadText}>Stiahnut</Text>
+              </TouchableOpacity>
+            </View>
+          ))}
+        </View>
+      </View>
+    );
+  };
+
   // ============ EDIT STOP MODAL ============
 
   const EditStopModal = () => {
@@ -660,6 +736,7 @@ export default function Admin() {
     { key: 'stats', label: 'Prehlad', icon: 'stats-chart' },
     { key: 'stops', label: 'Zastavky', icon: 'location' },
     { key: 'partners', label: 'Partneri', icon: 'business' },
+    { key: 'qrcodes', label: 'QR Kody', icon: 'qr-code' },
     { key: 'content', label: 'Obsah', icon: 'document-text' },
     { key: 'deeplink', label: 'Links', icon: 'link' },
   ];
@@ -710,6 +787,7 @@ export default function Admin() {
             {activeTab === 'stats' && renderStats()}
             {activeTab === 'stops' && renderStops()}
             {activeTab === 'partners' && renderPartners()}
+            {activeTab === 'qrcodes' && renderQRCodes()}
             {activeTab === 'content' && renderContent()}
             {activeTab === 'deeplink' && renderDeepLink()}
           </>
@@ -854,4 +932,37 @@ const styles = StyleSheet.create({
   categoryOptionActive: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
   categoryOptionText: { fontSize: 13, color: COLORS.textSecondary },
   categoryOptionTextActive: { color: '#000', fontWeight: '600' },
+
+  // QR Codes
+  printAllButton: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: COLORS.accent, padding: 16, borderRadius: 12, marginBottom: 16, gap: 8,
+  },
+  printAllButtonText: { fontSize: 15, fontWeight: '700', color: '#000' },
+  qrSectionTitle: {
+    fontSize: 14, color: COLORS.textSecondary, marginBottom: 12, textAlign: 'center',
+  },
+  qrGrid: {
+    flexDirection: 'row', flexWrap: 'wrap', gap: 12, justifyContent: 'center',
+  },
+  qrCard: {
+    width: '47%', backgroundColor: COLORS.card, borderRadius: 14, padding: 12,
+    alignItems: 'center', borderWidth: 1, borderColor: 'rgba(74,144,217,0.15)',
+  },
+  qrImage: {
+    width: 140, height: 140, marginBottom: 8, borderRadius: 8,
+    backgroundColor: '#fff',
+  },
+  qrLabel: {
+    fontSize: 12, fontWeight: '600', color: COLORS.text, textAlign: 'center',
+    marginBottom: 2,
+  },
+  qrUrl: {
+    fontSize: 9, color: COLORS.textSecondary, textAlign: 'center', marginBottom: 8,
+  },
+  qrDownloadButton: {
+    flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.primary,
+    paddingHorizontal: 14, paddingVertical: 6, borderRadius: 8, gap: 4,
+  },
+  qrDownloadText: { fontSize: 12, fontWeight: '600', color: '#000' },
 });
