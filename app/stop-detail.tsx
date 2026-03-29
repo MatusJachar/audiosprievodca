@@ -1,0 +1,469 @@
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Pressable } from 'react-native';
+import { router, useLocalSearchParams } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import { Ionicons } from '@expo/vector-icons';
+import { useTourStore } from '../store/tourStore';
+import { useLanguageStore } from '../store/languageStore';
+import { useTourTypeStore } from '../store/tourTypeStore';
+import { useEffect, useState, useRef } from 'react';
+import { Audio, AVPlaybackStatus } from 'expo-av';
+import BackgroundWrapper from '../components/BackgroundWrapper';
+import { OfflineCacheManager } from '../utils/offlineCacheManager';
+
+const API_URL = 'http://178.104.72.151:8002';
+
+export default function StopDetail() {
+  const { stopId } = useLocalSearchParams();
+  const { tourStops, userProgress, markStopComplete } = useTourStore();
+  const selectedLanguage = useLanguageStore((state) => state.selectedLanguage);
+  const { getTourRoute } = useTourTypeStore();
+  
+  const [sound, setSound] = useState<Audio.Sound | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [position, setPosition] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [speed, setSpeed] = useState(1.0);
+  const [isOfflineMode, setIsOfflineMode] = useState(false);
+  const [preloadStatus, setPreloadStatus] = useState<string>('');
+  const preloadInProgress = useRef(false);
+
+  const stop = tourStops.find((s) => s.id === stopId);
+  const content = stop?.content?.[selectedLanguage];
+  const isCompleted = userProgress?.completed_stops?.includes(stopId as string) || false;
+  
+  // Get the current tour route for tour-aware preloading
+  const currentTourRoute = getTourRoute();
+
+  // Smart preload: Download next stops in background when viewing a stop
+  // Preloads ONLY the user's selected language (not multiple languages)
+  // NOW TOUR-ROUTE AWARE - follows actual tour order
+  useEffect(() => {
+    const runSmartPreload = async () => {
+      if (!stop || !API_URL || preloadInProgress.current) return;
+      
+      const currentStopNumber = stop.stop_number;
+      if (!currentStopNumber) return; // Skip for legends
+      
+      preloadInProgress.current = true;
+      
+      try {
+        // Show preload status for stops 9-13 (poor coverage area)
+        if (currentStopNumber >= 9) {
+          setPreloadStatus('Preloading next stops...');
+        }
+        
+        // Preload using the ACTUAL TOUR ROUTE order
+        await OfflineCacheManager.smartPreload(
+          currentStopNumber,
+          tourStops,
+          selectedLanguage,
+          API_URL,
+          currentTourRoute.stopNumbers // Pass the tour route!
+        );
+        
+        if (currentStopNumber >= 9) {
+          setPreloadStatus('Next stops ready');
+          // Clear status after 3 seconds
+          setTimeout(() => setPreloadStatus(''), 3000);
+        }
+      } catch (error) {
+        console.error('[StopDetail] Preload error:', error);
+        setPreloadStatus('');
+      } finally {
+        preloadInProgress.current = false;
+      }
+    };
+
+    // Start preload after a short delay to not block initial render
+    const timer = setTimeout(runSmartPreload, 1000);
+    return () => clearTimeout(timer);
+  }, [stopId, selectedLanguage, stop?.stop_number, currentTourRoute.stopNumbers]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (sound) {
+        sound.unloadAsync();
+      }
+    };
+  }, [sound]);
+
+  // Reset when stop changes
+  useEffect(() => {
+    const cleanup = async () => {
+      if (sound) {
+        await sound.unloadAsync();
+        setSound(null);
+      }
+      setIsPlaying(false);
+      setPosition(0);
+      setDuration(0);
+      setIsOfflineMode(false);
+    };
+    cleanup();
+  }, [stopId, selectedLanguage]);
+
+  // Get next stop in tour order
+  const getNextStop = () => {
+    if (!stop) return null;
+    const tourRoute = getTourRoute();
+    const currentStopNumber = stop.stop_number;
+    
+    if (currentStopNumber) {
+      // For numbered stops, find next in tour route
+      const currentIndex = tourRoute.stopNumbers.indexOf(currentStopNumber);
+      if (currentIndex !== -1 && currentIndex < tourRoute.stopNumbers.length - 1) {
+        const nextStopNumber = tourRoute.stopNumbers[currentIndex + 1];
+        return tourStops.find(s => s.stop_number === nextStopNumber);
+      } else if (currentIndex === tourRoute.stopNumbers.length - 1) {
+        // Last numbered stop - go to legend
+        if (tourRoute.legendIndexes.length > 0) {
+          const legendIndex = tourRoute.legendIndexes[0];
+          return tourStops.find(s => s.stop_name?.includes(`Legend ${legendIndex + 1}`));
+        }
+      }
+    }
+    return null;
+  };
+
+  const nextStop = getNextStop();
+  const [autoAdvanceCountdown, setAutoAdvanceCountdown] = useState<number | null>(null);
+
+  const onStatus = (status: AVPlaybackStatus) => {
+    if (status.isLoaded) {
+      setPosition(status.positionMillis || 0);
+      if (status.durationMillis) {
+        setDuration(status.durationMillis);
+      }
+      if (status.didJustFinish) {
+        setIsPlaying(false);
+        markStopComplete('default-user', stopId as string);
+        
+        // Start auto-advance countdown if there's a next stop
+        if (nextStop) {
+          setAutoAdvanceCountdown(5);
+        }
+      }
+    }
+  };
+
+  // Auto-advance countdown
+  useEffect(() => {
+    if (autoAdvanceCountdown === null) return;
+    
+    if (autoAdvanceCountdown <= 0) {
+      // Navigate to next stop
+      if (nextStop) {
+        router.replace({ pathname: '/stop-detail', params: { stopId: nextStop.id } });
+      }
+      setAutoAdvanceCountdown(null);
+      return;
+    }
+    
+    const timer = setTimeout(() => {
+      setAutoAdvanceCountdown(prev => prev !== null ? prev - 1 : null);
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }, [autoAdvanceCountdown, nextStop]);
+
+  const cancelAutoAdvance = () => {
+    setAutoAdvanceCountdown(null);
+  };
+
+  const goToNextStop = () => {
+    if (nextStop) {
+      setAutoAdvanceCountdown(null);
+      router.replace({ pathname: '/stop-detail', params: { stopId: nextStop.id } });
+    }
+  };
+
+  const handlePlay = async () => {
+    try {
+      setIsLoading(true);
+      
+      if (!sound) {
+        // First check for cached offline audio
+        let audioUri: string | null = null;
+        
+        try {
+          audioUri = await OfflineCacheManager.getCachedAudioUri(stopId as string, selectedLanguage);
+          if (audioUri) {
+            console.log('[StopDetail] Using OFFLINE cached audio:', audioUri);
+            setIsOfflineMode(true);
+          }
+        } catch (cacheError) {
+          console.warn('[StopDetail] Offline cache check failed:', cacheError);
+        }
+        
+        // Fallback to streaming URL if no cached audio
+        if (!audioUri) {
+          // Try direct audio URL first (from translations)
+          const stopAudioUrl = stop?.audio?.[selectedLanguage];
+          if (stopAudioUrl) {
+            audioUri = stopAudioUrl.startsWith('http') ? stopAudioUrl : `${API_URL}${stopAudioUrl}`;
+            console.log('[StopDetail] Using audio URL from translations:', audioUri);
+          } else {
+            // Fallback: try file-based URL pattern
+            const stopNum = stop?.stop_number;
+            if (stopNum) {
+              audioUri = `${API_URL}/api/uploads/audio/stop${stopNum}_${selectedLanguage}.mp3`;
+              console.log('[StopDetail] Trying file URL:', audioUri);
+            } else {
+              // Last fallback: streaming endpoint
+              audioUri = `${API_URL}/api/audio/stream/${stopId}/${selectedLanguage}`;
+              console.log('[StopDetail] Using stream URL:', audioUri);
+            }
+          }
+          setIsOfflineMode(false);
+        }
+        
+        await Audio.setAudioModeAsync({
+          playsInSilentModeIOS: true,
+          staysActiveInBackground: true,
+        });
+        
+        const { sound: newSound } = await Audio.Sound.createAsync(
+          { uri: audioUri },
+          { shouldPlay: true, progressUpdateIntervalMillis: 250 },
+          onStatus
+        );
+        setSound(newSound);
+        setIsPlaying(true);
+      } else {
+        const status = await sound.getStatusAsync();
+        if (status.isLoaded) {
+          if (status.isPlaying) {
+            await sound.pauseAsync();
+            setIsPlaying(false);
+          } else {
+            await sound.playAsync();
+            setIsPlaying(true);
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Play error:', e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleStop = async () => {
+    if (sound) {
+      await sound.stopAsync();
+      await sound.unloadAsync();
+      setSound(null);
+      setIsPlaying(false);
+      setPosition(0);
+    }
+  };
+
+  const handleSkip = async (seconds: number) => {
+    if (sound) {
+      const status = await sound.getStatusAsync();
+      if (status.isLoaded) {
+        const newPos = Math.max(0, Math.min(status.positionMillis + seconds * 1000, status.durationMillis || 0));
+        await sound.setPositionAsync(newPos);
+      }
+    }
+  };
+
+  const handleSpeedChange = async () => {
+    const speeds = [0.5, 1.0, 1.5, 2.0];
+    const next = speeds[(speeds.indexOf(speed) + 1) % speeds.length];
+    setSpeed(next);
+    if (sound) {
+      await sound.setRateAsync(next, true);
+    }
+  };
+
+  const formatTime = (ms: number) => {
+    const sec = Math.floor(ms / 1000);
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
+
+  const handleBack = async () => {
+    if (sound) {
+      await sound.unloadAsync();
+    }
+    router.back();
+  };
+
+  if (!stop) {
+    return (
+      <BackgroundWrapper>
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color="#FFD700" />
+        </View>
+      </BackgroundWrapper>
+    );
+  }
+
+  return (
+    <BackgroundWrapper>
+      <View style={styles.container}>
+        <StatusBar style="light" />
+        
+        <View style={styles.header}>
+          <TouchableOpacity onPress={handleBack} style={styles.backBtn}>
+            <Ionicons name="arrow-back" size={24} color="#fff" />
+          </TouchableOpacity>
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{stop.stop_number}</Text>
+          </View>
+        </View>
+
+        <ScrollView style={styles.scroll}>
+          {isCompleted && (
+            <View style={styles.completedBanner}>
+              <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
+              <Text style={styles.completedText}>Completed</Text>
+            </View>
+          )}
+
+          {/* Preload Status Indicator - Shows for stops 9-13 */}
+          {preloadStatus !== '' && (
+            <View style={styles.preloadBanner}>
+              <Ionicons 
+                name={preloadStatus === 'Next stops ready' ? 'checkmark-circle' : 'cloud-download'} 
+                size={16} 
+                color={preloadStatus === 'Next stops ready' ? '#4CAF50' : '#FFD700'} 
+              />
+              <Text style={[
+                styles.preloadText,
+                preloadStatus === 'Next stops ready' && styles.preloadTextReady
+              ]}>
+                {preloadStatus}
+              </Text>
+            </View>
+          )}
+
+          <Text style={styles.title}>{content?.title || stop.stop_name}</Text>
+          <Text style={styles.desc}>{content?.description || 'No description available.'}</Text>
+
+          {/* Audio Player */}
+          <View style={styles.player}>
+            {/* Offline Mode Indicator */}
+            {isOfflineMode && (
+              <View style={styles.offlineIndicator}>
+                <Ionicons name="cloud-offline" size={14} color="#4CAF50" />
+                <Text style={styles.offlineIndicatorText}>Playing from offline cache</Text>
+              </View>
+            )}
+            
+            <View style={styles.progressRow}>
+              <View style={styles.progressBg}>
+                <View style={[styles.progressFill, { width: `${duration > 0 ? (position / duration) * 100 : 0}%` }]} />
+              </View>
+            </View>
+            <View style={styles.timeRow}>
+              <Text style={styles.time}>{formatTime(position)}</Text>
+              <Text style={styles.time}>{formatTime(duration)}</Text>
+            </View>
+
+            <View style={styles.controls}>
+              <Pressable onPress={handleSpeedChange} style={styles.speedBtn}>
+                <Text style={styles.speedText}>{speed}x</Text>
+              </Pressable>
+
+              <Pressable onPress={() => handleSkip(-10)} style={styles.skipBtn}>
+                <Ionicons name="play-back" size={26} color="#fff" />
+                <Text style={styles.skipText}>-10s</Text>
+              </Pressable>
+
+              <Pressable onPress={handlePlay} style={styles.playBtn} disabled={isLoading}>
+                {isLoading ? (
+                  <ActivityIndicator color="#000" />
+                ) : (
+                  <Ionicons name={isPlaying ? 'pause' : 'play'} size={32} color="#000" />
+                )}
+              </Pressable>
+
+              <Pressable onPress={() => handleSkip(10)} style={styles.skipBtn}>
+                <Ionicons name="play-forward" size={26} color="#fff" />
+                <Text style={styles.skipText}>+10s</Text>
+              </Pressable>
+
+              <Pressable onPress={handleStop} style={styles.stopBtn}>
+                <Ionicons name="stop" size={22} color="#FF5252" />
+              </Pressable>
+            </View>
+
+            {/* Auto-advance countdown */}
+            {autoAdvanceCountdown !== null && nextStop && (
+              <View style={styles.autoAdvanceContainer}>
+                <View style={styles.autoAdvanceContent}>
+                  <Ionicons name="arrow-forward-circle" size={24} color="#4A90D9" />
+                  <Text style={styles.autoAdvanceText}>
+                    Ďalšia zastávka za {autoAdvanceCountdown}s...
+                  </Text>
+                </View>
+                <Pressable onPress={cancelAutoAdvance} style={styles.cancelBtn}>
+                  <Text style={styles.cancelBtnText}>Zrušiť</Text>
+                </Pressable>
+              </View>
+            )}
+
+            {/* Next Stop Button */}
+            {nextStop && autoAdvanceCountdown === null && (
+              <Pressable onPress={goToNextStop} style={styles.nextStopBtn}>
+                <View style={styles.nextStopContent}>
+                  <Text style={styles.nextStopLabel}>Ďalšia zastávka</Text>
+                  <Text style={styles.nextStopName}>
+                    {nextStop.content?.[selectedLanguage]?.title || nextStop.stop_name || `Stop ${nextStop.stop_number}`}
+                  </Text>
+                </View>
+                <Ionicons name="arrow-forward" size={24} color="#fff" />
+              </Pressable>
+            )}
+          </View>
+        </ScrollView>
+      </View>
+    </BackgroundWrapper>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  header: { flexDirection: 'row', alignItems: 'center', padding: 16, paddingTop: 56, gap: 16 },
+  backBtn: { padding: 8 },
+  badge: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#4A90D9', justifyContent: 'center', alignItems: 'center' },
+  badgeText: { fontSize: 18, fontWeight: 'bold', color: '#fff' },
+  scroll: { flex: 1, padding: 20 },
+  completedBanner: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(76,175,80,0.2)', padding: 10, borderRadius: 8, marginBottom: 16, gap: 8 },
+  completedText: { color: '#4CAF50', fontWeight: '600' },
+  preloadBanner: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(74,144,217,0.15)', padding: 10, borderRadius: 8, marginBottom: 12, gap: 8 },
+  preloadText: { color: '#4A90D9', fontSize: 13, fontWeight: '500' },
+  preloadTextReady: { color: '#4CAF50' },
+  title: { fontSize: 26, fontWeight: 'bold', color: '#fff', marginBottom: 12 },
+  desc: { fontSize: 15, color: '#ccc', lineHeight: 24, marginBottom: 20, maxHeight: 200 },
+  player: { backgroundColor: 'rgba(30,30,50,0.95)', borderRadius: 16, padding: 20, borderWidth: 1, borderColor: 'rgba(74,144,217,0.2)' },
+  offlineIndicator: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(76,175,80,0.15)', paddingVertical: 6, paddingHorizontal: 12, borderRadius: 20, marginBottom: 12, alignSelf: 'center', gap: 6 },
+  offlineIndicatorText: { fontSize: 12, color: '#4CAF50', fontWeight: '500' },
+  progressRow: { marginBottom: 8 },
+  progressBg: { height: 6, backgroundColor: '#333', borderRadius: 3, overflow: 'hidden' },
+  progressFill: { height: '100%', backgroundColor: '#4A90D9' },
+  timeRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 },
+  time: { color: '#888', fontSize: 12 },
+  controls: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 12 },
+  speedBtn: { backgroundColor: '#252542', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6 },
+  speedText: { color: '#4A90D9', fontWeight: 'bold' },
+  skipBtn: { padding: 10, alignItems: 'center' },
+  skipText: { color: '#888', fontSize: 10, marginTop: 2 },
+  playBtn: { width: 60, height: 60, borderRadius: 30, backgroundColor: '#4A90D9', justifyContent: 'center', alignItems: 'center' },
+  stopBtn: { padding: 10 },
+  autoAdvanceContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'rgba(74,144,217,0.15)', padding: 12, borderRadius: 10, marginTop: 16 },
+  autoAdvanceContent: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  autoAdvanceText: { color: '#4A90D9', fontSize: 14, fontWeight: '500' },
+  cancelBtn: { backgroundColor: 'rgba(255,82,82,0.2)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6 },
+  cancelBtnText: { color: '#FF5252', fontSize: 13, fontWeight: '600' },
+  nextStopBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#4A90D9', padding: 16, borderRadius: 12, marginTop: 16 },
+  nextStopContent: { flex: 1 },
+  nextStopLabel: { color: 'rgba(255,255,255,0.7)', fontSize: 12, marginBottom: 2 },
+  nextStopName: { color: '#fff', fontSize: 16, fontWeight: '600' },
+});

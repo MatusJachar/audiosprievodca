@@ -1,0 +1,1 @@
+{"ignore_dirs": ["node_modules/@expo/cli/build", "node_modules/@react-native-community", "node_modules/react-native-reanimated/lib", "node_modules/react-native-gesture-handler"]}
