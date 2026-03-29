@@ -107,3 +107,7 @@ spissky-hrad-export/database/dump.archive
 *.env.*
 export/database/spissky_hrad.archive
 export/database/json_dump/test_database/tour_audio.bson
+-e 
+# Environment files
+*.env
+*.env.*
