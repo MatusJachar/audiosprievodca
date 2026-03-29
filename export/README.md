@@ -103,6 +103,74 @@ curl -X POST http://localhost:8002/api/admin/partners/seed
 curl http://localhost:8002/api/health
 ```
 
+### Automated Deployment (one command)
+```bash
+# Upload and run the deploy script
+scp -r ./spissky-hrad-export root@YOUR_SERVER_IP:/opt/spissky-hrad
+ssh root@YOUR_SERVER_IP "cd /opt/spissky-hrad && chmod +x scripts/*.sh && ./scripts/deploy.sh"
+```
+
+---
+
+## SSL Certificate Setup (HTTPS)
+
+### Option 1: Let's Encrypt (Free, Automatic)
+
+```bash
+# 1. Point your domain DNS to your Hetzner server IP
+# A record: your-domain.com -> YOUR_SERVER_IP
+
+# 2. Run the SSL setup script
+chmod +x scripts/setup-ssl.sh
+./scripts/setup-ssl.sh your-domain.com admin@your-domain.com
+```
+
+This will:
+- Request a free SSL certificate from Let's Encrypt
+- Configure Nginx for HTTPS with HTTP->HTTPS redirect
+- Set up automatic certificate renewal (every 12 hours check)
+- Apply security headers (HSTS, X-Frame-Options, etc.)
+
+### Option 2: Manual SSL Certificate
+
+If you already have SSL certificates:
+
+```bash
+# 1. Copy your certificates to the ssl directory
+cp your_fullchain.pem docker/ssl/fullchain.pem
+cp your_privkey.pem docker/ssl/privkey.pem
+
+# 2. Update nginx config with your domain
+sed "s/YOUR_DOMAIN.com/your-domain.com/g" docker/nginx-ssl.conf > docker/nginx.conf
+
+# 3. Restart nginx
+docker compose restart nginx
+```
+
+### SSL Configuration Details
+
+The `nginx-ssl.conf` includes:
+- **TLS 1.2 + 1.3** (modern protocol support)
+- **Strong cipher suites** (ECDHE-ECDSA/RSA with AES-GCM)
+- **HSTS** (Strict-Transport-Security header)
+- **Session caching** (50MB shared cache)
+- **OCSP Stapling** for performance
+- **Security headers** (X-Frame-Options, X-Content-Type-Options, X-XSS-Protection)
+- **Auto-renewal** via Certbot container (checks every 12h)
+
+### After SSL Setup
+
+Update your mobile app API URL:
+```bash
+# In frontend/.env or eas.json
+EXPO_PUBLIC_BACKEND_URL=https://your-domain.com
+```
+
+Then rebuild the mobile app:
+```bash
+cd frontend && eas build --platform android --profile production
+```
+
 ---
 
 ## Mobile App Build (EAS)
@@ -397,50 +465,58 @@ http://YOUR_SERVER_IP:8002/api
 
 ```
 spissky-hrad-export/
-├── docker-compose.yml          # Docker orchestration
-├── README.md                   # This file
+├── docker-compose.yml              # Docker orchestration (MongoDB + API + Nginx + Certbot)
+├── README.md                       # This file - complete deployment guide
 ├── backend/
-│   ├── server.py               # FastAPI application
-│   ├── Dockerfile              # Docker build
-│   ├── requirements.txt        # Python dependencies
-│   └── .env.example            # Environment template
+│   ├── server.py                   # FastAPI application (all endpoints)
+│   ├── Dockerfile                  # Docker build for backend
+│   ├── requirements.txt            # Python dependencies (incl. qrcode, pillow)
+│   └── .env.example                # Environment template
 ├── frontend/
-│   ├── app/                    # Expo Router screens
-│   │   ├── _layout.tsx         # Root layout + deep linking
-│   │   ├── index.tsx           # Home page
-│   │   ├── language-select.tsx # Language picker (9 langs)
-│   │   ├── tour.tsx            # Tour stops list
-│   │   ├── stop-detail.tsx     # Audio player + auto-advance
-│   │   ├── partners.tsx        # Partner listings
-│   │   ├── admin.tsx           # Admin panel (full CRUD)
-│   │   ├── admin-content.tsx   # Content management
-│   │   ├── admin-login.tsx     # Admin authentication
-│   │   ├── settings.tsx        # App settings
-│   │   ├── shop.tsx            # Tickets & shop
-│   │   ├── travel-info.tsx     # Travel information
-│   │   └── discover-region.tsx # Discover region
-│   ├── store/                  # Zustand state management
-│   │   ├── tourStore.ts        # Tour data store
-│   │   ├── tourTypeStore.ts    # Tour filtering config
-│   │   └── languageStore.ts    # Language preferences
+│   ├── app/                        # Expo Router screens (12 screens)
+│   │   ├── _layout.tsx             # Root layout + deep linking handler
+│   │   ├── index.tsx               # Home page with castle branding
+│   │   ├── language-select.tsx     # 9-language picker with flags
+│   │   ├── tour.tsx                # Tour stops list + GastroFlow button
+│   │   ├── stop-detail.tsx         # Audio player + auto-advance + Next Stop
+│   │   ├── partners.tsx            # Partner listings with categories
+│   │   ├── admin.tsx               # Admin panel (6 tabs, full CRUD)
+│   │   ├── admin-content.tsx       # Content management editor
+│   │   ├── admin-login.tsx         # Admin authentication
+│   │   ├── settings.tsx            # App settings
+│   │   ├── shop.tsx                # Tickets & shop info
+│   │   ├── travel-info.tsx         # Travel & transport info
+│   │   ├── discover-region.tsx     # Discover region promo
+│   │   └── clear-cache.tsx         # Cache management
+│   ├── store/                      # Zustand state management
+│   │   ├── tourStore.ts            # Tour data + audio streaming
+│   │   ├── tourTypeStore.ts        # Tour filtering (8 stops config)
+│   │   └── languageStore.ts        # Language preferences (9 langs)
 │   ├── constants/
-│   │   └── colors.ts           # Color scheme
+│   │   └── colors.ts               # Blue/purple/gold color scheme
 │   ├── components/
-│   │   └── BackgroundWrapper.tsx
+│   │   └── BackgroundWrapper.tsx    # Background image wrapper
 │   ├── utils/
-│   │   └── offlineCacheManager.ts
-│   ├── app.json                # Expo configuration
-│   ├── package.json            # Node dependencies
-│   └── metro.config.js         # Metro bundler config
+│   │   └── offlineCacheManager.ts  # Offline audio caching
+│   ├── app.json                    # Expo config (com.spiscastle.freetour)
+│   ├── package.json                # Node dependencies
+│   ├── metro.config.js             # Metro bundler config
+│   └── eas.json                    # EAS Build configuration
 ├── database/
-│   ├── spissky_hrad.archive    # MongoDB dump (archive format)
-│   ├── json_dump/              # JSON format dump
-│   └── restore.sh              # Restore script
+│   ├── spissky_hrad.archive        # MongoDB dump (archive format)
+│   ├── json_dump/                  # MongoDB dump (JSON format)
+│   │   └── test_database/          # All collections as BSON/JSON
+│   └── restore.sh                  # Database restore script
 ├── docker/
-│   ├── nginx.conf              # Nginx reverse proxy
-│   └── ssl/                    # SSL certificates (add yours)
+│   ├── nginx.conf                  # Nginx config (HTTP only)
+│   ├── nginx-ssl.conf              # Nginx config (HTTPS with SSL)
+│   └── ssl/                        # SSL certificates directory
+├── scripts/
+│   ├── deploy.sh                   # One-command full deployment
+│   ├── setup-ssl.sh                # Let's Encrypt SSL setup
+│   └── backup.sh                   # Database backup script
 └── media/
-    └── audio/                  # Audio files directory
+    └── audio/                      # Audio files directory
 ```
 
 ---
