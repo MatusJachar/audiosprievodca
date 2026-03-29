@@ -42,7 +42,7 @@ interface TourState {
   downloadAllContent: () => Promise<void>;
 }
 
-const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+const API_URL = 'http://178.104.72.151:8002';
 
 export const useTourStore = create<TourState>((set, get) => ({
   tourStops: [],
@@ -62,15 +62,33 @@ export const useTourStore = create<TourState>((set, get) => ({
       if (!response.ok) throw new Error('Failed to fetch tour stops');
       const data = await response.json();
       
-      // Debug: Check audio data for first stop
-      if (data.length > 0) {
-        const firstStop = data[0];
+      // Transform: backend returns translations[] array, NOT content{} and audio{} objects
+      const transformed = data.map((stop: any) => {
+        const content: Record<string, any> = {};
+        const audio: Record<string, string> = {};
+        (stop.translations || []).forEach((t: any) => {
+          content[t.language_code] = { title: t.title, description: t.description };
+          if (t.audio_url) {
+            audio[t.language_code] = t.audio_url.startsWith('http') 
+              ? t.audio_url 
+              : `${API_URL}${t.audio_url}`;
+          }
+        });
+        // If stop already has content/audio format (from local dev backend), keep it
+        if (stop.content && Object.keys(stop.content).length > 0 && Object.keys(content).length === 0) {
+          return stop;
+        }
+        return { ...stop, content, audio };
+      });
+      
+      // Debug: Check data for first stop
+      if (transformed.length > 0) {
+        const firstStop = transformed[0];
+        console.log('[TourStore] First stop content keys:', Object.keys(firstStop.content || {}));
         console.log('[TourStore] First stop audio keys:', Object.keys(firstStop.audio || {}));
-        console.log('[TourStore] First stop has English audio:', !!firstStop.audio?.en);
-        console.log('[TourStore] English audio length:', firstStop.audio?.en?.length || 0);
       }
       
-      set({ tourStops: data, loading: false, error: null });
+      set({ tourStops: transformed, loading: false, error: null });
       
       // Cache metadata for offline use
       try {

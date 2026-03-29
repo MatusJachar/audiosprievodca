@@ -7,7 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 
-const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+const API_URL = 'http://178.104.72.151:8002';
 
 type ContentSection = 'background' | 'shop' | 'travel' | 'discover';
 

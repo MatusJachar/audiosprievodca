@@ -10,7 +10,7 @@ import { OfflineCacheManager } from '../utils/offlineCacheManager';
 import { LinearGradient } from 'expo-linear-gradient';
 import BackgroundWrapper from '../components/BackgroundWrapper';
 
-const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+const API_URL = 'http://178.104.72.151:8002';
 
 // Color scheme
 const COLORS = {

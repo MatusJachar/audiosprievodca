@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 
-const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+const API_URL = 'http://178.104.72.151:8002';
 
 const COLORS = {
   primary: '#4A90D9',

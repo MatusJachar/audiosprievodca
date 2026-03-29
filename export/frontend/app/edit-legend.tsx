@@ -4,7 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useEffect } from 'react';
 
-const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+const API_URL = 'http://178.104.72.151:8002';
 
 export default function EditLegend() {
   const { stopId, legendIndex } = useLocalSearchParams();

@@ -10,7 +10,13 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.spiscastle.freetour"
+      "bundleIdentifier": "com.spiscastle.freetour",
+      "infoPlist": {
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true
+        },
+        "NSLocationWhenInUseUsageDescription": "Find nearby restaurants and services"
+      }
     },
     "android": {
       "adaptiveIcon": {

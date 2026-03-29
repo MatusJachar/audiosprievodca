@@ -10,7 +10,7 @@ import { Audio, AVPlaybackStatus } from 'expo-av';
 import BackgroundWrapper from '../components/BackgroundWrapper';
 import { OfflineCacheManager } from '../utils/offlineCacheManager';
 
-const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+const API_URL = 'http://178.104.72.151:8002';
 
 export default function StopDetail() {
   const { stopId } = useLocalSearchParams();
@@ -199,13 +199,23 @@ export default function StopDetail() {
         
         // Fallback to streaming URL if no cached audio
         if (!audioUri) {
-          audioUri = `${API_URL}/api/audio/stream/${stopId}/${selectedLanguage}`;
-          console.log('[StopDetail] =============================');
-          console.log('[StopDetail] STREAMING AUDIO REQUEST:');
-          console.log('[StopDetail] Stop ID:', stopId);
-          console.log('[StopDetail] Language:', selectedLanguage);
-          console.log('[StopDetail] Full URL:', audioUri);
-          console.log('[StopDetail] =============================');
+          // Try direct audio URL first (from translations)
+          const stopAudioUrl = stop?.audio?.[selectedLanguage];
+          if (stopAudioUrl) {
+            audioUri = stopAudioUrl.startsWith('http') ? stopAudioUrl : `${API_URL}${stopAudioUrl}`;
+            console.log('[StopDetail] Using audio URL from translations:', audioUri);
+          } else {
+            // Fallback: try file-based URL pattern
+            const stopNum = stop?.stop_number;
+            if (stopNum) {
+              audioUri = `${API_URL}/api/uploads/audio/stop${stopNum}_${selectedLanguage}.mp3`;
+              console.log('[StopDetail] Trying file URL:', audioUri);
+            } else {
+              // Last fallback: streaming endpoint
+              audioUri = `${API_URL}/api/audio/stream/${stopId}/${selectedLanguage}`;
+              console.log('[StopDetail] Using stream URL:', audioUri);
+            }
+          }
           setIsOfflineMode(false);
         }
         

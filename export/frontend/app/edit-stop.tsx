@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useState, useEffect } from 'react';
 import { useLanguageStore } from '../store/languageStore';
 
-const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+const API_URL = 'http://178.104.72.151:8002';
 
 export default function EditStop() {
   const { stopId } = useLocalSearchParams();

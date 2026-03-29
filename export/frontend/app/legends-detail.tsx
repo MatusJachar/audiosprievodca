@@ -7,7 +7,7 @@ import { useLanguageStore } from '../store/languageStore';
 import { useState, useEffect } from 'react';
 import { Audio } from 'expo-av';
 
-const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+const API_URL = 'http://178.104.72.151:8002';
 
 export default function LegendsDetail() {
   const { stopId } = useLocalSearchParams();
