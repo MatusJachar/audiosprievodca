@@ -18,7 +18,7 @@ COPY . .
 RUN mkdir -p uploads/audio uploads/partners
 
 # Expose port
-EXPOSE 8001
+EXPOSE 8002
 
 # Run the application
-CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8001", "--workers", "2"]
+CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8002", "--workers", "2"]
