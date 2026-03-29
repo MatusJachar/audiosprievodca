@@ -111,3 +111,7 @@ export/database/json_dump/test_database/tour_audio.bson
 # Environment files
 *.env
 *.env.*
+-e 
+# Environment files
+*.env
+*.env.*
