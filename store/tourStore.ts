@@ -88,7 +88,7 @@ export const useTourStore = create<TourState>((set, get) => ({
         console.log('[TourStore] First stop audio keys:', Object.keys(firstStop.audio || {}));
       }
       
-      set({ tourStops: transformed, loading: false, error: null });
+      set({ tourStops: data, loading: false, error: null });
       
       // Cache metadata for offline use
       try {
