@@ -57,40 +57,54 @@ export const useTourStore = create<TourState>((set, get) => ({
     try {
       console.log('[TourStore] Fetching tour stops from:', `${API_URL}/api/tour-stops`);
       
-      // Try to fetch from network
       const response = await fetch(`${API_URL}/api/tour-stops`);
       if (!response.ok) throw new Error('Failed to fetch tour stops');
       const data = await response.json();
       
-      // Transform: backend returns translations[] array, NOT content{} and audio{} objects
       const transformed = data.map((stop: any) => {
         const content: Record<string, any> = {};
         const audio: Record<string, string> = {};
+        
         (stop.translations || []).forEach((t: any) => {
           content[t.language_code] = { title: t.title, description: t.description };
           if (t.audio_url) {
-            audio[t.language_code] = t.audio_url.startsWith('http') 
-              ? t.audio_url 
+            audio[t.language_code] = t.audio_url.startsWith('http')
+              ? t.audio_url
               : `${API_URL}${t.audio_url}`;
           }
         });
-        // If stop already has content/audio format (from local dev backend), keep it
+
+        // Backend returns content{} directly (not translations[])
         if (stop.content && Object.keys(stop.content).length > 0 && Object.keys(content).length === 0) {
-          return stop;
+          const audioFromNumber: Record<string, string> = {};
+          const langs = ['en', 'sk', 'de', 'pl', 'hu', 'ru', 'es', 'zh', 'fr'];
+          
+          if (stop.stop_number) {
+            langs.forEach(lang => {
+              audioFromNumber[lang] = `${API_URL}/api/uploads/audio/stop${stop.stop_number}_${lang}.mp3`;
+            });
+          } else if (stop.stop_name) {
+            const match = stop.stop_name.match(/Legend (\d+)/);
+            if (match) {
+              langs.forEach(lang => {
+                audioFromNumber[lang] = `${API_URL}/api/uploads/audio/legend_${match[1]}_${lang}.mp3`;
+              });
+            }
+          }
+          return { ...stop, audio: audioFromNumber };
         }
+        
         return { ...stop, content, audio };
       });
       
-      // Debug: Check data for first stop
       if (transformed.length > 0) {
         const firstStop = transformed[0];
         console.log('[TourStore] First stop content keys:', Object.keys(firstStop.content || {}));
         console.log('[TourStore] First stop audio keys:', Object.keys(firstStop.audio || {}));
       }
       
-      set({ tourStops: data, loading: false, error: null });
+      set({ tourStops: transformed, loading: false, error: null });
       
-      // Cache metadata for offline use
       try {
         const metadataOnly = data.map((stop: TourStop) => ({
           id: stop.id,
@@ -109,7 +123,6 @@ export const useTourStore = create<TourState>((set, get) => ({
     } catch (error) {
       console.error('[TourStore] Network error:', error);
       
-      // Try to load from cache for offline mode
       try {
         const cached = await AsyncStorage.getItem('tourStops');
         if (cached) {
@@ -132,12 +145,9 @@ export const useTourStore = create<TourState>((set, get) => ({
       if (!response.ok) throw new Error('Failed to fetch progress');
       const data = await response.json();
       set({ userProgress: data });
-      
-      // Cache progress
       await AsyncStorage.setItem('userProgress', JSON.stringify(data));
     } catch (error) {
       console.error('Error fetching progress:', error);
-      // Try to load from cache
       try {
         const cached = await AsyncStorage.getItem('userProgress');
         if (cached) {
@@ -157,7 +167,6 @@ export const useTourStore = create<TourState>((set, get) => ({
       );
       if (!response.ok) throw new Error('Failed to mark stop complete');
       
-      // Update local state
       const currentProgress = get().userProgress;
       if (currentProgress) {
         const updatedProgress = {
@@ -180,7 +189,6 @@ export const useTourStore = create<TourState>((set, get) => ({
       );
       if (!response.ok) throw new Error('Failed to reset progress');
       
-      // Update local state
       const currentProgress = get().userProgress;
       if (currentProgress) {
         const resetProgress = {
@@ -207,9 +215,6 @@ export const useTourStore = create<TourState>((set, get) => ({
   downloadAllContent: async () => {
     set({ loading: true });
     try {
-      // Note: Audio files are too large (111MB total) to cache in AsyncStorage
-      // They will be fetched on-demand from the backend
-      // We only cache metadata for offline reference
       await AsyncStorage.setItem('offlineReady', 'true');
       console.log('[TourStore] Offline mode enabled (audio will stream from backend)');
       set({ isOfflineMode: true, loading: false });
