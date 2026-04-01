@@ -185,7 +185,7 @@ export default function Tour() {
       if (b.stop_number !== null) return 1;
       return 0;
     });
-  }, [tourStops]);
+  }, [tourStops, tourStops.length]);
 
   const isStopCompleted = (stopId: string) => {
     return userProgress?.completed_stops.includes(stopId) || false;
