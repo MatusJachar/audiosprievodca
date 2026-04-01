@@ -61,62 +61,43 @@ export const useTourStore = create<TourState>((set, get) => ({
       if (!response.ok) throw new Error('Failed to fetch tour stops');
       const data = await response.json();
       
-      const transformed = data.map((stop: any) => {
-        const content: Record<string, any> = {};
-        const audio: Record<string, string> = {};
-        
-        (stop.translations || []).forEach((t: any) => {
-          content[t.language_code] = { title: t.title, description: t.description };
-          if (t.audio_url) {
-            audio[t.language_code] = t.audio_url.startsWith('http')
-              ? t.audio_url
-              : `${API_URL}${t.audio_url}`;
-          }
-        });
+      const langs = ['en', 'sk', 'de', 'pl', 'hu', 'ru', 'es', 'zh', 'fr'];
 
-        // Backend returns content{} directly (not translations[])
-        if (stop.content && Object.keys(stop.content).length > 0 && Object.keys(content).length === 0) {
-          const audioFromNumber: Record<string, string> = {};
-          const langs = ['en', 'sk', 'de', 'pl', 'hu', 'ru', 'es', 'zh', 'fr'];
-          
-          if (stop.stop_number) {
+      const transformed = data.map((stop: any) => {
+        const audioFromNumber: Record<string, string> = {};
+
+        if (stop.stop_number) {
+          langs.forEach(lang => {
+            audioFromNumber[lang] = `${API_URL}/api/uploads/audio/stop${stop.stop_number}_${lang}.mp3`;
+          });
+        } else if (stop.stop_name) {
+          const match = stop.stop_name.match(/Legend (\d+)/);
+          if (match) {
             langs.forEach(lang => {
-              audioFromNumber[lang] = `${API_URL}/api/uploads/audio/stop${stop.stop_number}_${lang}.mp3`;
+              audioFromNumber[lang] = `${API_URL}/api/uploads/audio/legend_${match[1]}_${lang}.mp3`;
             });
-          } else if (stop.stop_name) {
-            const match = stop.stop_name.match(/Legend (\d+)/);
-            if (match) {
-              langs.forEach(lang => {
-                audioFromNumber[lang] = `${API_URL}/api/uploads/audio/legend_${match[1]}_${lang}.mp3`;
-              });
-            }
           }
-          return { ...stop, audio: audioFromNumber };
         }
-        
-        return { ...stop, content, audio };
+
+        return {
+          ...stop,
+          content: stop.content || {},
+          audio: audioFromNumber,
+        };
       });
       
       if (transformed.length > 0) {
         const firstStop = transformed[0];
         console.log('[TourStore] First stop content keys:', Object.keys(firstStop.content || {}));
         console.log('[TourStore] First stop audio keys:', Object.keys(firstStop.audio || {}));
+        console.log('[TourStore] First stop_number:', firstStop.stop_number);
       }
       
       set({ tourStops: transformed, loading: false, error: null });
       
       try {
-        const metadataOnly = data.map((stop: TourStop) => ({
-          id: stop.id,
-          stop_number: stop.stop_number,
-          stop_name: stop.stop_name,
-          content: stop.content,
-          image_base64: stop.image_base64,
-          created_at: stop.created_at,
-          updated_at: stop.updated_at,
-        }));
-        await AsyncStorage.setItem('tourStops', JSON.stringify(metadataOnly));
-        console.log('[TourStore] Cached metadata for', metadataOnly.length, 'tour stops');
+        await AsyncStorage.setItem('tourStops', JSON.stringify(transformed));
+        console.log('[TourStore] Cached', transformed.length, 'tour stops');
       } catch (cacheError) {
         console.error('[TourStore] Cache error:', cacheError);
       }
