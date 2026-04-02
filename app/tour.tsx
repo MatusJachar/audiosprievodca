@@ -26,7 +26,11 @@ const COLORS = {
 };
 
 export default function Tour() {
-  const { tourStops, userProgress, loading, fetchTourStops, fetchUserProgress } = useTourStore();
+  const tourStops = useTourStore((state) => state.tourStops);
+  const userProgress = useTourStore((state) => state.userProgress);
+  const loading = useTourStore((state) => state.loading);
+  const fetchTourStops = useTourStore((state) => state.fetchTourStops);
+  const fetchUserProgress = useTourStore((state) => state.fetchUserProgress);
   const selectedLanguage = useLanguageStore((state) => state.selectedLanguage);
   const { getTourRoute } = useTourTypeStore();
   const [showDownloadModal, setShowDownloadModal] = useState(false);
@@ -151,41 +155,24 @@ export default function Tour() {
     return names[code] || code;
   };
 
-  // Filter tour stops based on selected tour type
+ // Filter tour stops based on selected tour type
   const filteredTourStops = useMemo(() => {
-    const tourRoute = getTourRoute();
-    
-    return tourStops.filter(stop => {
-      // Check if it's a legend stop
-      const isLegendStop = stop.stop_name && stop.stop_name.startsWith('Legend ');
-      
-      if (isLegendStop) {
-        // For legend stops, check if the index is in legendIndexes
-        const legendMatch = stop.stop_name?.match(/Legend (\d+)/);
-        if (legendMatch) {
-          const legendNumber = parseInt(legendMatch[1]);
-          const legendIndex = legendNumber - 1; // Convert to 0-based index
-          return tourRoute.legendIndexes.includes(legendIndex);
-        }
-        return false;
+    console.log('[Filter] tourStops count:', tourStops.length);
+    if (tourStops.length === 0) return [];
+    const STOP_NUMBERS = [1, 2, 4, 6, 8, 11, 12];
+    const result = tourStops.filter(stop => {
+      if (stop.stop_name && stop.stop_name.startsWith('Legend ')) {
+        return stop.stop_name === 'Legend 3';
       }
-      
-      // For numbered stops, check if the stop_number is in the route
-      if (stop.stop_number !== null && stop.stop_number !== undefined) {
-        return tourRoute.stopNumbers.includes(stop.stop_number);
-      }
-      
-      return false;
+      return STOP_NUMBERS.includes(Number(stop.stop_number));
     }).sort((a, b) => {
-      // Sort: numbered stops first by stop_number, then legends
-      if (a.stop_number !== null && b.stop_number !== null) {
-        return a.stop_number - b.stop_number;
-      }
-      if (a.stop_number !== null) return -1;
-      if (b.stop_number !== null) return 1;
-      return 0;
+      if (a.stop_number && b.stop_number) return Number(a.stop_number) - Number(b.stop_number);
+      if (a.stop_number) return -1;
+      return 1;
     });
-  }, [tourStops, tourStops.length]);
+    console.log('[Filter] result count:', result.length);
+    return result;
+  }, [tourStops]);
 
   const isStopCompleted = (stopId: string) => {
     return userProgress?.completed_stops.includes(stopId) || false;
