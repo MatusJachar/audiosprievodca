@@ -228,7 +228,7 @@ export default function Tour() {
     );
   };
 
-  if (loading && tourStops.length === 0) {
+  if (loading) {
     return (
       <BackgroundWrapper>
         <View style={[styles.container, styles.centered]}>
