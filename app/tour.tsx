@@ -158,20 +158,7 @@ export default function Tour() {
  // Filter tour stops based on selected tour type
   const filteredTourStops = useMemo(() => {
     console.log('[Filter] tourStops count:', tourStops.length);
-    if (tourStops.length === 0) return [];
-    const STOP_NUMBERS = [1, 2, 4, 6, 8, 11, 12];
-    const result = tourStops.filter(stop => {
-      if (stop.stop_name && stop.stop_name.startsWith('Legend ')) {
-        return stop.stop_name === 'Legend 3';
-      }
-      return STOP_NUMBERS.includes(Number(stop.stop_number));
-    }).sort((a, b) => {
-      if (a.stop_number && b.stop_number) return Number(a.stop_number) - Number(b.stop_number);
-      if (a.stop_number) return -1;
-      return 1;
-    });
-    console.log('[Filter] result count:', result.length);
-    return result;
+    return tourStops;
   }, [tourStops]);
 
   const isStopCompleted = (stopId: string) => {
