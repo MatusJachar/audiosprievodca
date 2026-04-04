@@ -42,7 +42,6 @@ export default function Tour() {
   const initialPreloadDone = useRef(false);
 
   useEffect(() => {
-    fetchTourStops();
     if (!userProgress) {
       fetchUserProgress('default-user');
     }

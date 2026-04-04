@@ -53,6 +53,10 @@ export const useTourStore = create<TourState>((set, get) => ({
   error: null,
   
   fetchTourStops: async () => {
+    if (get().loading) {
+        console.log('[TourStore] Already fetching, skipping...');
+        return;
+    }
     set({ loading: true, error: null });
     try {
       console.log('[TourStore] Fetching tour stops from:', `${API_URL}/api/tour-stops`);
