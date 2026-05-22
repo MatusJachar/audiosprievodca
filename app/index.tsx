@@ -151,6 +151,7 @@ export default function Index() {
             <Ionicons name="map" size={20} color={COLORS.primary} />
             <Text style={styles.quickLinkText}>Doprava</Text>
           </TouchableOpacity>
+          {/* SHOP - zakomentované, použiť na novom mieste v budúcnosti
           <TouchableOpacity
             style={styles.quickLink}
             onPress={() => router.push('/shop')}
@@ -158,6 +159,7 @@ export default function Index() {
             <Ionicons name="ticket" size={20} color={COLORS.primary} />
             <Text style={styles.quickLinkText}>Listky</Text>
           </TouchableOpacity>
+          */}
         </View>
       </View>
     </View>

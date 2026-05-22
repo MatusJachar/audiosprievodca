@@ -186,25 +186,6 @@ export default function Settings() {
         </View>
         
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Admin</Text>
-          <TouchableOpacity
-            style={styles.settingCard}
-            onPress={() => router.push('/admin')}
-          >
-            <View style={styles.settingLeft}>
-              <Ionicons name="shield-checkmark" size={24} color="#FF5252" />
-              <View style={styles.settingInfo}>
-                <Text style={styles.settingLabel}>Admin Panel</Text>
-                <Text style={styles.settingSubtext}>
-                  Edit tour stops and generate audio
-                </Text>
-              </View>
-            </View>
-            <Ionicons name="chevron-forward" size={24} color="#aaa" />
-          </TouchableOpacity>
-        </View>
-        
-        <View style={styles.section}>
           <Text style={styles.sectionTitle}>Troubleshooting</Text>
           <TouchableOpacity
             style={styles.settingCard}

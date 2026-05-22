@@ -2,7 +2,7 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert } from 'reac
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const ADMIN_PASSWORD = 'castle2025'; // Change this to your desired password
@@ -11,6 +11,11 @@ export default function AdminLogin() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    // Always clear auth state - password required every time
+    AsyncStorage.removeItem('admin_authenticated');
+  }, []);
+
   const handleLogin = async () => {
     if (!password.trim()) {
       Alert.alert('Error', 'Please enter password');
@@ -18,16 +23,14 @@ export default function AdminLogin() {
     }
 
     setLoading(true);
-    
+
     if (password === ADMIN_PASSWORD) {
-      // Save login state
       await AsyncStorage.setItem('admin_authenticated', 'true');
-      Alert.alert('Success', 'Admin access granted');
       router.replace('/admin');
     } else {
       Alert.alert('Error', 'Incorrect password');
     }
-    
+
     setLoading(false);
     setPassword('');
   };
@@ -35,15 +38,15 @@ export default function AdminLogin() {
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
-      
+
       <View style={styles.content}>
         <View style={styles.iconContainer}>
           <Ionicons name="lock-closed" size={80} color="#4A90D9" />
         </View>
-        
+
         <Text style={styles.title}>Admin Panel</Text>
         <Text style={styles.subtitle}>Enter password to continue</Text>
-        
+
         <View style={styles.inputContainer}>
           <Ionicons name="key" size={20} color="#4A90D9" style={styles.inputIcon} />
           <TextInput
@@ -58,7 +61,7 @@ export default function AdminLogin() {
             onSubmitEditing={handleLogin}
           />
         </View>
-        
+
         <TouchableOpacity
           style={styles.loginButton}
           onPress={handleLogin}
@@ -69,18 +72,13 @@ export default function AdminLogin() {
           </Text>
           <Ionicons name="arrow-forward" size={20} color="#000" />
         </TouchableOpacity>
-        
+
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => router.back()}
         >
-          <Text style={styles.backButtonText}>Back to Settings</Text>
+          <Text style={styles.backButtonText}>Cancel</Text>
         </TouchableOpacity>
-        
-        <View style={styles.hint}>
-          <Text style={styles.hintText}>Default password: castle2025</Text>
-          <Text style={styles.hintSubtext}>Change this in /app/frontend/app/admin-login.tsx</Text>
-        </View>
       </View>
     </View>
   );
@@ -154,21 +152,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   backButtonText: {
-    color: '#4A90D9',
+    color: '#aaa',
     fontSize: 14,
-  },
-  hint: {
-    position: 'absolute',
-    bottom: 40,
-    alignItems: 'center',
-  },
-  hintText: {
-    color: '#666',
-    fontSize: 12,
-  },
-  hintSubtext: {
-    color: '#444',
-    fontSize: 10,
-    marginTop: 4,
   },
 });

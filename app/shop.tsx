@@ -60,26 +60,26 @@ export default function Shop() {
             <View style={styles.priceList}>
               <View style={styles.priceItem}>
                 <Text style={styles.priceLabel}>Adults</Text>
-                <Text style={styles.priceValue}>€10.00</Text>
+                <Text style={styles.priceValue}>€12.00</Text>
               </View>
               <View style={styles.priceItem}>
                 <Text style={styles.priceLabel}>Children (6-15 years)</Text>
-                <Text style={styles.priceValue}>€5.00</Text>
+                <Text style={styles.priceValue}>€6.00</Text>
               </View>
               <View style={styles.priceItem}>
                 <Text style={styles.priceLabel}>Students / Seniors</Text>
-                <Text style={styles.priceValue}>€7.00</Text>
+                <Text style={styles.priceValue}>€8.00</Text>
               </View>
               <View style={styles.priceItem}>
                 <Text style={styles.priceLabel}>Family Ticket (2+2)</Text>
-                <Text style={styles.priceValue}>€22.00</Text>
+                <Text style={styles.priceValue}>€25.00</Text>
               </View>
               <View style={styles.priceItem}>
-                <Text style={styles.priceLabel}>Disabled Child (under 18)</Text>
+                <Text style={styles.priceLabel}>ZTP child (up to 18 years)</Text>
                 <Text style={styles.priceValue}>€3.00</Text>
               </View>
               <View style={styles.priceItem}>
-                <Text style={styles.priceLabel}>Disabled Adults</Text>
+                <Text style={styles.priceLabel}>ZTP adults</Text>
                 <Text style={styles.priceValue}>€5.00</Text>
               </View>
             </View>
@@ -106,11 +106,11 @@ export default function Shop() {
             <View style={styles.priceList}>
               <View style={styles.priceItem}>
                 <Text style={styles.priceLabel}>Night Tour - Adults</Text>
-                <Text style={styles.priceValue}>€13.00</Text>
+                <Text style={styles.priceValue}>€15.00</Text>
               </View>
               <View style={styles.priceItem}>
                 <Text style={styles.priceLabel}>Night Tour - Family</Text>
-                <Text style={styles.priceValue}>€30.00</Text>
+                <Text style={styles.priceValue}>€35.00</Text>
               </View>
             </View>
           </View>

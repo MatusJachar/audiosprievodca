@@ -323,6 +323,7 @@ export default function Tour() {
         showsVerticalScrollIndicator={false}
         ListFooterComponent={() => (
           <View style={styles.listFooter}>
+          {/* GASTROFLOW - zakomentované, použiť na novom mieste v budúcnosti
             {/* Nearby Restaurants - GastroFlow Deep Link */}
             <TouchableOpacity
               style={styles.gastroFlowButton}
@@ -359,6 +360,7 @@ export default function Tour() {
               </View>
               <Ionicons name="chevron-forward" size={20} color="#000" />
             </TouchableOpacity>
+            */}
 
             {/* Partners link */}
             <TouchableOpacity
