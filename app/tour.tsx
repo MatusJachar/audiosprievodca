@@ -325,55 +325,51 @@ export default function Tour() {
           <View style={styles.listFooter}>
           {/* GASTROFLOW - zakomentované, použiť na novom mieste v budúcnosti
             {/* Nearby Restaurants - GastroFlow Deep Link */}
-            <TouchableOpacity
-              style={styles.gastroFlowButton}
-              onPress={async () => {
-                // Try deep link first, fallback to partners page
-                try {
-                  const canOpen = await Linking.canOpenURL('gastroflow://restaurants');
-                  if (canOpen) {
-                    // Track referral
-                    fetch(`${API_URL}/api/deeplink/referral`, {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        source_app: 'audioguide',
-                        target_app: 'gastroflow',
-                        referral_type: 'direct',
-                      }),
-                    }).catch(() => {});
-                    await Linking.openURL('gastroflow://restaurants?ref=audioguide');
-                  } else {
-                    router.push('/partners');
-                  }
-                } catch {
-                  router.push('/partners');
-                }
-              }}
-            >
-              <View style={styles.gastroFlowIcon}>
-                <Ionicons name="restaurant" size={24} color="#000" />
-              </View>
-              <View style={styles.gastroFlowText}>
-                <Text style={styles.gastroFlowTitle}>Restauracie v okoli</Text>
-                <Text style={styles.gastroFlowSubtitle}>Najdite najlepsie jedlo blizko hradu</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color="#000" />
-            </TouchableOpacity>
-            */}
+           {false && (
+  <TouchableOpacity
+    style={styles.gastroFlowButton}
+    onPress={async () => {
+      try {
+        const canOpen = await Linking.canOpenURL('gastroflow://restaurants');
+        if (canOpen) {
+          fetch(`${API_URL}/api/deeplink/referral`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              source_app: 'audioguide',
+              target_app: 'gastroflow',
+              referral_type: 'direct',
+            }),
+          }).catch(() => {});
+          await Linking.openURL('gastroflow://restaurants?ref=audioguide');
+        } else {
+          router.push('/partners');
+        }
+      } catch {
+        router.push('/partners');
+      }
+    }}
+  >
+    <View style={styles.gastroFlowIcon}>
+      <Ionicons name="restaurant" size={24} color="#000" />
+    </View>
+    <View style={styles.gastroFlowText}>
+      <Text style={styles.gastroFlowTitle}>Restauracie v okoli</Text>
+      <Text style={styles.gastroFlowSubtitle}>Najdite najlepsie jedlo blizko hradu</Text>
+    </View>
+    <Ionicons name="chevron-forward" size={20} color="#000" />
+  </TouchableOpacity>
+)}
 
-            {/* Partners link */}
-            <TouchableOpacity
-              style={styles.partnersButton}
-              onPress={() => router.push('/partners')}
-            >
-              <Ionicons name="business" size={20} color={COLORS.primary} />
-              <Text style={styles.partnersButtonText}>Vsetci partneri a sluzby</Text>
-              <Ionicons name="chevron-forward" size={18} color={COLORS.textSecondary} />
-            </TouchableOpacity>
-          </View>
-        )}
-      />
+{/* Partners link */}
+<TouchableOpacity
+  style={styles.partnersButton}
+  onPress={() => router.push('/partners')}
+>
+  <Ionicons name="business" size={20} color={COLORS.primary} />
+  <Text style={styles.partnersButtonText}>Vsetci partneri a sluzby</Text>
+  <Ionicons name="chevron-forward" size={18} color={COLORS.textSecondary} />
+</TouchableOpacity>
       
       {/* Download for Offline Modal */}
       <Modal
