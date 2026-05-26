@@ -368,7 +368,10 @@ export default function Tour() {
   <Text style={styles.partnersButtonText}>Vsetci partneri a sluzby</Text>
   <Ionicons name="chevron-forward" size={18} color={COLORS.textSecondary} />
 </TouchableOpacity>
-      
+          </View>
+        )}
+      />
+
       {/* Download for Offline Modal */}
       <Modal
         visible={showDownloadModal}
