@@ -323,8 +323,6 @@ export default function Tour() {
         showsVerticalScrollIndicator={false}
         ListFooterComponent={() => (
           <View style={styles.listFooter}>
-          {/* GASTROFLOW - zakomentované, použiť na novom mieste v budúcnosti
-            {/* Nearby Restaurants - GastroFlow Deep Link */}
            {false && (
   <TouchableOpacity
     style={styles.gastroFlowButton}
