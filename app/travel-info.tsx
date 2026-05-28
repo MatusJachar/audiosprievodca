@@ -25,7 +25,6 @@ export default function TravelInfo() {
   };
 
   const handleOpenGPS = () => {
-    // GPS: 48°59.98956'N, 20°46.08196'E
     const url = 'https://www.google.com/maps/search/?api=1&query=48.999826,20.768033';
     Linking.openURL(url).catch(() => {
       Alert.alert('Error', 'Unable to open maps');
@@ -36,7 +35,7 @@ export default function TravelInfo() {
     <BackgroundWrapper>
       <View style={styles.container}>
         <StatusBar style="light" />
-        
+
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color="#fff" />
@@ -44,7 +43,7 @@ export default function TravelInfo() {
           <Text style={styles.headerTitle}>How to Get Back</Text>
           <View style={{ width: 24 }} />
         </View>
-        
+
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           {/* Location & GPS */}
           <View style={styles.section}>
@@ -54,13 +53,13 @@ export default function TravelInfo() {
             </View>
             <Text style={styles.address}>Spišské Podhradie</Text>
             <Text style={styles.addressDetail}>053 04, Slovakia</Text>
-            
+
             <View style={styles.gpsBox}>
               <Ionicons name="navigate" size={18} color="#4CAF50" />
               <Text style={styles.gpsText}>GPS: 48°59.98956'N, 20°46.08196'E</Text>
             </View>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={styles.mapButton}
               onPress={handleOpenGPS}
             >
@@ -81,14 +80,14 @@ export default function TravelInfo() {
                   <Text style={styles.seasonIcon}>☀️</Text>
                   <Text style={styles.hoursDay}>Summer (Jun - Sep)</Text>
                 </View>
-                <Text style={styles.hoursTime}>9:00 - 18:00</Text>
+                <Text style={styles.hoursTime}>9:00 - 19:00</Text>
               </View>
               <View style={styles.hoursRow}>
                 <View style={styles.seasonLabel}>
                   <Text style={styles.seasonIcon}>🍂</Text>
                   <Text style={styles.hoursDay}>Spring/Autumn (Apr, Oct, Nov)</Text>
                 </View>
-                <Text style={styles.hoursTime}>9:00 - 16:00</Text>
+                <Text style={styles.hoursTime}>9:00 - 17:00</Text>
               </View>
             </View>
             <Text style={styles.hoursNote}>* Open Monday - Sunday</Text>
@@ -103,14 +102,14 @@ export default function TravelInfo() {
             <Text style={styles.infoText}>
               The easiest way to reach Spiš Castle is by car. Parking is available directly below the castle.
             </Text>
-            
+
             <View style={styles.routeBox}>
               <Text style={styles.routeTitle}>🛣️ Route:</Text>
               <Text style={styles.routeText}>
                 From D1 highway, exit towards Levoča, then continue to Spišské Podhradie.
               </Text>
             </View>
-            
+
             <View style={styles.distanceList}>
               <View style={styles.distanceItem}>
                 <Text style={styles.distanceCity}>From Poprad:</Text>
@@ -125,7 +124,7 @@ export default function TravelInfo() {
                 <Text style={styles.distanceValue}>~60 km</Text>
               </View>
             </View>
-            
+
             <View style={styles.parkingInfo}>
               <Ionicons name="car" size={18} color="#4CAF50" />
               <Text style={styles.parkingText}>
@@ -143,15 +142,15 @@ export default function TravelInfo() {
             <Text style={styles.infoText}>
               Take a bus to Spišské Podhradie. From there, it's approximately 30-45 minutes walk to the castle on a tourist trail.
             </Text>
-            
+
             <View style={styles.connectionList}>
               <Text style={styles.connectionTitle}>Bus connections:</Text>
               <Text style={styles.connectionItem}>• From Spišská Nová Ves (20 min)</Text>
               <Text style={styles.connectionItem}>• From Levoča (15 min)</Text>
               <Text style={styles.connectionItem}>• From Košice (1.5 hours)</Text>
             </View>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={styles.linkButton}
               onPress={() => handleOpenLink('https://cp.hnonline.sk/')}
             >
@@ -169,21 +168,21 @@ export default function TravelInfo() {
             <Text style={styles.infoText}>
               From Poprad or Spišská Nová Ves, take a train to Spišské Vlachy and transfer to Spišské Podhradie.
             </Text>
-            
+
             <View style={styles.warningBox}>
               <Ionicons name="warning" size={18} color="#FF6B6B" />
               <Text style={styles.warningText}>
                 Trains may not wait for connections - verify your connection in advance. Train to Spišské Podhradie runs only during summer tourist season!
               </Text>
             </View>
-            
+
             <View style={styles.walkInfo}>
               <Text style={styles.walkTitle}>🚶 Walking distances:</Text>
               <Text style={styles.walkItem}>• From bus station: ~30-45 min</Text>
               <Text style={styles.walkItem}>• From train station: ~20 min</Text>
             </View>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={styles.linkButton}
               onPress={() => handleOpenLink('https://www.zssk.sk/en/')}
             >
@@ -215,14 +214,14 @@ export default function TravelInfo() {
             <Text style={styles.infoText}>
               From Spišské Podhradie to Prešov, Spišská Nová Ves, or Poprad:
             </Text>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={styles.taxiMainItem}
-              onPress={() => handleCall('+421944376007')}
+              onPress={() => handleCall('+421911530432')}
             >
               <View style={styles.taxiInfo}>
                 <Text style={styles.taxiName}>🚕 Taxi Service</Text>
-                <Text style={styles.taxiNumber}>+421 944 376 007</Text>
+                <Text style={styles.taxiNumber}>+421 911 530 432</Text>
                 <Text style={styles.taxiDest}>To: Prešov, Sp. Nová Ves, Poprad</Text>
               </View>
               <View style={styles.callButton}>
