@@ -1,71 +1,71 @@
 ﻿{
-  "expo": {
-    "name": "Spišský hrad",
-    "slug": "spissky-hrad-tour",
-    "version": "20.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/images/logo.png",
-    "scheme": "audioguide",
-    "userInterfaceStyle": "dark",
-    "newArchEnabled": true,
-    "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.spiscastle.freetour",
-      "infoPlist": {
-        "NSAppTransportSecurity": {
-          "NSAllowsArbitraryLoads": true
-        },
-        "NSLocationWhenInUseUsageDescription": "Find nearby restaurants and services"
-      }
-    },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/images/logo.png",
-        "backgroundColor": "#1a1a2e"
-      },
-      "package": "com.spiscastle.freetour",
-      "versionCode": 20,
-      "edgeToEdgeEnabled": true,
-      "usesCleartextTraffic": true,
-      "permissions": [
-        "android.permission.INTERNET",
-        "android.permission.ACCESS_NETWORK_STATE",
-        "android.permission.ACCESS_FINE_LOCATION",
-        "android.permission.ACCESS_COARSE_LOCATION"
-      ]
-    },
-    "web": {
-      "bundler": "metro",
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
-    },
-    "plugins": [
-      "expo-router",
-      [
-        "expo-build-properties",
-        {
-          "android": {
-            "usesCleartextTraffic": true
-          }
-        }
-      ],
-      [
-        "expo-splash-screen",
-        {
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#1a1a1a"
-        }
-      ]
-    ],
-    "experiments": {
-      "typedRoutes": true
-    },
-    "extra": {
-      "eas": {
-        "projectId": "a2b9b7b3-690a-46a5-b951-fe27e8fb544c"
-      }
-    }
-  }
+    "expo":  {
+                 "name":  "Spišský hrad",
+                 "slug":  "spissky-hrad-tour",
+                 "version":  "21.0.0",
+                 "orientation":  "portrait",
+                 "icon":  "./assets/images/logo.png",
+                 "scheme":  "audioguide",
+                 "userInterfaceStyle":  "dark",
+                 "newArchEnabled":  true,
+                 "ios":  {
+                             "supportsTablet":  true,
+                             "bundleIdentifier":  "com.spiscastle.freetour",
+                             "infoPlist":  {
+                                               "NSAppTransportSecurity":  {
+                                                                              "NSAllowsArbitraryLoads":  true
+                                                                          },
+                                               "NSLocationWhenInUseUsageDescription":  "Find nearby restaurants and services"
+                                           }
+                         },
+                 "android":  {
+                                 "adaptiveIcon":  {
+                                                      "foregroundImage":  "./assets/images/logo.png",
+                                                      "backgroundColor":  "#FFFFFF"
+                                                  },
+                                 "package":  "com.spiscastle.freetour",
+                                 "versionCode":  21,
+                                 "edgeToEdgeEnabled":  true,
+                                 "usesCleartextTraffic":  true,
+                                 "permissions":  [
+                                                     "android.permission.INTERNET",
+                                                     "android.permission.ACCESS_NETWORK_STATE",
+                                                     "android.permission.ACCESS_FINE_LOCATION",
+                                                     "android.permission.ACCESS_COARSE_LOCATION"
+                                                 ]
+                             },
+                 "web":  {
+                             "bundler":  "metro",
+                             "output":  "static",
+                             "favicon":  "./assets/images/favicon.png"
+                         },
+                 "plugins":  [
+                                 "expo-router",
+                                 [
+                                     "expo-build-properties",
+                                     {
+                                         "android":  {
+                                                         "usesCleartextTraffic":  true
+                                                     }
+                                     }
+                                 ],
+                                 [
+                                     "expo-splash-screen",
+                                     {
+                                         "image":  "./assets/images/splash-icon.png",
+                                         "imageWidth":  200,
+                                         "resizeMode":  "contain",
+                                         "backgroundColor":  "#1a1a1a"
+                                     }
+                                 ]
+                             ],
+                 "experiments":  {
+                                     "typedRoutes":  true
+                                 },
+                 "extra":  {
+                               "eas":  {
+                                           "projectId":  "a2b9b7b3-690a-46a5-b951-fe27e8fb544c"
+                                       }
+                           }
+             }
 }
